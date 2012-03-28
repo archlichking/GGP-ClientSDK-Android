@@ -1,0 +1,4 @@
+Scenario: first test
+
+When I want to load out all leaderboards for current user
+Then all leaderboards I have should be return

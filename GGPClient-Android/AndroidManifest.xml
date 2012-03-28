@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.openfeint.qa.ggp"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <!-- add permission for GGP -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="net.gree.Sample.permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <application
+        android:name=".GGPClientAutomationApplication"
+        android:icon="@drawable/gree"
+        android:label="@string/app_name" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- use GGP activities -->
+        <activity
+            android:configChanges="orientation|keyboardHidden"
+            android:launchMode="singleTask"
+            android:name="net.gree.asdk.core.auth.SetupActivity"
+            android:theme="@android:style/Theme.Translucent" >
+            <intent-filter >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="reopen"
+                    android:scheme="greeapp607" />
+            </intent-filter>
+            <intent-filter >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="get-accesstoken"
+                    android:scheme="greeapp607" />
+            </intent-filter>
+        </activity>
+
+        <!-- use GGP receiver -->
+        <receiver
+            android:name="net.gree.asdk.api.ConnectionChangeReceiver"
+            android:label="NetworkConnection" >
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
