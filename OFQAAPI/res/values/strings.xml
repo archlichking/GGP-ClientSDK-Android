@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="submit_tcm_not_reachable">TCM is not reachable, case result isnot uploaded. case_id : </string>
+    <string name="get_tcm_not_reachable">TCM is not reachable, please try again</string>
+
+</resources>
