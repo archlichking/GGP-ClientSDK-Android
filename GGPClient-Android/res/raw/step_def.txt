@@ -1,0 +1,2 @@
+step_def=com.openfeint.qa.definition.SampleStepDefinitions
+step_path=com.openfeint.qa.ggp.step_definitions

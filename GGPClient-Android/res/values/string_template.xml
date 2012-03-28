@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="no_suiteid_load">You NEED a TCM suite id</string>
+    <string name="no_runid_load">You NEED a TCM run id</string>
+    <string name="no_case_load">Please load ofx cases first</string>
+    
+    <string name="load_cases">loading cases</string>
+    <string name="execute_cases">executing cases</string>
+    <string name="title_case_result">OT</string>
+    <string name="title_case_id">Id</string>
+    <string name="title_case_title">Title</string>
+    
+    
+
+</resources>
