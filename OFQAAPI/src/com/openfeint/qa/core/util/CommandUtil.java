@@ -3,7 +3,7 @@ package com.openfeint.qa.core.util;
 
 public class CommandUtil {
     public enum Command {
-        GIVEN, WHEN, THEN, AND, NONE;
+        GIVEN, WHEN, THEN, AND, BEFORE, AFTER, NONE;
         public static Command toCommand(String comm) {
             return valueOf(Command.class, comm);
         }
@@ -17,6 +17,10 @@ public class CommandUtil {
 
     public static String AND_COM = "AND";
 
+    public static String BEFORE_COM = "BEFORE";
+
+    public static String AFTER_COM = "AFTER";
+
     public static String GIVEN_FILTER = "Given";
 
     public static String WHEN_FILTER = "When";
@@ -24,5 +28,9 @@ public class CommandUtil {
     public static String THEN_FILTER = "Then";
 
     public static String AND_FILTER = "And";
+
+    public static String BEFORE_FILTER = "Before";
+
+    public static String AFTER_FILTER = "After";
 
 }
