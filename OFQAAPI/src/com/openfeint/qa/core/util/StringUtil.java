@@ -30,9 +30,12 @@ public class StringUtil {
         // keep only GIVEN, THEN, WHEN
         while (i < temp.size()) {
             String s = temp.get(i).replace("\t", "");
-            if (!s.startsWith(CommandUtil.GIVEN_FILTER) && !s.startsWith(CommandUtil.WHEN_FILTER)
+            if (!s.startsWith(CommandUtil.GIVEN_FILTER) 
+                    && !s.startsWith(CommandUtil.WHEN_FILTER)
                     && !s.startsWith(CommandUtil.THEN_FILTER)
-                    && !s.startsWith(CommandUtil.AND_FILTER)) {
+                    && !s.startsWith(CommandUtil.AND_FILTER)
+                    && !s.startsWith(CommandUtil.BEFORE_FILTER)
+                    && !s.startsWith(CommandUtil.AFTER_FILTER)) {
                 temp.remove(i);
             } else {
                 temp.set(i, s);
