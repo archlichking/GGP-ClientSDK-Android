@@ -2,7 +2,9 @@
 package com.openfeint.qa.core.caze.step;
 
 import com.openfeint.qa.core.Scanner;
+import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
+import com.openfeint.qa.core.command.Before;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -49,6 +51,10 @@ public class StepParser {
                 // match then command
             case AND:
                 // match and command
+            case BEFORE:
+                // match before command
+            case AFTER:
+                // match after command
                 s.setCommand(step);
                 holder.fixStep(inst, s, command);
                 break;
@@ -90,6 +96,18 @@ public class StepParser {
                         aimStepList.add(new StepPair(p, m));
                         continue;
                     }
+                    if (null != m.getAnnotation(Before.class)) {
+                        Pattern p = Pattern.compile(CommandUtil.BEFORE_FILTER + " "
+                                + m.getAnnotation(Before.class).value());
+                        aimStepList.add(new StepPair(p, m));
+                        continue;
+                    }
+                    if (null != m.getAnnotation(After.class)) {
+                        Pattern p = Pattern.compile(CommandUtil.AFTER_FILTER + " "
+                                + m.getAnnotation(After.class).value());
+                        aimStepList.add(new StepPair(p, m));
+                        continue;
+                    }
                 }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -102,7 +120,7 @@ public class StepParser {
          * @param inst would be instruction behind command, such like I click on
          *            xxx button"
          * @param step aim step to insert into
-         * @param command Given || When || Then
+         * @param command Given || When || Then || And || After || Before
          * @throws NoSuchStepException
          */
         public void fixStep(String inst, final Step step, String command)
