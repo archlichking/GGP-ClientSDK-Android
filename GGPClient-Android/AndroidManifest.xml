@@ -29,6 +29,28 @@
 
         <!-- use GGP activities -->
         <activity
+            android:configChanges="orientation"
+            android:name="net.gree.asdk.core.dashboard.DashboardActivity" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:name="net.gree.asdk.core.notifications.ui.NotificationBoardActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:name="net.gree.asdk.core.dashboard.ModalActivity" >
+        </activity>
+        <activity
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:name="net.gree.asdk.core.notifications.ui.PopupActivity"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/NotificationDialog" >
+        </activity>
+        <activity
             android:configChanges="orientation|keyboardHidden"
             android:launchMode="singleTask"
             android:name="net.gree.asdk.core.auth.SetupActivity"
@@ -54,6 +76,58 @@
                     android:scheme="greeapp607" />
             </intent-filter>
         </activity>
+        <activity
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:name="net.gree.asdk.core.notifications.RelayActivity"
+            android:noHistory="true"
+            android:taskAffinity="" >
+        </activity>
+        <activity 
+            android:name="net.gree.asdk.core.ui.SSOAuthReceiverActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleInstance"
+            android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="GREEApp/SSOAuthResponse" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="net.gree.asdk.core.ui.ServiceResultreceiverActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="serviceresponse"
+                    android:scheme="greeapp607" />
+            </intent-filter>
+        </activity>
+        
+        <service android:name=".C2DMReceiver" />
+
+        <receiver
+            android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter >
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+
+                <category android:name="net.gree.platformsample" /> <!-- This is the registered package name in google cd2m server (different for each appli using push) -->
+            </intent-filter>
+            <intent-filter >
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
+                <category android:name="net.gree.platformsample" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name="com.google.android.c2dm.intent.REGISTER" />
 
         <!-- use GGP receiver -->
         <receiver
