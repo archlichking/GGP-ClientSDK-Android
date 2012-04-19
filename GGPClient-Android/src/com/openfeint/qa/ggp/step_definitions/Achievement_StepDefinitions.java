@@ -16,6 +16,7 @@ import org.apache.http.HeaderIterator;
 import util.Consts;
 import android.util.Log;
 
+import com.google.android.c2dm.C2DMBaseReceiver;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Given;
@@ -78,7 +79,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 	@When("I try to load out all achievements for current user")
 	public void getAchievements() {
 		status = Consts.UNKNOWN;
-		Achievement.fetch(achiListener);
+		Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize, achiListener);
 		waitCallback();
 	}
 

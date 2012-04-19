@@ -150,11 +150,11 @@ public class MainActivity extends Activity {
 							// sample_case.txt
 
 							// TODO: comments this out first;
-							// Log.i(TAG,
-							// "---------- Submitting result to TCM ---------");
-							// submitToTCM(cases);
 							Log.i(TAG,
-									"--------Test Finished!, NOT post to TCM ----");
+									"---------- Submitting result to TCM ---------");
+							submitToTCM(cases);
+							// Log.i(TAG,
+							// "--------Test Finished!, NOT post to TCM ----");
 						}
 
 					});
