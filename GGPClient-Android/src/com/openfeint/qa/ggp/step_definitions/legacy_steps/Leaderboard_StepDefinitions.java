@@ -1,4 +1,4 @@
-package com.openfeint.qa.ggp.step_definitions;
+package com.openfeint.qa.ggp.step_definitions.legacy_steps;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;

@@ -136,13 +136,13 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		getFriends(me);
 	}
 
-	@Then("there should be (\\d+) friends in my friend list")
+	@Then("friend list should be size of (\\d+)")
 	public void verifyFriendNumber(int num) {
 		Log.d(TAG, "Checking friend number...");
 		assertEquals(num, peopleList.size());
 	}
 
-	@Then("user (.+) should be in my friend list")
+	@Then("friend list should have (.+)")
 	public void verifyFriendExists(String friendName) {
 		friend = null;
 		Log.d(TAG, "Check if " + friendName + " is in the friend list");
