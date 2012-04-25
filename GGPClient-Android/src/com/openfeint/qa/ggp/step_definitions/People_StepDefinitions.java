@@ -1,31 +1,34 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
-import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
-import com.openfeint.qa.core.command.And;
-import com.openfeint.qa.core.command.Then;
-import com.openfeint.qa.core.command.When;
+import java.util.ArrayList;
+import java.util.List;
 
-import net.gree.asdk.api.GreePerson;
 import net.gree.asdk.api.GreePlatform;
-import net.gree.asdk.api.GreePerson.GreePersonListener;
+import net.gree.asdk.api.GreeUser;
+import net.gree.asdk.api.GreeUser.GreeUserListener;
 
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-
 import android.util.Log;
 
-import java.security.acl.Owner;
-import java.util.ArrayList;
-import java.util.List;
+import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.Given;
+import com.openfeint.qa.core.command.Then;
+import com.openfeint.qa.core.command.When;
 
 public class People_StepDefinitions extends BasicStepDefinition {
 	private static final String TAG = "People_Steps";
 
-	private static List<GreePerson> peopleList;
+	private static List<GreeUser> peopleList = new ArrayList<GreeUser>();
+
+	private static GreeUser me;
+
+	private static GreeUser friend;
 
 	private String status;
 
@@ -45,14 +48,14 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		}
 	}
 
-	GreePersonListener listener = new GreePersonListener() {
+	GreeUserListener listener = new GreeUserListener() {
 		@Override
-		public void onSuccess(int index, int count, GreePerson[] people) {
+		public void onSuccess(int index, int count, GreeUser[] people) {
 			Log.d(TAG, "Get people success!");
+			peopleList.clear();
 			if (people != null) {
+				Log.i(TAG, "Get " + people.length + " people");
 				Log.i(TAG, "Adding people datas");
-				Log.i(TAG, "Get " + people.length + "people");
-				peopleList = new ArrayList<GreePerson>();
 				for (int i = 0; i < people.length; i++) {
 					peopleList.add(people[i]);
 				}
@@ -68,80 +71,111 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		}
 	};
 
-	private void verifyCurrentUserInfo(GreePerson person) {
-		if (!person.getId().equals("57574"))
-			fail("Now we can only check auto-grade3-user, please relogin that user!");
-		assertEquals("auto-grade3-user", person.getNickname());
-		assertEquals(String.valueOf(3), person.getUserGrade());
-		assertEquals("US", person.getRegion());
-
+	@Given("I logged in with email (.+) and password (\\w+)")
+	public void checkLogin(String email, String password) {
+		// TODO Login action is now can not be automated
+		me = GreePlatform.getLocalUser();
+		if (me == null)
+			fail("No login yet！");
+		Log.i(TAG, "Logined as user: " + me.getNickname());
 	}
 
-	@Then("I can get my info from native storage")
-	public void verifyNativeCurrentUserInfo() {
-		GreePerson person = GreePlatform.getLocalUser();
-		Log.i(TAG, "User info get from native:");
-		Log.i(TAG, "ID: " + person.getId());
-		Log.i(TAG, "Nickname: " + person.getNickname());
-		Log.i(TAG, "DisplayName: " + person.getDisplayName());
-		Log.i(TAG, "UserGrade: " + person.getUserGrade());
-		Log.i(TAG, "Region: " + person.getRegion());
-		Log.i(TAG, "ThumbnailUrl: " + person.getThumbnailUrl());
-
-		verifyCurrentUserInfo(person);
+	@When("I see my info from native cache")
+	public void getUserInfoFromCache() {
+		// Nothing to do here
 	}
 
-	@And("I can request from server to get my info")
-	public void verifyServerCurrentUserInfo() {
+	@Then("my (\\w+) should be (.+)")
+	public void verifyUserInfo(String column, String value) {
+		if ("displayName".equals(column)) {
+			assertEquals(value, me.getNickname());
+			return;
+		}
+		if ("id".equals(column)) {
+			assertEquals(value, me.getId());
+			return;
+		}
+		if ("userGrade".equals(column)) {
+			assertEquals(value, me.getUserGrade());
+			return;
+		}
+		if ("region".equals(column)) {
+			assertEquals(value, me.getRegion());
+			return;
+		}
+	}
+
+	@When("I see my info from server")
+	public void getUserInfoFromServer() {
 		status = Consts.UNKNOWN;
-		GreePerson.loadUserWithId(1, 1, "@me", listener);
+		GreeUser.loadUserWithId(1, 1, "@me", listener);
 		waitCallback();
 		if (peopleList == null)
-			fail();
-		GreePerson person = peopleList.get(0);
-		Log.i(TAG, "User info get from server:");
-		Log.i(TAG, "ID: " + person.getId());
-		Log.i(TAG, "Nickname: " + person.getNickname());
-		Log.i(TAG, "DisplayName: " + person.getDisplayName());
-		Log.i(TAG, "UserGrade: " + person.getUserGrade());
-		Log.i(TAG, "Region: " + person.getRegion());
-		Log.i(TAG, "ThumbnailUrl: " + person.getThumbnailUrl());
-
-		verifyCurrentUserInfo(person);
+			fail("No user info got!");
+		me = peopleList.get(0);
+		Log.i(TAG, "User info get from server: " + me.getNickname());
 	}
 
-	private void getFriends(GreePerson owner) {
+	private void getFriends(GreeUser owner) {
 		status = Consts.UNKNOWN;
 		owner.loadFriends(Consts.startIndex_1, Consts.pageSize, listener);
 		waitCallback();
 		if (peopleList == null)
-			fail();
-		for (GreePerson person : peopleList) {
+			fail("No friend got!");
+		for (GreeUser person : peopleList) {
 			Log.i(TAG, "Friend " + (peopleList.indexOf(person) + 1));
 			Log.i(TAG, "ID: " + person.getId());
 			Log.i(TAG, "Nickname: " + person.getNickname());
-			Log.i(TAG, "DisplayName: " + person.getDisplayName());
 			Log.i(TAG, "UserGrade: " + person.getUserGrade());
-			Log.i(TAG, "ThumbnailUrl: " + person.getThumbnailUrl());
 		}
 	}
 
-	@When("I try to get friends info of current user")
+	@When("I check my friend list")
 	public void getCurrentUserFriends() {
-		GreePerson me = GreePlatform.getLocalUser();
+		GreeUser me = GreePlatform.getLocalUser();
 		getFriends(me);
-
 	}
 
-	@Then("I should get the friend list success")
-	public void verifyFriendList() {
-		// TODO add verification after got a solution for create test data
+	@Then("friend list should be size of (\\d+)")
+	public void verifyFriendNumber(int num) {
+		Log.d(TAG, "Checking friend number...");
+		assertEquals(num, peopleList.size());
 	}
 
-	@When("I try to get friends info of user (\\w+)")
-	public void getSpecificUserFriends(String pid) {
-		GreePerson.loadUserWithId(1, 1, pid, listener);
+	@Then("friend list should have (.+)")
+	public void verifyFriendExists(String friendName) {
+		friend = null;
+		Log.d(TAG, "Check if " + friendName + " is in the friend list");
+		boolean isExists = false;
+		for (GreeUser user : peopleList) {
+			if (friendName.equals(user.getNickname())) {
+				Log.d(TAG, "Got the user");
+				isExists = true;
+				friend = user;
+			}
+		}
+		assertTrue(isExists);
+	}
+
+	@Then("userid of (.+) should be (\\w+) and grade should be (\\w+)")
+	public void verifyFriendInfo(String name, String id, String grade) {
+		if (friend == null)
+			fail("Don't get the friend in the list");
+		Log.d(TAG, "Checking friend info...");
+		assertEquals(id, friend.getId());
+		assertEquals(grade, friend.getUserGrade());
+	}
+
+	// This step is not using now, seems the sdk is not allow to get another
+	// user instance except the current login user
+	@When("I check friend list of user (\\w+)")
+	public void getSpecificUserFriends(String userId) {
+		status = Consts.UNKNOWN;
+		GreeUser.loadUserWithId(1, 1, userId, listener);
+		waitCallback();
+		if (peopleList == null)
+			fail("Don't get the friend in the list");
+		Log.d(TAG, "specific user is: " + peopleList.get(0).getNickname());
 		getFriends(peopleList.get(0));
 	}
-
 }
