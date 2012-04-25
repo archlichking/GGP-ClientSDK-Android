@@ -1,7 +1,6 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 import java.util.ArrayList;
@@ -10,13 +9,17 @@ import java.util.List;
 import net.gree.asdk.api.Achievement;
 import net.gree.asdk.api.Achievement.AchievementChangeListener;
 import net.gree.asdk.api.Achievement.AchievementListUpdateListener;
+import net.gree.asdk.api.GreePlatform;
 
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
+import android.R.integer;
 import android.util.Log;
 
+import com.handmark.pulltorefresh.library.R.menu;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
@@ -26,12 +29,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 	private static final String TAG = "Achievement_Steps";
 
 	private static List<Achievement> achievementList;
-
-	private List<String> achievementNames;
-
-	private static Achievement testAchi;
-
-	private static int expectLockStatus;
 
 	private String status;
 
@@ -51,7 +48,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		}
 	}
 
-	AchievementListUpdateListener achiListener = new AchievementListUpdateListener() {
+	private AchievementListUpdateListener achiListener = new AchievementListUpdateListener() {
 
 		@Override
 		public void onSuccess(int index, int totalListSize,
@@ -75,79 +72,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		}
 	};
 
-	@When("I try to load out all achievements for current user")
-	public void getAchievements() {
-		status = Consts.UNKNOWN;
-		Achievement.fetch(achiListener);
-		waitCallback();
-	}
-
-	@Then("(\\w+) achievements I have should be return")
-	public void verifyAchievements() {
-		achievementNames = new ArrayList<String>();
-		achievementNames.add("Achievement01");
-		achievementNames.add("Achievement02");
-		achievementNames.add("Achievement03");
-		achievementNames.add("Achievement04");
-		achievementNames.add("Achievement05");
-		achievementNames.add("Achievement06");
-
-		// Verify
-		if (achievementList == null)
-			fail();
-		Log.i(TAG, "Verifing the achievementNames");
-		assertEquals(achievementNames.size(), achievementList.size());
-		for (Achievement achi : achievementList) {
-			assertTrue(achievementNames.contains(achi.getName()));
-		}
-	}
-
-	@Given("I get the achievement list success")
-	public void getAchievementsAtFirst() {
-		getAchievements();
-	}
-
-	@Then("I can get all infos of achievement (\\w+)")
-	public void getAchievementInfos(String achiName) {
-		if (achievementList == null)
-			fail();
-		Log.i(TAG, "Verifing the achievement infos");
-		for (Achievement achi : achievementList) {
-			if (achiName.equals(achi.getName())) {
-				Log.d(TAG, "Name: " + achi.getName());
-				Log.d(TAG, "Id: " + achi.getId());
-				Log.d(TAG, "Description: " + achi.getDescription());
-				Log.d(TAG, "Score: " + achi.getScore());
-				Log.d(TAG, "isSecret: " + achi.isSecret());
-				Log.d(TAG, "isUnlocked: " + achi.isUnlocked());
-				testAchi = achi;
-			}
-		}
-	}
-
-	@Then("score should be (\\d+), description should be (\'\\w+\') and it should be a (\\w+) achievement")
-	public void verifyAchievementInfo(int score, String desc, String isSecret) {
-		assertEquals(score, testAchi.getScore());
-		assertEquals(desc, testAchi.getDescription());
-		if ("secret".equals(isSecret))
-			assertEquals(true, testAchi.isSecret());
-		else
-			assertEquals(false, testAchi.isSecret());
-	}
-
-	@When("I get the lock status of achievement (\\w+)")
-	public void getLockStatus(String achiName) {
-		if (achievementList == null)
-			fail();
-		Log.i(TAG, "Get the achievement you want to verify");
-		for (Achievement achi : achievementList) {
-			if (achiName.equals(achi.getName())) {
-				testAchi = achi;
-				Log.d(TAG, "Now lock status is :" + testAchi.isUnlocked());
-			}
-		}
-	}
-
 	private AchievementChangeListener lockListener = new AchievementChangeListener() {
 
 		@Override
@@ -165,32 +89,117 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
 	};
 
-	@And("I update its status")
-	public void updateLockStatus() {
-		if (testAchi == null)
-			fail();
+	@When("I load list of achievement")
+	public void getAchievements() {
 		status = Consts.UNKNOWN;
-		if (testAchi.isUnlocked() == Achievement.LOCKED) {
-			Log.i(TAG, "Unlocking the achievement");
-			testAchi.unlock(lockListener);
-			expectLockStatus = Achievement.UNLOCKED;
-		} else if (testAchi.isUnlocked() == Achievement.UNLOCKED) {
-			Log.i(TAG, "Locking the achievement");
-			testAchi.lock(lockListener);
-			expectLockStatus = Achievement.LOCKED;
+		Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize,
+				achiListener);
+		waitCallback();
+	}
+
+	@Then("I should have total achievements (\\d+)")
+	public void verifyAchievementCount(int size) {
+		if (achievementList == null)
+			fail("No achievement found!");
+		Log.i(TAG, "Verifing the achievement count...");
+		assertEquals(size, achievementList.size());
+	}
+
+	private int transLockStatus(String statusMark) {
+		if ("LOCK".equals(statusMark))
+			return Achievement.LOCKED;
+		else if ("UNLOCK".equals(statusMark))
+			return Achievement.UNLOCKED;
+		else {
+			fail("Unknown lock status!");
+			return -1;
+		}
+	}
+
+	@Then("I should have achievement of name (.+) with status (\\w+) and score (\\d+)")
+	public void verifyAchievementInfo(String achiName, String statusMark,
+			int score) {
+		Achievement achi = getAchievementByName(achiName);
+		int lockStatus = transLockStatus(statusMark);
+
+		assertEquals(lockStatus, achi.isUnlocked());
+		assertEquals(score, achi.getScore());
+	}
+
+	@Given("I load list of achievement")
+	public void getAchievementsAsCondition() {
+		getAchievements();
+	}
+
+	private void updateLockStatus(Achievement achi, int expectStatus) {
+		status = Consts.UNKNOWN;
+		if (expectStatus == Achievement.UNLOCKED) {
+			Log.i(TAG, "Unlocking the achievement " + achi.getName());
+			achi.unlock(lockListener);
+		} else if (expectStatus == Achievement.LOCKED) {
+			Log.i(TAG, "Locking the achievement " + achi.getName());
+			achi.lock(lockListener);
 		} else {
-			Log.e(TAG,
-					"Unknow lock status of the achievement: "
-							+ testAchi.getName());
-			fail();
+			fail("Unknow lock status of the achievement: " + achi.getName());
 		}
 		waitCallback();
 	}
 
-	@Then("its status should be updated")
-	public void verifyLockStatus() {
-		getLockStatus(testAchi.getName());
-		// verify
-		assertEquals(expectLockStatus, testAchi.isUnlocked());
+	@Given("I make sure status of achievement (.+) is (\\w+)")
+	public void updateStatusAsCondition(String achiName, String statusMark) {
+		Achievement achi = getAchievementByName(achiName);
+		int expectStatus = transLockStatus(statusMark);
+
+		Log.i(TAG, "Expect status of achievement " + achiName + " is "
+				+ statusMark);
+		if (achi.isUnlocked() != expectStatus) {
+			Log.i(TAG, "But no the status we want!");
+			updateLockStatus(achi, expectStatus);
+		}
 	}
+
+	@When("I update status of achievement (.+) to (\\w+)")
+	public void updateLockStatusByName(String achiName, String statusMark) {
+		Achievement achi = getAchievementByName(achiName);
+		int expectStatus = transLockStatus(statusMark);
+
+		Log.i(TAG, "Got the achievement " + achiName
+				+ ", and update its status to : " + statusMark);
+		updateLockStatus(achi, expectStatus);
+	}
+
+	private Achievement getAchievementByName(String achiName) {
+		if (achievementList == null)
+			fail("No achievement in the list!");
+		for (Achievement achi : achievementList) {
+			if (achiName.equals(achi.getName())) {
+				Log.d(TAG, "Found the achievement " + achiName);
+				return achi;
+			}
+		}
+		fail("Could not find the achievement named " + achiName);
+		return null;
+	}
+
+	@Then("status of achievement (.+) should be (\\w+)")
+	public void verifyLockStatusByName(String achiName, String statusMark) {
+		Achievement achi = getAchievementByName(achiName);
+		int lockStatus = transLockStatus(statusMark);
+
+		Log.i(TAG, "Verifing the lock status of achievement " + achiName);
+		assertEquals(lockStatus, achi.isUnlocked());
+	}
+
+	@Then("my score should be (\\w+) by (\\d+)")
+	public void verifyScoreUpdated(String operator, int changeValue) {
+		// TODO So far, sdk is not support to get the total score of user, will
+		// add this verification after sdk to support it
+	}
+
+	@After("I make sure status of achievement (.+) is (\\w+)")
+	public void updateStatusToRecoverData(String achiName, String statusMark) {
+		Log.i(TAG, "Recover data after this run...");
+		updateStatusAsCondition(achiName, statusMark);
+	}
+
 }
