@@ -52,10 +52,10 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		@Override
 		public void onSuccess(int index, int count, GreeUser[] people) {
 			Log.d(TAG, "Get people success!");
+			peopleList.clear();
 			if (people != null) {
 				Log.i(TAG, "Get " + people.length + " people");
 				Log.i(TAG, "Adding people datas");
-				peopleList.clear();
 				for (int i = 0; i < people.length; i++) {
 					peopleList.add(people[i]);
 				}
@@ -111,7 +111,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		GreeUser.loadUserWithId(1, 1, "@me", listener);
 		waitCallback();
 		if (peopleList == null)
-			fail();
+			fail("No user info got!");
 		me = peopleList.get(0);
 		Log.i(TAG, "User info get from server: " + me.getNickname());
 	}
@@ -121,7 +121,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		owner.loadFriends(Consts.startIndex_1, Consts.pageSize, listener);
 		waitCallback();
 		if (peopleList == null)
-			fail();
+			fail("No friend got!");
 		for (GreeUser person : peopleList) {
 			Log.i(TAG, "Friend " + (peopleList.indexOf(person) + 1));
 			Log.i(TAG, "ID: " + person.getId());
@@ -174,7 +174,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		GreeUser.loadUserWithId(1, 1, userId, listener);
 		waitCallback();
 		if (peopleList == null)
-			fail();
+			fail("Don't get the friend in the list");
 		Log.d(TAG, "specific user is: " + peopleList.get(0).getNickname());
 		getFriends(peopleList.get(0));
 	}
