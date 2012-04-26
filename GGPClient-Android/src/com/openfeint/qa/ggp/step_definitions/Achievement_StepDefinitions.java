@@ -9,18 +9,14 @@ import java.util.List;
 import net.gree.asdk.api.Achievement;
 import net.gree.asdk.api.Achievement.AchievementChangeListener;
 import net.gree.asdk.api.Achievement.AchievementListUpdateListener;
-import net.gree.asdk.api.GreePlatform;
 
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-import android.R.integer;
 import android.util.Log;
 
-import com.handmark.pulltorefresh.library.R.menu;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
-import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -42,7 +38,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 			}
 
 			if (status != Consts.UNKNOWN) {
-				assertEquals(Consts.SUCCESS, status);
+				assertEquals("server response", Consts.SUCCESS, status);
 				break;
 			}
 		}
@@ -102,7 +98,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		if (achievementList == null)
 			fail("No achievement found!");
 		Log.i(TAG, "Verifing the achievement count...");
-		assertEquals(size, achievementList.size());
+		assertEquals("achievement count", size, achievementList.size());
 	}
 
 	private int transLockStatus(String statusMark) {
@@ -122,8 +118,9 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		Achievement achi = getAchievementByName(achiName);
 		int lockStatus = transLockStatus(statusMark);
 
-		assertEquals(lockStatus, achi.isUnlocked());
-		assertEquals(score, achi.getScore());
+		assertEquals("lock status of achievement " + achiName, lockStatus,
+				achi.isUnlocked());
+		assertEquals("score of achievement " + achiName, score, achi.getScore());
 	}
 
 	@Given("I load list of achievement")
@@ -187,7 +184,8 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		int lockStatus = transLockStatus(statusMark);
 
 		Log.i(TAG, "Verifing the lock status of achievement " + achiName);
-		assertEquals(lockStatus, achi.isUnlocked());
+		assertEquals("lock status of achievement " + achiName, lockStatus,
+				achi.isUnlocked());
 	}
 
 	@Then("my score should be (\\w+) by (\\d+)")

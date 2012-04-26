@@ -42,7 +42,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 			}
 
 			if (status != Consts.UNKNOWN) {
-				assertEquals(Consts.SUCCESS, status);
+				assertEquals("server response", Consts.SUCCESS, status);
 				break;
 			}
 		}
@@ -88,20 +88,15 @@ public class People_StepDefinitions extends BasicStepDefinition {
 	@Then("my (\\w+) should be (.+)")
 	public void verifyUserInfo(String column, String value) {
 		if ("displayName".equals(column)) {
-			assertEquals(value, me.getNickname());
-			return;
-		}
-		if ("id".equals(column)) {
-			assertEquals(value, me.getId());
-			return;
-		}
-		if ("userGrade".equals(column)) {
-			assertEquals(value, me.getUserGrade());
-			return;
-		}
-		if ("region".equals(column)) {
-			assertEquals(value, me.getRegion());
-			return;
+			assertEquals("userName", value, me.getNickname());
+		} else if ("id".equals(column)) {
+			assertEquals("userId", value, me.getId());
+		} else if ("userGrade".equals(column)) {
+			assertEquals("userGrade", value, me.getUserGrade());
+		} else if ("region".equals(column)) {
+			assertEquals("userRegion", value, me.getRegion());
+		} else {
+			fail("Unknown column of user info!");
 		}
 	}
 
@@ -139,7 +134,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 	@Then("friend list should be size of (\\d+)")
 	public void verifyFriendNumber(int num) {
 		Log.d(TAG, "Checking friend number...");
-		assertEquals(num, peopleList.size());
+		assertEquals("friend count", num, peopleList.size());
 	}
 
 	@Then("friend list should have (.+)")
@@ -154,7 +149,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 				friend = user;
 			}
 		}
-		assertTrue(isExists);
+		assertTrue("user in friend list", isExists);
 	}
 
 	@Then("userid of (.+) should be (\\w+) and grade should be (\\w+)")
@@ -162,8 +157,8 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		if (friend == null)
 			fail("Don't get the friend in the list");
 		Log.d(TAG, "Checking friend info...");
-		assertEquals(id, friend.getId());
-		assertEquals(grade, friend.getUserGrade());
+		assertEquals("userId", id, friend.getId());
+		assertEquals("userGrade", grade, friend.getUserGrade());
 	}
 
 	// This step is not using now, seems the sdk is not allow to get another
