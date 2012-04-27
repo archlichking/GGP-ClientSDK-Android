@@ -86,6 +86,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 	};
 
 	@When("I load list of achievement")
+	@Given("I load list of achievement")
 	public void getAchievements() {
 		status = Consts.UNKNOWN;
 		Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize,
@@ -123,10 +124,10 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		assertEquals("score of achievement " + achiName, score, achi.getScore());
 	}
 
-	@Given("I load list of achievement")
-	public void getAchievementsAsCondition() {
-		getAchievements();
-	}
+//	@Given("I load list of achievement")
+//	public void getAchievementsAsCondition() {
+//		getAchievements();
+//	}
 
 	private void updateLockStatus(Achievement achi, int expectStatus) {
 		status = Consts.UNKNOWN;
