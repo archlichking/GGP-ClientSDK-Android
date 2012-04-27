@@ -24,7 +24,7 @@ import com.openfeint.qa.core.command.When;
 public class Achievement_StepDefinitions extends BasicStepDefinition {
 	private static final String TAG = "Achievement_Steps";
 
-	private static List<Achievement> achievementList;
+	private static List<Achievement> achievementList = new ArrayList<Achievement>();
 
 	private String status;
 
@@ -50,9 +50,9 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		public void onSuccess(int index, int totalListSize,
 				Achievement[] requestedElements) {
 			Log.d(TAG, "Get achievement list success!");
+			achievementList.clear();
 			if (requestedElements != null) {
 				Log.i(TAG, "Adding achievement datas");
-				achievementList = new ArrayList<Achievement>();
 				for (int i = 0; i < requestedElements.length; i++) {
 					achievementList.add(requestedElements[i]);
 				}
@@ -64,6 +64,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 		public void onFailure(int responseCode, HeaderIterator headers,
 				String response) {
 			Log.e(TAG, "Get achievement list failed!");
+			achievementList.clear();
 			status = Consts.FAILED;
 		}
 	};
