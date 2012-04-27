@@ -67,6 +67,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 		public void onFailure(int responseCode, HeaderIterator headers,
 				String response) {
 			Log.e(TAG, "Get people failed!");
+			peopleList.clear();
 			status = Consts.FAILED;
 		}
 	};
