@@ -152,7 +152,7 @@ public class StepParser {
                 }
             }
             throw new NoSuchStepException("No Such step [" + command + " " + inst
-                    + "] defined in class definition.Steps");
+                    + "] defined");
         }
     }
 
