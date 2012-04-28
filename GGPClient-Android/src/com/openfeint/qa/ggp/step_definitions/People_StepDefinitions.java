@@ -10,6 +10,7 @@ import java.util.List;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreeUser;
+import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 
 import org.apache.http.HeaderIterator;
@@ -18,6 +19,7 @@ import util.Consts;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -30,6 +32,8 @@ public class People_StepDefinitions extends BasicStepDefinition {
     private static GreeUser me;
 
     private static GreeUser friend;
+
+    private static String[] ignoreUsers;
 
     private String status;
 
@@ -173,5 +177,70 @@ public class People_StepDefinitions extends BasicStepDefinition {
             fail("Don't get the friend in the list");
         Log.d(TAG, "specific user is: " + peopleList.get(0).getNickname());
         getFriends(peopleList.get(0));
+    }
+
+    private GreeIgnoredUserListener ignoredUserListener = new GreeIgnoredUserListener() {
+        @Override
+        public void onSuccess(int index, int count, String[] list) {
+            Log.d(TAG, "Get ignore list success!");
+            Log.i(TAG, "Index: " + index);
+            Log.i(TAG, "TotalListSize: " + count);
+            if (list != null) {
+                ignoreUsers = list;
+                for (int i = 0; i < list.length; i++) {
+                    Log.i(TAG, "Block user " + (i + 1) + ": " + list[i]);
+                }
+            }
+            status = Consts.SUCCESS;
+        }
+
+        @Override
+        public void onFailure(int responseCode, HeaderIterator headers, String response) {
+            Log.e(TAG, "Get ignore list failed!");
+            ignoreUsers = null;
+            status = Consts.FAILED;
+        }
+    };
+
+    @Given("I make sure user (\\w+) is in my ignore list")
+    public void checkUserInIgnoreListAsCondition(String userId) {
+        Log.i(TAG, "Expect user " + userId + " is in my ignore list...");
+        status = Consts.UNKNOWN;
+        me.isIgnoringUserWithId(userId, ignoredUserListener);
+        waitCallback();
+        if (ignoreUsers == null)
+            fail("Did not get the ignore list!");
+        if (ignoreUsers.length == 0 || !userId.equals(ignoreUsers[0]))
+            fail("User " + userId + " is not in the ignore list, please add it from sb.gree.net");
+    }
+
+    @When("I get my ignore list")
+    public void getMyIgnoreList() {
+        status = Consts.UNKNOWN;
+        Log.e(TAG, "me is " + me.getNickname());
+        me = GreePlatform.getLocalUser();
+        me.loadIgnoredUserIds(Consts.startIndex_1, Consts.pageSize, ignoredUserListener);
+        waitCallback();
+    }
+
+    @Then("there should be (\\d+) user in my ignore list")
+    public void verifyIgnoreUserCount(String count) {
+        if (ignoreUsers == null)
+            fail("Do not have user in the ignore list!");
+        assertEquals("ingore user count", count, ignoreUsers.length);
+    }
+
+    @And("user (\\w+) should be in my ignore list")
+    public void checkUserInIgnoreList(String userId) {
+        boolean isExists = false;
+        if (ignoreUsers == null)
+            fail("Did not get the ignore list!");
+        for (String id : ignoreUsers) {
+            if (userId.equals(id)) {
+                Log.i(TAG, "Find user: " + userId + " in the list");
+                isExists = true;
+            }
+        }
+        assertTrue("user in ignore list", isExists);
     }
 }
