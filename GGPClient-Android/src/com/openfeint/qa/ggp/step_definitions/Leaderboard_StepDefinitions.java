@@ -121,4 +121,127 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         assertEquals("leaderboard is secret?", isSecret, board.getSecret());
     }
 
+    @Given("I load list of leaderboard")
+    public void getLeaderboardsAsCondition() {
+        getLeaderboards();
+    }
+
+    private ScoreListener scoreListener = new ScoreListener() {
+        @Override
+        public void onSuccess(Score[] entry) {
+            Log.d(TAG, "Get leaderboard score success!");
+            ranks = entry;
+            status = Consts.SUCCESS;
+        }
+
+        @Override
+        public void onFailure(int responseCode, HeaderIterator headers, String response) {
+            Log.d(TAG, "No leaderboard score!");
+            ranks = null;
+            // When leaderboard doesn't have score, is also return 404. Sucks
+            // and I have to keep status not to failed
+            status = Consts.SUCCESS;
+        }
+    };
+
+    private SuccessListener successListener = new SuccessListener() {
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Update leaderboard score success!");
+            status = Consts.SUCCESS;
+        }
+
+        @Override
+        public void onFailure(int responseCode, HeaderIterator headers, String response) {
+            Log.e(TAG, "Update Leadboard score failed!");
+            if (response != null)
+                Log.e(TAG, "response: " + response.substring(response.indexOf("\"message\"")));
+            status = Consts.FAILED;
+        }
+    };
+
+    private void getScore(String selector, String period, String lid) {
+        int iSelector = -1;
+        if ("FRIENDS".equals(selector)) {
+            iSelector = Score.FRIENDS_SCORES;
+        } else if ("EVERYONE".equals(selector)) {
+            iSelector = Score.ALL_SCORES;
+        } else if ("ME".equals(selector)) {
+            iSelector = Score.MY_SCORES;
+        } else {
+            fail("Using an unknown selector " + selector + " to getScore!");
+        }
+
+        int iPeroid = -1;
+        if ("DAILY".equals(period)) {
+            iPeroid = Score.DAILY;
+        } else if ("WEEKLY".equals(period)) {
+            iPeroid = Score.WEEKLY;
+        } else if ("TOTAL".equals(period)) {
+            iPeroid = Score.ALL_TIME;
+        } else {
+            fail("Using an unknown period " + period + " to getScore!");
+        }
+
+        status = Consts.UNKNOWN;
+        Log.i(TAG, "Try to get leaderboard ranking and score...");
+        Leaderboard.getScore(lid, iSelector, iPeroid, Consts.startIndex_0, Consts.pageSize,
+                scoreListener);
+        waitCallback();
+    }
+
+    private void deleteScore(String lid) {
+        status = Consts.UNKNOWN;
+        Log.i(TAG, "Try to delete score of leaderboard...");
+        Leaderboard.deleteScore(lid, successListener);
+        waitCallback();
+    }
+
+    private void createScore(int score, String lid) {
+        status = Consts.UNKNOWN;
+        Log.i(TAG, "Try to create new score for leaderboard...");
+        Leaderboard.createScore(lid, score, successListener);
+        waitCallback();
+    }
+
+    @Given("I make sure my score (\\w+) in leaderboard (.+)")
+    public void updateScoreAsCondition(String isExistsMark, String boardName) {
+        Leaderboard board = getBoardByName(boardName);
+        if (!("NOTEXISTS".equals(isExistsMark) || "EXISTS".equals(isExistsMark)))
+            fail("Unknown isExistsMark!");
+        getScore("ME", "TOTAL", board.getId());
+        Log.i(TAG, "Expect the score of leaderboard " + boardName + " is " + isExistsMark);
+
+        if ("NOTEXISTS".equals(isExistsMark) && ranks != null && ranks.length > 0) {
+            Log.i(TAG, "But no as we expected");
+            deleteScore(board.getId());
+        } else if ("EXISTS".equals(isExistsMark) && ranks == null) {
+            Log.i(TAG, "But no as we expected");
+            createScore(defaultScore, board.getId());
+        }
+    }
+
+    @When("I add score to leaderboard (.+) with score (-?\\d+)")
+    public void createScoreByName(String boardName, int score) {
+        Leaderboard board = getBoardByName(boardName);
+        // Record score updated for the below steps
+        updatedScore = score;
+        createScore(score, board.getId());
+    }
+
+    @Then("my (\\w+) score ranking of leaderboard (.+) should be (\\d+)")
+    public void verifyRankingByName(String period, String boardName, int ranking) {
+        Leaderboard board = getBoardByName(boardName);
+        getScore("ME", period, board.getId());
+        Log.i(TAG, "Verify the ranking...");
+        if (ranks == null)
+            fail("Failed to verify ranking, no score or get score failed!");
+        Log.d(TAG, "Now score is: " + ranks[0].getScore());
+        assertEquals("ranking", ranking, ranks[0].getRank());
+    }
+
+    @After("I make sure my score (\\w+) in leaderboard (.+)")
+    public void recoverScoreData(String isExistsMark, String boardName) {
+        updateScoreAsCondition(isExistsMark, boardName);
+    }
 }
