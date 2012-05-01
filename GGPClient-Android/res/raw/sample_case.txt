@@ -1,4 +1,5 @@
 Scenario: first test
 
-When I want to load out all leaderboards for current user
-Then all leaderboards I have should be return
+Given I logged in with email auto3@163.com and password 123456
+When I send to moderation server with text what is your name
+Then status of text what is your name in server should be CHECKED

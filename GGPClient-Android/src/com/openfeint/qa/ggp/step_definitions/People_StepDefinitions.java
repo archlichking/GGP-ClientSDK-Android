@@ -35,7 +35,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
     @Given("I logged in with email (.+) and password (\\w+)")
     public void checkLogin(String email, String password) {
         // nothing to do in this method
-        notifyNext();
+        notifyStepPass();
     }
 
     @When("I see my info from native cache")
@@ -46,7 +46,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
             getBlockRepo().put(MYSELF, GreePlatform.getLocalUser());
             Log.i(TAG, "Logined as user: " + GreePlatform.getLocalUser().getNickname());
         }
-        notifyNext();
+        notifyStepPass();
     }
 
     @Then("my (\\w+) should be (.+)")
@@ -64,7 +64,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
         } else {
             fail("Unknown column of user info!");
         }
-        notifyNext();
+        notifyStepPass();
     }
 
     @When("I see my info from server")
@@ -80,13 +80,13 @@ public class People_StepDefinitions extends BasicStepDefinition {
                     getBlockRepo().put(MYSELF, people[0]);
                     Log.i(TAG, "User info get from server: " + people[0]);
                 }
-                notifyNext();
+                notifyStepPass();
             }
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
                 Log.e(TAG, "Get people failed!");
-                notifyNext();
+                notifyStepPass();
             }
         });
     }
@@ -105,14 +105,14 @@ public class People_StepDefinitions extends BasicStepDefinition {
                     ((ArrayList<GreeUser>) getBlockRepo().get(PEOPLE_LIST)).addAll(Arrays
                             .asList(people));
                 }
-                notifyNext();
+                notifyStepPass();
             }
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
                 getBlockRepo().put(PEOPLE_LIST, new ArrayList<GreeUser>());
                 Log.e(TAG, "Get people failed!");
-                notifyNext();
+                notifyStepPass();
             }
         });
     }
@@ -122,7 +122,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
         Log.d(TAG, "Checking friend number...");
         ArrayList<GreeUser> l = (ArrayList<GreeUser>) getBlockRepo().get(PEOPLE_LIST);
         assertEquals("friend count", num, l.size());
-        notifyNext();
+        notifyStepPass();
     }
 
     @Then("friend list should have (.+)")
@@ -135,12 +135,12 @@ public class People_StepDefinitions extends BasicStepDefinition {
                 Log.d(TAG, "Got the user");
                 assertTrue("user in friend list", true);
                 getBlockRepo().put(FRIEND, user);
-                notifyNext();
+                notifyStepPass();
                 return;
             }
         }
         assertTrue("user " + friendName + " in friend list", false);
-        notifyNext();
+        notifyStepPass();
     }
 
     @Then("userid of (.+) should be (\\w+) and grade should be (\\w+)")
@@ -153,7 +153,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
         Log.d(TAG, "Checking friend info...");
         assertEquals("userId", id, friend.getId());
         assertEquals("userGrade", grade, friend.getUserGrade());
-        notifyNext();
+        notifyStepPass();
     }
 
     // This step is not using now, seems the sdk is not allow to get another
@@ -171,14 +171,14 @@ public class People_StepDefinitions extends BasicStepDefinition {
                     ((ArrayList<GreeUser>) getBlockRepo().get(PEOPLE_LIST)).addAll(Arrays
                             .asList(people));
                 }
-                notifyNext();
+                notifyStepPass();
             }
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
                 getBlockRepo().put(PEOPLE_LIST, new ArrayList<GreeUser>());
                 Log.e(TAG, "Get people failed!");
-                notifyNext();
+                notifyStepPass();
             }
         });
     }

@@ -75,7 +75,7 @@ public class Step implements Observer {
     private Object[] ref_method_params;
 
     @SuppressWarnings("finally")
-    public StepResult invoke() {
+    public synchronized StepResult invoke() {
         waiting = true;
         int res = TestCase.RESULT.FAILED;
         String comm = "";
@@ -85,8 +85,6 @@ public class Step implements Observer {
                             + ref_method.getName() + "]");
             Object stepDefinition = this.getRef_class().newInstance();
             ((BasicStepDefinition) stepDefinition).addObserver(this);
-            
-            System.out.println(((BasicStepDefinition) stepDefinition).countObservers());
             
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 

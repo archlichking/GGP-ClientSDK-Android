@@ -13,7 +13,7 @@ public abstract class BasicStepDefinition extends Observable{
         return blockRepo;
     }
 
-    protected void notifyNext() {
+    protected void notifyStepPass() {
         setChanged();
         notifyObservers("update waiting");
     }
