@@ -24,6 +24,16 @@ import java.util.Observer;
 public class Step implements Observer {
     private String command;
 
+    private String keyword;
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
     private static boolean waiting = true;
 
     public String getCommand() {
@@ -85,7 +95,7 @@ public class Step implements Observer {
                             + ref_method.getName() + "]");
             Object stepDefinition = this.getRef_class().newInstance();
             ((BasicStepDefinition) stepDefinition).addObserver(this);
-            
+
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 
             while (waiting) {

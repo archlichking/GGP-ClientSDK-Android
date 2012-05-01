@@ -143,6 +143,8 @@ public class StepParser {
             step.setRef_method_params(Scanner.scanParameterValues(sp, command + " " + inst));
             // 5. extract class for speed purpose
             step.setRef_class(Scanner.scanClass(sp.getM()));
+            
+            step.setKeyword(command);
         }
 
         private StepPair searchStep(String inst, String command) throws NoSuchStepException {
