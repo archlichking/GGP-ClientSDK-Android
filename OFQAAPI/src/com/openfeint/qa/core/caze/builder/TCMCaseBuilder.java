@@ -43,7 +43,9 @@ public class TCMCaseBuilder extends CaseBuilder {
                     try {
                         steps.add(this.parser.parse(step));
                     } catch (NoSuchStepException nsse) {
-                        Log.e(StringUtil.DEBUG_TAG, nsse.getMessage());
+                        Log.e(StringUtil.DEBUG_TAG,
+                                nsse.getMessage() + " for case " + o.getString("id") + "["
+                                        + o.getString("title") + "]");
                     }
                 }
 

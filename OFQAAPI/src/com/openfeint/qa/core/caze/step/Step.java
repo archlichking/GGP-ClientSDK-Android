@@ -2,6 +2,7 @@
 package com.openfeint.qa.core.caze.step;
 
 import com.openfeint.qa.core.caze.TestCase;
+import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.util.StringUtil;
 import com.openfeint.qa.core.util.type.TypeConversionException;
 import com.openfeint.qa.core.util.type.TypeConverter;
@@ -12,14 +13,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 /***
  * @author thunderzhulei
  * @category reflect a single text step defined in feature to a real java method
  *           in StepDefinition.java. including execute current step itself.
  */
-public class Step {
+public class Step implements Observer {
     private String command;
+
+    private static boolean waiting = true;
 
     public String getCommand() {
         return command;
@@ -70,14 +75,27 @@ public class Step {
     private Object[] ref_method_params;
 
     @SuppressWarnings("finally")
-    public StepResult invoke() {
+    public synchronized StepResult invoke() {
+        waiting = true;
         int res = TestCase.RESULT.FAILED;
         String comm = "";
         try {
             Log.v(StringUtil.DEBUG_TAG,
                     "invoking [" + command + "] with step [" + ref_class.getName() + "."
                             + ref_method.getName() + "]");
-            this.ref_method.invoke(this.getRef_class().newInstance(), this.buildRef_Params());
+            Object stepDefinition = this.getRef_class().newInstance();
+            ((BasicStepDefinition) stepDefinition).addObserver(this);
+            
+            this.ref_method.invoke(stepDefinition, this.buildRef_Params());
+
+            while (waiting) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
             Log.e(StringUtil.DEBUG_TAG, e.getCause().getMessage());
@@ -102,5 +120,13 @@ public class Step {
                     this.getRef_method_param_types()[i]));
         }
         return raw_params.toArray();
+    }
+
+    @Override
+    public void update(Observable observable, Object data) {
+        // TODO Auto-generated method stub
+        // if (observable instanceof BasicStepDefinition) {
+        waiting = false;
+        // }
     }
 }

@@ -256,7 +256,6 @@ public class MainActivity extends Activity {
 		result_list = (ListView) findViewById(R.id.result_list);
 	}
 
-	@SuppressWarnings("unused")
 	private void submitToTCM(Collection<TestCase> tcs) {
 		TCMCommunicator tcm = new TCMCommunicator(
 				rfu.getTextFromRawResource(R.raw.tcm), "");

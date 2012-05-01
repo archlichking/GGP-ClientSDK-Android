@@ -24,7 +24,8 @@ public abstract class NetCommunicator {
 
     protected void pushPost(HttpPost post) {
         try {
-            httpClient.execute(post);
+            httpClient.execute(post).getEntity().consumeContent();
+            // need to consume whole entity, or there will be warnings
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {

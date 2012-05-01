@@ -70,43 +70,48 @@ public class StepParser {
         private StepHolder(String packageName, String apkPath) {
             try {
                 List<Method> mList = PackageUtil.getAllStepMethods(packageName, apkPath);
-
                 for (Method m : mList) {
                     if (null != m.getAnnotation(Given.class)) {
                         Pattern p = Pattern.compile(CommandUtil.GIVEN_FILTER + " "
                                 + m.getAnnotation(Given.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
+                    }
+                    if (null != m.getAnnotation(Given.class)) {
+                        Pattern p = Pattern.compile(CommandUtil.GIVEN_FILTER + " "
+                                + m.getAnnotation(Given.class).value());
+                        aimStepList.add(new StepPair(p, m));
+                        // continue;
                     }
                     if (null != m.getAnnotation(Then.class)) {
                         Pattern p = Pattern.compile(CommandUtil.THEN_FILTER + " "
                                 + m.getAnnotation(Then.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
                     }
                     if (null != m.getAnnotation(When.class)) {
                         Pattern p = Pattern.compile(CommandUtil.WHEN_FILTER + " "
                                 + m.getAnnotation(When.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
                     }
                     if (null != m.getAnnotation(And.class)) {
                         Pattern p = Pattern.compile(CommandUtil.AND_FILTER + " "
                                 + m.getAnnotation(And.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
                     }
                     if (null != m.getAnnotation(Before.class)) {
                         Pattern p = Pattern.compile(CommandUtil.BEFORE_FILTER + " "
                                 + m.getAnnotation(Before.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
                     }
                     if (null != m.getAnnotation(After.class)) {
                         Pattern p = Pattern.compile(CommandUtil.AFTER_FILTER + " "
                                 + m.getAnnotation(After.class).value());
                         aimStepList.add(new StepPair(p, m));
-                        continue;
+                        // continue;
                     }
                 }
             } catch (ClassNotFoundException e) {
@@ -147,7 +152,7 @@ public class StepParser {
                 }
             }
             throw new NoSuchStepException("No Such step [" + command + " " + inst
-                    + "] defined in class definition.Steps");
+                    + "] defined");
         }
     }
 
