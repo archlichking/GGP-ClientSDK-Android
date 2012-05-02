@@ -52,7 +52,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         int iSelector = -1;
         if ("FRIENDS".equals(selector)) {
             iSelector = Score.FRIENDS_SCORES;
-        } else if ("EVERYONE".equals(selector)) {
+        } else if ("ALL".equals(selector)) {
             iSelector = Score.ALL_SCORES;
         } else if ("ME".equals(selector)) {
             iSelector = Score.MY_SCORES;
@@ -244,6 +244,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                         notifyStepPass();
                     }
                 });
+                return;
             }
         }
         fail("cannot find the leaderboard named: " + boardName);
@@ -299,7 +300,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
                 d = 1;
-                Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod(period),
+                Leaderboard.getScore(board.getId(), transSelector("ALL"), transPeriod(period),
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {

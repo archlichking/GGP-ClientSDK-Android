@@ -25,6 +25,7 @@ public class Step implements Observer {
     private String command;
 
     private String keyword;
+    private long TIMEOUT = 10;
 
     public String getKeyword() {
         return keyword;
@@ -87,6 +88,7 @@ public class Step implements Observer {
     @SuppressWarnings("finally")
     public synchronized StepResult invoke() {
         waiting = true;
+        int indent = 1;
         int res = TestCase.RESULT.FAILED;
         String comm = "";
         try {
@@ -98,9 +100,10 @@ public class Step implements Observer {
 
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 
-            while (waiting) {
+            while (waiting && indent < TIMEOUT) {
                 try {
                     Thread.sleep(1000);
+                    indent++;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
