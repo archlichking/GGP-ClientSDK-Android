@@ -8,6 +8,8 @@ import java.util.Observable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.AssertionFailedError;
+
 public abstract class BasicStepDefinition extends Observable {
     protected static Hashtable<String, Object> blockRepo = null;
 
@@ -30,13 +32,14 @@ public abstract class BasicStepDefinition extends Observable {
 
     /**
      * keeps waiting until a notifyAsync() call invoked
+     * 
+     * @throws InterruptedException
      */
     protected void waitForAsyncInStep() {
         try {
-            inStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            inStepSync.tryAcquire(1, 1, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            throw new AssertionFailedError("time out");
         }
     }
 
@@ -44,6 +47,6 @@ public abstract class BasicStepDefinition extends Observable {
      * notifys async semaphore that current async call is finished
      */
     protected void notifyAsyncInStep() {
-        Log.d("DEBUG", "after release");
+        inStepSync.release(1);
     }
 }

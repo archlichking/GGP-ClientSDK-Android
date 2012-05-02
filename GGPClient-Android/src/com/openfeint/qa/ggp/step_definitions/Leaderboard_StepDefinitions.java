@@ -10,7 +10,6 @@ import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
-import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.Leaderboard;
 import net.gree.asdk.api.Leaderboard.LeaderboardListener;
 import net.gree.asdk.api.Leaderboard.Score;
@@ -25,6 +24,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import junit.framework.AssertionFailedError;
 
 public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Leaderboard_Steps";
@@ -277,7 +278,9 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                                 notifyAsyncInStep();
                             }
                         });
+ 
                 waitForAsyncInStep();
+
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
                 notifyStepPass();
                 return;
