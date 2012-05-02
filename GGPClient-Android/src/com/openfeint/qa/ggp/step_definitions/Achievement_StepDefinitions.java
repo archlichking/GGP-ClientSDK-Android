@@ -48,7 +48,8 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
         @Override
         public void onFailure(int responseCode, HeaderIterator headers, String response) {
-            Log.e(TAG, "Change lock status failed");
+            Log.e(TAG, "Change lock status failed " + responseCode + "||||||" + response);
+
             notifyStepPass();
         }
 
@@ -146,7 +147,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
         for (Achievement achi : a) {
             if (achiName.equals(achi.getName())) {
                 Log.d(TAG, "Found the achievement " + achiName);
-                Log.i(TAG, "Verifing the lock status of achievement " + achiName);
+                Log.i(TAG, "Verifying the lock status of achievement " + achiName);
                 assertEquals("lock status of achievement " + achiName, transLockStatus(statusMark),
                         achi.isUnlocked());
                 notifyStepPass();

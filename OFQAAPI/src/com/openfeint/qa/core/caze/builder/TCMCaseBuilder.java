@@ -47,7 +47,7 @@ public class TCMCaseBuilder extends CaseBuilder {
                                 nsse.getMessage() + " for case " + o.getString("id") + "["
                                         + o.getString("title") + "]");
                         tc.setExecuted(true);
-                        tc.setResult(TestCase.RESULT.NEVER);
+                        tc.setResult(TestCase.RESULT.RETESTED);
                         tc.setResultComment("probably one or two step is not defined");
                         break;
 

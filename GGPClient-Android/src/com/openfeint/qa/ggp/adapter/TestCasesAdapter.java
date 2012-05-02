@@ -58,7 +58,7 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-                if (wrapper.getTheCase().getResult() != TestCase.RESULT.NEVER) {
+                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED) {
                     wrapper.getTheCase().setExecuted(false);
                 }
                 list.add(wrapper.getTheCase().getId());
@@ -107,7 +107,7 @@ public class TestCasesAdapter extends BaseAdapter {
         holder.use.setChecked(wrapper.isSelected());
         int result = wrapper.getTheCase().getResult();
         String sResult = "U";
-        if (result == TestCase.RESULT.FAILED || result == TestCase.RESULT.NEVER) {
+        if (result == TestCase.RESULT.FAILED) {
             sResult = "F";
         } else if (result == TestCase.RESULT.PASSED) {
             sResult = "T";

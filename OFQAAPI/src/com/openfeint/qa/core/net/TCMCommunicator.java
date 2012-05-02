@@ -24,6 +24,8 @@ import java.util.List;
 /***
  * @author thunderzhulei
  * @category
+ 
+ 
  */
 public class TCMCommunicator extends NetCommunicator {
     private static final String TCM_CASE_URL = "case_url";

@@ -14,7 +14,6 @@
 	<consumerKey>3c47b530df23</consumerKey>
 	<consumerSecret>c6958d092a3db174de86678f31d86d01</consumerSecret>
 	<developmentMode>sandbox</developmentMode>
-	<serverUrlSuffix>stg1</serverUrlSuffix>
 
 	<use_push_notification>true</use_push_notification>
 	<use_in_app_notification>true</use_in_app_notification>

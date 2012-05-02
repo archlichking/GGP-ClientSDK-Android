@@ -52,7 +52,7 @@ public class TestRunner {
 
     public void runAllCases() {
         for (TestCase tc : cases.values()) {
-            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.NEVER) {
+            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.RETESTED) {
                 tc.execute();
             }
         }
@@ -62,7 +62,7 @@ public class TestRunner {
     public void runCasesByIds(String[] ids) {
         for (String id : ids) {
             TestCase tc = cases.get(id);
-            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.NEVER) {
+            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.RETESTED) {
                 tc.execute();
             }
         }
