@@ -6,6 +6,7 @@ import android.util.Log;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public abstract class BasicStepDefinition extends Observable {
     protected static Hashtable<String, Object> blockRepo = null;
@@ -18,12 +19,6 @@ public abstract class BasicStepDefinition extends Observable {
         }
         return blockRepo;
     }
-
-    protected boolean WAIT = true;
-
-    private int tiktak = 0;
-
-    private static final int TIMEOUT = 10;
 
     /**
      * notifys automation framework that current step is finished
@@ -38,7 +33,7 @@ public abstract class BasicStepDefinition extends Observable {
      */
     protected void waitForAsyncInStep() {
         try {
-            inStepSync.acquire();
+            inStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

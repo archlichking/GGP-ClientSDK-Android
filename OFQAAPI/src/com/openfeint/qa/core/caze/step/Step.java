@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /***
  * @author thunderzhulei
@@ -98,7 +99,7 @@ public class Step implements Observer {
 
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 
-            crossStepSync.acquire(1);
+            crossStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
 
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
