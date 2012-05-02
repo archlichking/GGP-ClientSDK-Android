@@ -21,6 +21,8 @@ public class TestCase {
         int PASSED = 1;
 
         int UNTEST = 0;
+
+        int NEVER = -100;
     }
 
     public TestCase() {

@@ -1,11 +1,9 @@
 
 package com.openfeint.qa.core.net;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import com.openfeint.qa.core.caze.TestCase;
+import com.openfeint.qa.core.exception.TCMIsnotReachableException;
+import com.openfeint.qa.core.util.StringUtil;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -16,13 +14,16 @@ import org.apache.http.message.BasicNameValuePair;
 
 import android.util.Log;
 
-import com.openfeint.qa.core.caze.TestCase;
-import com.openfeint.qa.core.exception.TCMIsnotReachableException;
-import com.openfeint.qa.core.util.StringUtil;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /***
- * 
  * @author thunderzhulei
- * @category class for 
+ * @category
  */
 public class TCMCommunicator extends NetCommunicator {
     private static final String TCM_CASE_URL = "case_url";
@@ -55,11 +56,14 @@ public class TCMCommunicator extends NetCommunicator {
         list.add(new BasicNameValuePair("status_id", String.valueOf(tc.getResult())));
         list.add(new BasicNameValuePair("comment", tc.getResultComment()));
         this.pushPost(this.buildHttpPost(url, list));
+        System.out.println("post " + tc.getId());
     }
 
-    public void setTestCasesResult(String run_id, TestCase[] tcs) {
+    public void setTestCasesResult(String run_id, Collection<TestCase> tcs) {
         for (TestCase tc : tcs) {
-            this.setTestCaseResult(run_id, tc);
+            if (tc.isExecuted()) {
+                this.setTestCaseResult(run_id, tc);
+            }
         }
     }
 

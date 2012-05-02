@@ -138,17 +138,14 @@ public class MainActivity extends Activity {
 
     private Runnable submit_case_thread = new Runnable() {
         public void run() {
-            runner.runCasesByIds(adapter.getSelectedCaseIds(), /* optional */
-                    new TestCaseDelegate() {
-                        public void pushCaseResults(Collection<TestCase> cases) {
-                            // comment this line if you are debugging from
-                            // sample_case.txt
-                            Log.i(TAG, "---------- Submitting result to TCM ---------");
-                            submitToTCM(cases);
-                            Log.i(TAG, "---------- result submitted ----");
-                        }
+            runner.runCasesByIds(adapter.getSelectedCaseIds());
+            /* optional */
 
-                    });
+            Log.i(TAG, "---------- Submitting result to TCM ---------");
+            TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+            tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases());
+            Log.i(TAG, "---------- result submitted ----");
+
             is_under_progress = false;
         }
     };
@@ -246,8 +243,7 @@ public class MainActivity extends Activity {
     }
 
     private void submitToTCM(Collection<TestCase> tcs) {
-        TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-        tcm.setTestCasesResult(run_text.getText().toString(), tcs.toArray(new TestCase[tcs.size()]));
+
     }
 
     @Override

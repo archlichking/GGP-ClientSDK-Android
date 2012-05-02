@@ -58,12 +58,24 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-                //wrapper.getTheCase().setExecuted(wrapper.getTheCase().isExecuted());
+                if (wrapper.getTheCase().getResult() != TestCase.RESULT.NEVER) {
+                    wrapper.getTheCase().setExecuted(false);
+                }
                 list.add(wrapper.getTheCase().getId());
             }
         }
         String[] sl = (String[]) list.toArray(new String[list.size()]);
         return sl;
+    }
+
+    public List<TestCase> getSelectedCases() {
+        List<TestCase> list = new ArrayList<TestCase>();
+        for (CaseWrapper wrapper : testCases) {
+            if (wrapper.isSelected()) {
+                list.add(wrapper.getTheCase());
+            }
+        }
+        return list;
     }
 
     public void ToggleSelectAll(boolean isSelected) {
@@ -95,7 +107,7 @@ public class TestCasesAdapter extends BaseAdapter {
         holder.use.setChecked(wrapper.isSelected());
         int result = wrapper.getTheCase().getResult();
         String sResult = "U";
-        if (result == TestCase.RESULT.FAILED) {
+        if (result == TestCase.RESULT.FAILED || result == TestCase.RESULT.NEVER) {
             sResult = "F";
         } else if (result == TestCase.RESULT.PASSED) {
             sResult = "T";

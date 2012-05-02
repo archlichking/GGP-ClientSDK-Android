@@ -50,70 +50,26 @@ public class TestRunner {
         return 0 != cases.values().size();
     }
 
-    public void runAllCases(TestCaseDelegate delegate) {
+    public void runAllCases() {
         for (TestCase tc : cases.values()) {
-            if (!tc.isExecuted()) {
+            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.NEVER) {
                 tc.execute();
             }
         }
-        // submit all case results to tcm
-        try {
-            // need a callback to set case result
-            delegate.pushCaseResults(cases.values());
-        } catch (TCMIsnotReachableException e) {
-            Log.e(StringUtil.DEBUG_TAG,
-                    context.getResources().getString(R.string.submit_tcm_not_reachable));
-        }
-    }
 
-    public void runCasesByIds(String[] ids, TestCaseDelegate delegate) {
-        for (String id : ids) {
-            TestCase tc = cases.get(id);
-            if (!tc.isExecuted()) {
-                tc.execute();
-            }
-        }
-        // submit all case results to tcm
-        try {
-            // need a callback to set case result
-            delegate.pushCaseResults(cases.values());
-        } catch (TCMIsnotReachableException e) {
-            Log.e(StringUtil.DEBUG_TAG,
-                    context.getResources().getString(R.string.submit_tcm_not_reachable));
-        }
     }
 
     public void runCasesByIds(String[] ids) {
         for (String id : ids) {
             TestCase tc = cases.get(id);
-            if (!tc.isExecuted()) {
+            if (!tc.isExecuted() && tc.getResult() != TestCase.RESULT.NEVER) {
                 tc.execute();
             }
         }
     }
 
-    public void runAllCases() {
-        for (TestCase tc : cases.values()) {
-            tc.execute();
-        }
-    }
-
     public TestCase getCaseById(String id) {
         return cases.get(id);
-    }
-
-    public void runCase(String id, TestCaseDelegate delegate) {
-        // set case result
-        TestCase tc = cases.get(id);
-        tc.execute();
-        try {
-            // need a callback to set case result
-            delegate.pushCaseResults(cases.values());
-        } catch (TCMIsnotReachableException e) {
-            Log.e(StringUtil.DEBUG_TAG,
-                    context.getResources().getString(R.string.submit_tcm_not_reachable)
-                            + tc.getId());
-        }
     }
 
     public void runCase(String id) {
