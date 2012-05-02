@@ -15,6 +15,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /***
  * @author thunderzhulei
@@ -24,7 +26,17 @@ import java.util.Observer;
 public class Step implements Observer {
     private String command;
 
-    private static boolean waiting = true;
+    private String keyword;
+
+    private final Semaphore crossStepSync = new Semaphore(0, true);
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
 
     public String getCommand() {
         return command;
@@ -76,7 +88,6 @@ public class Step implements Observer {
 
     @SuppressWarnings("finally")
     public synchronized StepResult invoke() {
-        waiting = true;
         int res = TestCase.RESULT.FAILED;
         String comm = "";
         try {
@@ -85,16 +96,10 @@ public class Step implements Observer {
                             + ref_method.getName() + "]");
             Object stepDefinition = this.getRef_class().newInstance();
             ((BasicStepDefinition) stepDefinition).addObserver(this);
-            
+
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 
-            while (waiting) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            crossStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
 
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
@@ -125,8 +130,6 @@ public class Step implements Observer {
     @Override
     public void update(Observable observable, Object data) {
         // TODO Auto-generated method stub
-        // if (observable instanceof BasicStepDefinition) {
-        waiting = false;
-        // }
+        crossStepSync.release(1);
     }
 }

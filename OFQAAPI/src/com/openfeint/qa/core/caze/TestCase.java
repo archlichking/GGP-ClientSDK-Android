@@ -10,7 +10,7 @@ import android.util.Log;
 
 /***
  * @author thunderzhulei
- * @category for a single scenario, including executing itself
+ * @category a single scenario, including executing itself
  */
 public class TestCase {
     public interface RESULT {
@@ -21,6 +21,12 @@ public class TestCase {
         int PASSED = 1;
 
         int UNTEST = 0;
+    }
+
+    public TestCase() {
+        this.result = TestCase.RESULT.UNTEST;
+        this.resultComment = "";
+        this.isExecuted = false;
     }
 
     /***
@@ -75,6 +81,10 @@ public class TestCase {
 
     private Step[] steps;
 
+    public void setSteps(Step[] steps) {
+        this.steps = steps;
+    }
+
     private int result;
 
     private boolean isExecuted;
@@ -95,7 +105,7 @@ public class TestCase {
         } else {
             StringBuffer sb = new StringBuffer();
             for (Step s : steps) {
-                if (res != TestCase.RESULT.FAILED || s.getCommand().toUpperCase().equals("AFTER")) {
+                if (res != TestCase.RESULT.FAILED || s.getKeyword().toUpperCase().equals("AFTER")) {
                     // only run with after if exists and if step fails
                     StepResult sr = s.invoke();
                     // merge results with or operation
