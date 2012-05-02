@@ -5,25 +5,29 @@ import com.openfeint.qa.core.caze.step.Step;
 import com.openfeint.qa.core.caze.step.StepResult;
 import com.openfeint.qa.core.util.StringUtil;
 
+import android.provider.SyncStateContract.Constants;
 import android.util.Log;
+
 /***
- * 
  * @author thunderzhulei
- * @category class for a single scenario, including executing itself
+ * @category for a single scenario, including executing itself
  */
 public class TestCase {
     public interface RESULT {
         int FAILED = 5;
+
         int RETESTED = 4;
+
         int PASSED = 1;
+
         int UNTEST = 0;
     }
-/***
- * 
- * @param id case_id
- * @param title case_title
- * @param steps steps for final executing method
- */
+
+    /***
+     * @param id case_id
+     * @param title case_title
+     * @param steps steps for final executing method
+     */
     public TestCase(String id, String title, Step[] steps) {
         this.id = id;
         this.title = title;
@@ -91,10 +95,13 @@ public class TestCase {
         } else {
             StringBuffer sb = new StringBuffer();
             for (Step s : steps) {
-                StepResult sr = s.invoke();
-                // merge results with or operation
-                res = res | sr.getCode();
-                sb.append(sr.getComment() + StringUtil.FILE_LINE_SPLIT);
+                if (res != TestCase.RESULT.FAILED || s.getCommand().toUpperCase().equals("AFTER")) {
+                    // only run with after if exists and if step fails
+                    StepResult sr = s.invoke();
+                    // merge results with or operation
+                    res = res | sr.getCode();
+                    sb.append(sr.getComment() + StringUtil.FILE_LINE_SPLIT);
+                }
             }
             this.resultComment = sb.toString();
         }
