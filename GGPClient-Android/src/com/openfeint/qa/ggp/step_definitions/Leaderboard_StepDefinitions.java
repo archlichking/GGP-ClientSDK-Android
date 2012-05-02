@@ -256,7 +256,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
-                resetAsyncInStep();
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override

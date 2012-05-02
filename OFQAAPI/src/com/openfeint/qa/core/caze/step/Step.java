@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.Semaphore;
 
 /***
  * @author thunderzhulei
@@ -26,7 +27,7 @@ public class Step implements Observer {
 
     private String keyword;
 
-    private long TIMEOUT = 10;
+    private final Semaphore crossStepSync = new Semaphore(0, true);
 
     public String getKeyword() {
         return keyword;
@@ -35,8 +36,6 @@ public class Step implements Observer {
     public void setKeyword(String keyword) {
         this.keyword = keyword;
     }
-
-    private static boolean waiting = true;
 
     public String getCommand() {
         return command;
@@ -88,8 +87,6 @@ public class Step implements Observer {
 
     @SuppressWarnings("finally")
     public synchronized StepResult invoke() {
-        waiting = true;
-        int indent = 1;
         int res = TestCase.RESULT.FAILED;
         String comm = "";
         try {
@@ -101,18 +98,8 @@ public class Step implements Observer {
 
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
 
-            while (waiting && indent < TIMEOUT) {
-                try {
-                    Thread.sleep(1000);
-                    indent++;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (indent == TIMEOUT) {
-                throw new InvocationTargetException(null, "command [" + command
-                        + "] invocation out of time");
-            }
+            crossStepSync.acquire(1);
+
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
             Log.e(StringUtil.DEBUG_TAG, e.getCause().getMessage());
@@ -142,8 +129,6 @@ public class Step implements Observer {
     @Override
     public void update(Observable observable, Object data) {
         // TODO Auto-generated method stub
-        // if (observable instanceof BasicStepDefinition) {
-        waiting = false;
-        // }
+        crossStepSync.release(1);
     }
 }

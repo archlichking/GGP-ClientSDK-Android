@@ -1,11 +1,16 @@
 
 package com.openfeint.qa.core.caze.step.definition;
 
+import android.util.Log;
+
 import java.util.Hashtable;
 import java.util.Observable;
+import java.util.concurrent.Semaphore;
 
 public abstract class BasicStepDefinition extends Observable {
     protected static Hashtable<String, Object> blockRepo = null;
+
+    private final Semaphore inStepSync = new Semaphore(0, true);
 
     protected static Hashtable<String, Object> getBlockRepo() {
         if (null == blockRepo) {
@@ -29,29 +34,21 @@ public abstract class BasicStepDefinition extends Observable {
     }
 
     /**
-     * resets async semaphore to its initial state
-     */
-    protected void resetAsyncInStep() {
-        WAIT = true;
-        tiktak = 0;
-    }
-    /**
      * keeps waiting until a notifyAsync() call invoked
      */
     protected void waitForAsyncInStep() {
-        while (WAIT && tiktak < TIMEOUT) {
-            try {
-                Thread.sleep(1000);
-                tiktak++;
-            } catch (Exception e) {
-                return;
-            }
+        try {
+            inStepSync.acquire();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
+
     /**
      * notifys async semaphore that current async call is finished
      */
     protected void notifyAsyncInStep() {
-        WAIT = false;
+        Log.d("DEBUG", "after release");
     }
 }
