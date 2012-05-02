@@ -53,7 +53,6 @@ public class TCMCaseBuilder extends CaseBuilder {
 
                     }
                 }
-                Log.e(StringUtil.DEBUG_TAG, o.getString("id") + " " + tc.isExecuted());
                 tc.setId(o.getString("id"));
                 tc.setTitle(o.getString("title"));
                 tc.setSteps(steps.toArray(new Step[steps.size()]));

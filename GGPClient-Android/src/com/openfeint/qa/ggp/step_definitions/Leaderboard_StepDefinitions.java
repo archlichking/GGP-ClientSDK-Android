@@ -256,7 +256,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
-                d = 1;
+                resetAsyncInStep();
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
@@ -264,7 +264,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
 
                                 Log.d(TAG, "Get leaderboard score success!");
                                 getBlockRepo().put(SCORE, entry[0]);
-                                d = 0;
+                                notifyAsyncInStep();
                             }
 
                             @Override
@@ -275,16 +275,10 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                                 // return 404. Sucks
                                 // and I have to keep status not to failed
                                 getBlockRepo().put(SCORE, new Score());
-                                d = 0;
+                                notifyAsyncInStep();
                             }
                         });
-                while (d == 1) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-
-                    }
-                }
+                waitForAsyncInStep();
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
                 notifyStepPass();
                 return;

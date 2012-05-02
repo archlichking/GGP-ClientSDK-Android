@@ -105,7 +105,6 @@ public class TestCase {
         } else {
             StringBuffer sb = new StringBuffer();
             for (Step s : steps) {
-                Log.v(StringUtil.DEBUG_TAG, res + " " + s.getCommand());
                 if (res != TestCase.RESULT.FAILED || s.getKeyword().toUpperCase().equals("AFTER")) {
                     // only run with after if exists and if step fails
                     StepResult sr = s.invoke();

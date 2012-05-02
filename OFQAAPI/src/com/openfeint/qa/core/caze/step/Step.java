@@ -25,6 +25,7 @@ public class Step implements Observer {
     private String command;
 
     private String keyword;
+
     private long TIMEOUT = 10;
 
     public String getKeyword() {
@@ -108,7 +109,10 @@ public class Step implements Observer {
                     e.printStackTrace();
                 }
             }
-
+            if (indent == TIMEOUT) {
+                throw new InvocationTargetException(null, "command [" + command
+                        + "] invocation out of time");
+            }
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
             Log.e(StringUtil.DEBUG_TAG, e.getCause().getMessage());
