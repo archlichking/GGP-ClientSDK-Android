@@ -3,25 +3,26 @@ package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.fail;
 
-import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
-import com.openfeint.qa.core.command.Given;
-import com.openfeint.qa.core.command.Then;
-import com.openfeint.qa.core.command.When;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreeUser;
+import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.Given;
+import com.openfeint.qa.core.command.Then;
+import com.openfeint.qa.core.command.When;
 
 public class People_StepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
@@ -32,10 +33,11 @@ public class People_StepDefinitions extends BasicStepDefinition {
 
     private final static String FRIEND = "friend";
 
+    private final static String IGNORE_LIST = "ignoreUsers";
+
     @Given("I logged in with email (.+) and password (\\w+)")
     public void checkLogin(String email, String password) {
-        // nothing to do in this method
-        notifyStepPass();
+        getUserInfoFromCache();
     }
 
     @When("I see my info from native cache")
@@ -181,5 +183,77 @@ public class People_StepDefinitions extends BasicStepDefinition {
                 notifyStepPass();
             }
         });
+    }
+
+    private GreeIgnoredUserListener ignoredUserListener = new GreeIgnoredUserListener() {
+        @Override
+        public void onSuccess(int index, int count, String[] list) {
+            Log.d(TAG, "Get ignore list success!");
+            Log.i(TAG, "Index: " + index);
+            Log.i(TAG, "TotalListSize: " + count);
+            if (list != null) {
+                getBlockRepo().put(IGNORE_LIST, list);
+                for (int i = 0; i < list.length; i++) {
+                    Log.i(TAG, "Block user " + (i + 1) + ": " + list[i]);
+                }
+            }
+            notifyStepPass();
+        }
+
+        @Override
+        public void onFailure(int responseCode, HeaderIterator headers, String response) {
+            Log.e(TAG, "Get ignore list failed!");
+            getBlockRepo().put(IGNORE_LIST, "");
+            notifyStepPass();
+        }
+    };
+
+    @Given("I make sure my ignore list (\\w+) user (\\w+)")
+    public void checkUserInIgnoreListAsCondition(String isInclude, String userId) {
+        // Nothing to do by the current design
+        // Log.i(TAG, "Expect user " + userId + " is in my ignore list...");
+        // GreeUser me = GreePlatform.getLocalUser();
+        // me.isIgnoringUserWithId(userId, ignoredUserListener);
+        // if (getBlockRepo().get(IGNORE_LIST) == null)
+        // fail("Did not get the ignore list!");
+        // if (((String[]) getBlockRepo().get(IGNORE_LIST)).length == 0
+        // || !userId.equals(((String[]) getBlockRepo().get(IGNORE_LIST))[0]))
+        // fail("User " + userId +
+        // " is not in the ignore list, please add it from sb.gree.net");
+    }
+
+    @When("I load my ignore list")
+    public void getMyIgnoreList() {
+        GreeUser me = GreePlatform.getLocalUser();
+        me.loadIgnoredUserIds(Consts.startIndex_1, Consts.pageSize, ignoredUserListener);
+        notifyStepPass();
+    }
+
+    @Then("my ignore list should be size of (\\d+)")
+    public void verifyIgnoreUserCount(int count) {
+        if (getBlockRepo().get(IGNORE_LIST) == null)
+            fail("Do not have user in the ignore list!");
+        assertEquals("ingore user count", count,
+                ((String[]) getBlockRepo().get(IGNORE_LIST)).length);
+    }
+
+    @Then("my ignore list should (\\w+) user (\\w+)")
+    public void checkUserInIgnoreList(String isIncludedMark, String userId) {
+        if (!"INCLUDES".equals(isIncludedMark) && !"NOTINCLUDES".equals(isIncludedMark))
+            fail("Not a valid isIncludeMark!");
+        boolean isExists = false;
+        if (getBlockRepo().get(IGNORE_LIST) == null)
+            fail("Did not get the ignore list!");
+        String[] ignoreUsers = (String[]) getBlockRepo().get(IGNORE_LIST);
+        for (String id : ignoreUsers) {
+            if (userId.equals(id)) {
+                Log.i(TAG, "Find user: " + userId + " in the list");
+                isExists = true;
+            }
+        }
+        if ("INCLUDES".equals(isIncludedMark))
+            assertTrue("user in ignore list", isExists);
+        if ("NOTINCLUDES".equals(isIncludedMark))
+            assertFalse("user in ignore list", isExists);
     }
 }
