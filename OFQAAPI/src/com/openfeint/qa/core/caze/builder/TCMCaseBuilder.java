@@ -36,7 +36,7 @@ public class TCMCaseBuilder extends CaseBuilder {
                 String[] raw_case = StringUtil.splitSteps(o.getString("custom_steps"),
                         StringUtil.TCM_LINE_SPLIT);
                 String[] raw_steps = StringUtil.extractSteps(raw_case);
-
+                TestCase tc = new TestCase();
                 // pase case steps
                 ArrayList<Step> steps = new ArrayList<Step>();
                 for (String step : raw_steps) {
@@ -46,11 +46,18 @@ public class TCMCaseBuilder extends CaseBuilder {
                         Log.e(StringUtil.DEBUG_TAG,
                                 nsse.getMessage() + " for case " + o.getString("id") + "["
                                         + o.getString("title") + "]");
+                        tc.setExecuted(true);
+                        tc.setResult(TestCase.RESULT.RETESTED);
+                        tc.setResultComment("probably one or two step is not defined");
+                        break;
+
                     }
                 }
+                tc.setId(o.getString("id"));
+                tc.setTitle(o.getString("title"));
+                tc.setSteps(steps.toArray(new Step[steps.size()]));
 
-                tcs.add(new TestCase(o.getString("id"), o.getString("title"), steps
-                        .toArray(new Step[steps.size()])));
+                tcs.add(tc);
             }
 
             return tcs.toArray(new TestCase[tcs.size()]);

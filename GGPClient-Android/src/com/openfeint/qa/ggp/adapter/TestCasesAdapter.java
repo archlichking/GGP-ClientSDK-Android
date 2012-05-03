@@ -58,12 +58,24 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-                wrapper.getTheCase().setExecuted(false);
+                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED) {
+                    wrapper.getTheCase().setExecuted(false);
+                }
                 list.add(wrapper.getTheCase().getId());
             }
         }
         String[] sl = (String[]) list.toArray(new String[list.size()]);
         return sl;
+    }
+
+    public List<TestCase> getSelectedCases() {
+        List<TestCase> list = new ArrayList<TestCase>();
+        for (CaseWrapper wrapper : testCases) {
+            if (wrapper.isSelected()) {
+                list.add(wrapper.getTheCase());
+            }
+        }
+        return list;
     }
 
     public void ToggleSelectAll(boolean isSelected) {
