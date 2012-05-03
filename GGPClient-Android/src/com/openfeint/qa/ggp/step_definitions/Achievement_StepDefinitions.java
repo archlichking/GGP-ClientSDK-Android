@@ -28,13 +28,14 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
     private static String ACHIEVEMENT_LIST = "achievementlist";
 
-    private int transLockStatus(String statusMark) {
+    private boolean transLockStatus(String statusMark) {
         if ("LOCK".equals(statusMark))
-            return Achievement.LOCKED;
+            return false;
         else if ("UNLOCK".equals(statusMark))
-            return Achievement.UNLOCKED;
+            return true;
         else {
-            return -1;
+            fail("Got invalid statusMark!");
+            return false;
         }
     }
 
@@ -102,7 +103,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
         for (Achievement achi : a) {
             if (achiName.equals(achi.getName())) {
                 Log.d(TAG, "Found the achievement " + achiName);
-
                 assertEquals("lock status of achievement " + achiName, transLockStatus(statusMark),
                         achi.isUnlocked());
                 assertEquals("score of achievement " + achiName, score, achi.getScore());
@@ -125,10 +125,11 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
             if (achiName.equals(achi.getName())) {
                 Log.d(TAG, "Found the achievement " + achiName);
 
-                if (transLockStatus(statusMark) == Achievement.UNLOCKED) {
+                boolean isUnlocked = transLockStatus(statusMark);
+                if (isUnlocked == true) {
                     Log.i(TAG, "Unlocking the achievement " + achi.getName());
                     achi.unlock(lockListener);
-                } else if (transLockStatus(statusMark) == Achievement.LOCKED) {
+                } else if (isUnlocked == false) {
                     Log.i(TAG, "Locking the achievement " + achi.getName());
                     achi.lock(lockListener);
                 }
