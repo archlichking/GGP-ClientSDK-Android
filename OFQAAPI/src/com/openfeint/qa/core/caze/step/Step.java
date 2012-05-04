@@ -18,6 +18,8 @@ import java.util.Observer;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.AssertionFailedError;
+
 /***
  * @author thunderzhulei
  * @category reflect a single text step defined in feature to a real java method
@@ -101,7 +103,16 @@ public class Step implements Observer {
 
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
             if (wait) {
-                crossStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
+                String exp = "timeout exception in step [" + ref_class.getName() + "."
+                        + ref_method.getName() + "]";
+                try {
+                    boolean t = crossStepSync.tryAcquire(1, 10000, TimeUnit.MILLISECONDS);
+                    if (!t) {
+                        throw new InvocationTargetException(new Exception(exp), exp);
+                    }
+                } catch (InterruptedException e) {
+                    throw new InvocationTargetException(new Exception(exp), exp);
+                }
             }
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
