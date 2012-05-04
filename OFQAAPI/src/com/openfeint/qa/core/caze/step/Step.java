@@ -28,6 +28,8 @@ public class Step implements Observer {
 
     private String keyword;
 
+    private boolean wait = false;
+
     private final Semaphore crossStepSync = new Semaphore(0, true);
 
     public String getKeyword() {
@@ -98,9 +100,9 @@ public class Step implements Observer {
             ((BasicStepDefinition) stepDefinition).addObserver(this);
 
             this.ref_method.invoke(stepDefinition, this.buildRef_Params());
-
-            crossStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
-
+            if (wait) {
+                crossStepSync.tryAcquire(1, 5000, TimeUnit.MILLISECONDS);
+            }
             res = TestCase.RESULT.PASSED;
         } catch (IllegalArgumentException e) {
             Log.e(StringUtil.DEBUG_TAG, e.getCause().getMessage());
@@ -130,6 +132,10 @@ public class Step implements Observer {
     @Override
     public void update(Observable observable, Object data) {
         // TODO Auto-generated method stub
-        crossStepSync.release(1);
+        if (((String) data).equals("WAIT_SIG")) {
+            wait = true;
+        } else if (((String) data).equals("NOTIFY_SIG")) {
+            crossStepSync.release(1);
+        }
     }
 }
