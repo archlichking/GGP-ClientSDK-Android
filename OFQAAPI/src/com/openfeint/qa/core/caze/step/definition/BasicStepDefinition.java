@@ -43,8 +43,11 @@ public abstract class BasicStepDefinition extends Observable {
      */
     protected void waitForAsyncInStep() {
         try {
-            inStepSync.tryAcquire(1, TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
+            boolean t = inStepSync.tryAcquire(1, TIMEOUT, TimeUnit.MILLISECONDS);
+            if (!t) {
+                throw new AssertionFailedError();
+            }
+        } catch (InterruptedException e) {
             throw new AssertionFailedError();
         }
     }
