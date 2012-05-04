@@ -35,7 +35,6 @@ public class People_StepDefinitions extends BasicStepDefinition {
     @Given("I logged in with email (.+) and password (\\w+)")
     public void checkLogin(String email, String password) {
         // nothing to do in this method
-        notifyStepPass();
     }
 
     @When("I see my info from native cache")
@@ -46,7 +45,6 @@ public class People_StepDefinitions extends BasicStepDefinition {
             getBlockRepo().put(MYSELF, GreePlatform.getLocalUser());
             Log.i(TAG, "Logined as user: " + GreePlatform.getLocalUser().getNickname());
         }
-        notifyStepPass();
     }
 
     @Then("my (\\w+) should be (.+)")
@@ -61,14 +59,12 @@ public class People_StepDefinitions extends BasicStepDefinition {
             assertEquals("userGrade", value, me.getUserGrade());
         } else if ("region".equals(column)) {
             assertEquals("userRegion", value, me.getRegion());
-        } else {
-            fail("Unknown column of user info!");
-        }
-        notifyStepPass();
+        } 
     }
 
     @When("I see my info from server")
     public void getUserInfoFromServer() {
+        notifyStepWait();
         GreeUser.loadUserWithId(1, 1, "@me", new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] people) {
@@ -93,6 +89,7 @@ public class People_StepDefinitions extends BasicStepDefinition {
 
     @When("I check my friend list")
     public void getCurrentUserFriends() {
+        notifyStepWait();
         GreeUser me = GreePlatform.getLocalUser();
         me.loadFriends(Consts.startIndex_1, Consts.pageSize, new GreeUserListener() {
             @Override
@@ -140,7 +137,6 @@ public class People_StepDefinitions extends BasicStepDefinition {
             }
         }
         assertTrue("user " + friendName + " in friend list", false);
-        notifyStepPass();
     }
 
     @Then("userid of (.+) should be (\\w+) and grade should be (\\w+)")
@@ -153,13 +149,13 @@ public class People_StepDefinitions extends BasicStepDefinition {
         Log.d(TAG, "Checking friend info...");
         assertEquals("userId", id, friend.getId());
         assertEquals("userGrade", grade, friend.getUserGrade());
-        notifyStepPass();
     }
 
     // This step is not using now, seems the sdk is not allow to get another
     // user instance except the current login user
     @When("I check friend list of user (\\w+)")
     public void getSpecificUserFriends(String userId) {
+        notifyStepWait();
         GreeUser.loadUserWithId(1, 1, userId, new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] people) {
