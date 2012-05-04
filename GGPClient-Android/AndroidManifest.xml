@@ -47,8 +47,7 @@
             android:launchMode="singleInstance"
             android:name="net.gree.asdk.core.notifications.ui.PopupActivity"
             android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@style/NotificationDialog" >
+            android:taskAffinity="" >
         </activity>
         <activity
             android:configChanges="orientation|keyboardHidden"
