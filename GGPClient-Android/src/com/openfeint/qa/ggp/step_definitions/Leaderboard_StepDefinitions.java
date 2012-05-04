@@ -36,8 +36,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
 
     private int defaultScore = 3000;
 
-    private int d = 1;
-
     private String transLeaderboardStatus(String mark) {
         if ("YES".equals(mark))
             return "1";
@@ -50,7 +48,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     }
 
     private int transSelector(String selector) {
-        int iSelector = -1;
+        int iSelector = -100;
         if ("FRIENDS".equals(selector)) {
             iSelector = Score.FRIENDS_SCORES;
         } else if ("ALL".equals(selector)) {
@@ -62,7 +60,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     }
 
     private int transPeriod(String period) {
-        int iPeriod = -1;
+        int iPeriod = -100;
         if ("DAILY".equals(period)) {
             iPeriod = Score.DAILY;
         } else if ("WEEKLY".equals(period)) {
@@ -76,6 +74,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     @Given("I load list of leaderboard")
     @When("I load list of leaderboard")
     public void getLeaderboards() {
+        notifyStepWait();
         Leaderboard.loadLeaderboards(Consts.startIndex_1, Consts.pageSize,
                 new LeaderboardListener() {
 
@@ -110,7 +109,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
 
         Log.i(TAG, "Verifing the leaderboard count...");
         assertEquals("leaderboard count", expectCount, l.size());
-        notifyStepPass();
     }
 
     @Then("I should have leaderboard of name (.+) with allowWorseScore (\\w+) and secret (\\w+) and order asc (\\w+)")
@@ -126,7 +124,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                         board.getSort());
                 assertEquals("leaderboard is secret?", transLeaderboardStatus(isSecretMark),
                         board.getSecret());
-                notifyStepPass();
                 return;
             }
         }
@@ -137,11 +134,12 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     @After("I make sure my score (\\w+) in leaderboard (.+)")
     public void updateScoreAsCondition(String isExistsMark, String boardName) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        if (!("NOTEXISTS".equals(isExistsMark) || "EXISTS".equals(isExistsMark)))
+        if (!"NOTEXISTS".equals(isExistsMark) && !"EXISTS".equals(isExistsMark))
             fail("Unknown isExistsMark!");
 
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
+                notifyStepWait();
                 if ("NOTEXISTS".equals(isExistsMark)) {
                     Leaderboard.deleteScore(board.getId(), new SuccessListener() {
                         @Override
@@ -196,6 +194,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         // Record score updated for the below steps
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
+                notifyStepWait();
                 Log.d(TAG, "Fond the leaderboard " + boardName);
                 Log.i(TAG, "Try to create new score for leaderboard...");
                 Leaderboard.createScore(board.getId(), score, new SuccessListener() {
@@ -227,6 +226,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         // Record score updated for the below steps
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
+                notifyStepWait();
                 Log.d(TAG, "Found the leaderboard " + boardName);
                 Leaderboard.deleteScore(board.getId(), new SuccessListener() {
                     @Override
@@ -282,7 +282,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                 waitForAsyncInStep();
 
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
-                notifyStepPass();
                 return;
             }
         }
@@ -295,7 +294,6 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
-                d = 1;
                 Leaderboard.getScore(board.getId(), transSelector("ALL"), transPeriod(period),
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
@@ -303,7 +301,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
 
                                 Log.d(TAG, "Get leaderboard score success!");
                                 getBlockRepo().put(SCORE, entry[0]);
-                                d = 0;
+                                notifyAsyncInStep();
                             }
 
                             @Override
@@ -314,18 +312,11 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
                                 // return 404. Sucks
                                 // and I have to keep status not to failed
                                 getBlockRepo().put(SCORE, new Score());
-                                d = 0;
+                                notifyAsyncInStep();
                             }
                         });
-                while (d == 1) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-
-                    }
-                }
+                waitForAsyncInStep();
                 assertEquals(ranking, ((Score) getBlockRepo().get(SCORE)).getRank());
-                notifyStepPass();
                 return;
             }
         }
