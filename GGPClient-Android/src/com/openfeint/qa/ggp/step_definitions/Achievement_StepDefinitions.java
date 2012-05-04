@@ -59,6 +59,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
     @When("I load list of achievement")
     @Given("I load list of achievement")
     public void getAchievements() {
+        notifyStepWait();
         Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize,
                 new AchievementListUpdateListener() {
                     @Override
@@ -91,7 +92,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
         Log.i(TAG, "Verifing the achievement count...");
         assertEquals("achievement count", size, a.size());
-        notifyStepPass();
     }
 
     @Then("I should have achievement of name (.+) with status (\\w+) and score (\\d+)")
@@ -106,7 +106,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
                 assertEquals("lock status of achievement " + achiName, transLockStatus(statusMark),
                         achi.isUnlocked());
                 assertEquals("score of achievement " + achiName, score, achi.getScore());
-                notifyStepPass();
                 return;
             }
         }
@@ -123,6 +122,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
         for (Achievement achi : a) {
             if (achiName.equals(achi.getName())) {
+                notifyStepWait();
                 Log.d(TAG, "Found the achievement " + achiName);
 
                 boolean isUnlocked = transLockStatus(statusMark);
@@ -151,7 +151,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
                 Log.i(TAG, "Verifying the lock status of achievement " + achiName);
                 assertEquals("lock status of achievement " + achiName, transLockStatus(statusMark),
                         achi.isUnlocked());
-                notifyStepPass();
                 return;
             }
         }
@@ -162,7 +161,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
     public void verifyScoreUpdated(String operator, int changeValue) {
         // TODO So far, sdk is not support to get the total score of user, will
         // add this verification after sdk to support it
-        notifyStepPass();
     }
 
 }

@@ -33,7 +33,12 @@ public abstract class BasicStepDefinition extends Observable {
      */
     protected void notifyStepPass() {
         setChanged();
-        notifyObservers("update waiting");
+        notifyObservers("NOTIFY_SIG");
+    }
+    
+    protected void notifyStepWait() {
+        setChanged();
+        notifyObservers("WAIT_SIG");
     }
 
     /**
