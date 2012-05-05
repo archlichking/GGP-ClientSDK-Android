@@ -32,7 +32,7 @@ public class Step implements Observer {
 
     private boolean wait = false;
 
-    private final Semaphore crossStepSync = new Semaphore(0, true);
+    private Semaphore crossStepSync = new Semaphore(0, true);
 
     public String getKeyword() {
         return keyword;
@@ -108,9 +108,11 @@ public class Step implements Observer {
                 try {
                     boolean t = crossStepSync.tryAcquire(1, 10000, TimeUnit.MILLISECONDS);
                     if (!t) {
+                        crossStepSync = new Semaphore(0, true);
                         throw new InvocationTargetException(new Exception(exp), exp);
                     }
                 } catch (InterruptedException e) {
+                    crossStepSync = new Semaphore(0, true);
                     throw new InvocationTargetException(new Exception(exp), exp);
                 }
             }
@@ -125,7 +127,7 @@ public class Step implements Observer {
             // for NullPointointException use
             er.printStackTrace();
             Log.e(StringUtil.DEBUG_TAG, comm);
-
+            
         } finally {
             return new StepResult(res, comm);
         }
