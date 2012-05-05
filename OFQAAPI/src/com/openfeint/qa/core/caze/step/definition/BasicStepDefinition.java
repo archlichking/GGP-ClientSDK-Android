@@ -13,7 +13,7 @@ import junit.framework.AssertionFailedError;
 public abstract class BasicStepDefinition extends Observable {
     protected static Hashtable<String, Object> blockRepo = null;
 
-    private final Semaphore inStepSync = new Semaphore(0, true);
+    private Semaphore inStepSync = new Semaphore(0, true);
 
     protected int TIMEOUT = 5000;
 
@@ -50,9 +50,11 @@ public abstract class BasicStepDefinition extends Observable {
         try {
             boolean t = inStepSync.tryAcquire(1, TIMEOUT, TimeUnit.MILLISECONDS);
             if (!t) {
+                inStepSync = new Semaphore(0, true);
                 throw new AssertionFailedError();
             }
         } catch (InterruptedException e) {
+            inStepSync = new Semaphore(0, true);
             throw new AssertionFailedError();
         }
     }
