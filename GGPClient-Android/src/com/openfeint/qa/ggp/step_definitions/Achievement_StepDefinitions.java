@@ -114,7 +114,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
     @After("I make sure status of achievement (.+) is (\\w+)")
     @When("I update status of achievement (.+) to (\\w+)")
     public void updateLockStatusByName(String achiName, String statusMark) {
-        notifyStepWait();
         ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);
         if (a == null)
             fail("No achievement in the list!");
