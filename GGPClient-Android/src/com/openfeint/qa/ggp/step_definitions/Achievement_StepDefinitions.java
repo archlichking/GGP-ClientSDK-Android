@@ -48,7 +48,7 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
 
         @Override
         public void onFailure(int responseCode, HeaderIterator headers, String response) {
-            Log.e(TAG, "Change lock status failed " + responseCode + "||||||" + response);
+            Log.e(TAG, "Change lock status failed! " + responseCode + " || " + response);
 
             notifyStepPass();
         }
@@ -59,13 +59,13 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
     @Given("I load list of achievement")
     public void getAchievements() {
         notifyStepWait();
+        getBlockRepo().put(ACHIEVEMENT_LIST, new ArrayList<Achievement>());
         Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize,
                 new AchievementListUpdateListener() {
                     @Override
                     public void onSuccess(int index, int totalListSize,
                             Achievement[] requestedElements) {
                         Log.d(TAG, "Get achievement list success!");
-                        getBlockRepo().put(ACHIEVEMENT_LIST, new ArrayList<Achievement>());
                         if (requestedElements != null) {
                             Log.i(TAG, "Adding achievement datas");
                             ((ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST))
@@ -77,7 +77,6 @@ public class Achievement_StepDefinitions extends BasicStepDefinition {
                     @Override
                     public void onFailure(int responseCode, HeaderIterator headers, String response) {
                         Log.e(TAG, "Get achievement list failed!");
-                        getBlockRepo().put(ACHIEVEMENT_LIST, new ArrayList<Achievement>());
                         notifyStepPass();
                     }
                 });
