@@ -11,7 +11,7 @@
    * More server infomation can got [here](http://confluence.dev.gree.jp/display/greedevgii/GGP+Client+SDK+QA#GGPClientSDKQA-ServerEnvironmentInformationMatrix)
 5. Install GGPClient-Automation into your device
 
-## How to use automation ap
+## How to use automation app
 1. Login:
    * The first time you setup the automation app, you have to login manually before you run the test case
    * If next time you setup a new version of automation app without change the server setting, login is not need again
