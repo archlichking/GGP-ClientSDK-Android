@@ -53,7 +53,7 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
         int iSelector = -100;
         if ("FRIENDS".equals(selector)) {
             iSelector = Score.FRIENDS_SCORES;
-        } else if ("EVERYONE".equals(selector) || "".equals(selector)) {
+        } else if ("EVERYONE".equals(selector)) {
             iSelector = Score.ALL_SCORES;
         } else if ("ME".equals(selector)) {
             iSelector = Score.MY_SCORES;
@@ -225,75 +225,13 @@ public class Leaderboard_StepDefinitions extends BasicStepDefinition {
     @Given("I load top friend score list for leaderboard (.*) for period (\\w+)")
     @When("I load top friend score list for leaderboard (.*) for period (\\w+)")
     public void loadTopFriendScoreListOnDemand(String boardName, String period) {
-        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        for (Leaderboard board : l) {
-            if (boardName.equals(board.getName())) {
-                notifyStepWait();
-                Log.d(TAG, "Found the leaderboard " + boardName);
-                getBlockRepo().put(ALL_SCORE, new ArrayList<Score>());
-                Leaderboard.getScore(board.getId(), transSelector("FRIENDS"), transPeriod(period),
-                        Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
-                            @Override
-                            public void onSuccess(Score[] entry) {
-
-                                Log.d(TAG, "Get leaderboard score success!");
-                                ((ArrayList<Score>) getBlockRepo().get(ALL_SCORE)).addAll(Arrays
-                                        .asList(entry));
-                                notifyStepPass();
-                            }
-
-                            @Override
-                            public void onFailure(int responseCode, HeaderIterator headers,
-                                    String response) {
-                                Log.d(TAG, "No leaderboard score!");
-                                // When leaderboard doesn't have score, is also
-                                // return 404. Sucks
-                                // and I have to keep status not to failed
-                                notifyStepPass();
-                            }
-                        });
-
-                return;
-            }
-        }
-        fail("cannot find the leaderboard named: " + boardName);
+        loadScoreListOnDemand("FRIENDS", boardName, period);
     }
-    
+
     @Given("I load top score list for leaderboard (.*) for period (\\w+)")
     @When("I load top score list for leaderboard (.*) for period (\\w+)")
     public void loadTopScoreListOnDemand(String boardName, String period) {
-        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        for (Leaderboard board : l) {
-            if (boardName.equals(board.getName())) {
-                notifyStepWait();
-                Log.d(TAG, "Found the leaderboard " + boardName);
-                getBlockRepo().put(ALL_SCORE, new ArrayList<Score>());
-                Leaderboard.getScore(board.getId(), transSelector("EVERYONE"), transPeriod(period),
-                        Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
-                            @Override
-                            public void onSuccess(Score[] entry) {
-
-                                Log.d(TAG, "Get leaderboard score success!");
-                                ((ArrayList<Score>) getBlockRepo().get(ALL_SCORE)).addAll(Arrays
-                                        .asList(entry));
-                                notifyStepPass();
-                            }
-
-                            @Override
-                            public void onFailure(int responseCode, HeaderIterator headers,
-                                    String response) {
-                                Log.d(TAG, "No leaderboard score!");
-                                // When leaderboard doesn't have score, is also
-                                // return 404. Sucks
-                                // and I have to keep status not to failed
-                                notifyStepPass();
-                            }
-                        });
-
-                return;
-            }
-        }
-        fail("cannot find the leaderboard named: " + boardName);
+        loadScoreListOnDemand("EVERYONE", boardName, period);
     }
 
     @Given("I load score list of (\\w+) section for leaderboard (.*) for period (\\w+)")
