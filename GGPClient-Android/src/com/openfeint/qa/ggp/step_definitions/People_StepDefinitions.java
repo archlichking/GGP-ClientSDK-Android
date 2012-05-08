@@ -1,3 +1,4 @@
+
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
@@ -64,6 +65,20 @@ public class People_StepDefinitions extends BasicStepDefinition {
             assertEquals("userGrade", value, me.getUserGrade());
         } else if ("region".equals(column)) {
             assertEquals("userRegion", value, me.getRegion());
+        } else if ("subregion".equals(column)) {
+            assertEquals("subregion", value, me.getSubregion());
+        } else if ("birthday".equals(column)) {
+            assertEquals("birthday", value, me.getBirthday());
+        } else if ("aboutMe".equals(column)) {
+            assertEquals("aboutMe", value, me.getAboutMe());
+        } else if ("language".equals(column)) {
+            assertEquals("language", value, me.getLanguage());
+        } else if ("bloodType".equals(column)) {
+            assertEquals("bloodType", value, me.getBloodType());
+        } else if ("age".equals(column)) {
+            assertEquals("age", value, me.getAge());
+        } else if ("timezone".equals(column)) {
+            assertEquals("timezone", value, me.getTimezone());
         } else {
             fail("Unknown column of user info!");
         }
