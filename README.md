@@ -6,10 +6,6 @@
    GGPClient-Automation
 4. You can Modify **res/xml/gree_platform_configuraton.xml** to set the server
    and application config but the default config should be working.
-   * The default config is point to production sandbox server 
-   * The default application key/secret is only used by automation app
-   * More server infomation can got [here](http://confluence.dev.gree.jp/display/greedevgii/GGP+Client+SDK+QA#GGPClientSDKQA-ServerEnvironmentInformationMatrix)
-5. Install GGPClient-Automation into your device
 
 ## How to use automation app
 1. Login:
@@ -29,3 +25,11 @@
    * Default test suite is can be set in **res/layout/main.xml**, search android:id="@+id/text_run_id" in this xml
    * If you want to temporary disable the result submit to make your debug more faster, then comment out the line 
    tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases()); in MainActivity.java
+
+## Configuration
+### Server: production sandbox
+* App Id: 11787
+* App Key: 97f61d7b8f43
+* App Secret: 38a4325e76d9b66fb5cd2bda5a2eaa59
+* Test User: auto3@163.com/123456
+* TCMS Suites Id: 178
