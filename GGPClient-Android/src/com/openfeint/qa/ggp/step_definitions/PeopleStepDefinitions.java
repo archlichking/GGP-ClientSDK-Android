@@ -27,7 +27,7 @@ import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
-public class People_StepDefinitions extends BasicStepDefinition {
+public class PeopleStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
 
     private final static String PEOPLE_LIST = "friendList";

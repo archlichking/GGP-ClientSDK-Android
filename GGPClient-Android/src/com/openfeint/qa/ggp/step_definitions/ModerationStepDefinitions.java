@@ -27,7 +27,7 @@ import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
-public class Moderation_StepDefinitions extends BasicStepDefinition {
+public class ModerationStepDefinitions extends BasicStepDefinition {
   private static final String TAG = "Moderation_Steps";
 
   private static String MODERATION_LIST = "moderationlist";
