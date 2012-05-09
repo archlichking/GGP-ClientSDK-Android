@@ -9,7 +9,7 @@ public class CommonStepDefinitions extends BasicStepDefinition {
         // do nothing
     }
     @Then("(.*)as server automation(.*)")
-    public void ignoreAndroidStep(){
+    public void ignoreServerStep(){
         // do nothing
     }
 }
