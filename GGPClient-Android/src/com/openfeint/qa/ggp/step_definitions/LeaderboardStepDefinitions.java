@@ -308,8 +308,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
-                waitForAsyncInStep();
-                
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
@@ -332,6 +330,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                             }
                         });
                 
+                waitForAsyncInStep();
 
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
                 return;
