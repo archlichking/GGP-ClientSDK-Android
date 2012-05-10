@@ -22,7 +22,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Achievement_StepDefinitions extends BasicStepDefinition {
+public class AchievementStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Achievement_Steps";
 
     private static String ACHIEVEMENT_LIST = "achievementlist";

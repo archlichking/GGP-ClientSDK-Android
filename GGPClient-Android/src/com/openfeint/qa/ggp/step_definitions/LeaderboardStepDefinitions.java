@@ -27,7 +27,7 @@ import java.util.Arrays;
 
 import junit.framework.AssertionFailedError;
 
-public class Leaderboard_StepDefinitions extends BasicStepDefinition {
+public class LeaderboardStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Leaderboard_Steps";
 
     private static String LEADERBOARD_LIST = "leaderboardlist";
