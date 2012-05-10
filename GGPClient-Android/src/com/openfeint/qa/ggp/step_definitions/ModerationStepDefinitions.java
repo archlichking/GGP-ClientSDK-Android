@@ -23,6 +23,7 @@ import org.apache.http.HeaderIterator;
 import util.Consts;
 import android.util.Log;
 
+import com.handmark.pulltorefresh.library.internal.LoadingLayout;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.Given;
@@ -36,12 +37,15 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
 
     @When("I send to moderation server with text (.+)")
     public void sendModeration(String text) {
+        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
         notifyStepWait();
         ModeratedText.create(text, new ModeratedTextListener() {
             @Override
             public void onSuccess(ModeratedText[] textInfo) {
                 Log.d(TAG, "onSuccess");
                 ModeratedText.logTextInfo(textInfo);
+                ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
+                        .asList(textInfo));
                 notifyStepPass();
             }
 
@@ -51,45 +55,6 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
                 notifyStepPass();
             }
         });
-    }
-
-    private boolean transTarget(String target) {
-        if ("LOCAL_CACHE".equals(target)) {
-            return false;
-        } else if ("SERVER".equals(target)) {
-            return true;
-        } else {
-            fail("Unknown target to load moderation text!");
-            return false;
-        }
-    }
-
-    @When("I load moderation text from (\\w+)")
-    @After("I load moderation text from (\\w+)")
-    public void loadModerationText(String target) {
-        ModeratedTextListener listener = new ModeratedTextListener() {
-
-            @Override
-            public void onSuccess(ModeratedText[] textInfo) {
-                Log.d(TAG, "Get moderated text success!");
-                Log.d(TAG, "Get " + textInfo.length + " text!");
-                ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
-                        .asList(textInfo));
-                notifyStepPass();
-            }
-
-            @Override
-            public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                Log.e(TAG, "Get moderated text failed! " + response);
-                notifyStepPass();
-            }
-        };
-
-        boolean isLoadFromServer = transTarget(target);
-        notifyStepWait();
-        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
-        ModeratedText.loadFromLocalCache(isLoadFromServer, listener);
-
     }
 
     private int transStatus(String status) {
@@ -117,34 +82,80 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
         for (ModeratedText item : list) {
             if (text.equals(item.getContent())) {
                 Log.d(TAG, "Get the text \"" + text + "\" and checking its status...");
-                assertEquals(ModeratedText.STATUS_BEING_CHECKED, transStatus(status));
+                assertEquals("Text status", ModeratedText.STATUS_BEING_CHECKED, transStatus(status));
             }
             return;
         }
         fail("Could not find the moderation text: " + text);
     }
 
-    @After("I make sure the moderation text is clean up")
-    public void cleanUpText() {
+    private boolean transTarget(String target) {
+        if ("NATIVE_CACHE".equals(target)) {
+            return false;
+        } else if ("SERVER".equals(target)) {
+            return true;
+        } else {
+            fail("Unknown target to load moderation text!");
+            return false;
+        }
+    }
+
+    @When("I load from (\\w+) with moderation text (.+)")
+    public void loadModerationText(String target) {
+        boolean isLoadFromServer = transTarget(target);
+        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
+        ModeratedText.loadFromLocalCache(isLoadFromServer, new ModeratedTextListener() {
+
+            @Override
+            public void onSuccess(ModeratedText[] textInfo) {
+                Log.d(TAG, "Get moderated text success!");
+                Log.d(TAG, "Get " + textInfo.length + " text!");
+                ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
+                        .asList(textInfo));
+                notifyAsyncInStep();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Get moderated text failed! " + response);
+                notifyAsyncInStep();
+            }
+        });
+        waitForAsyncInStep();
+    }
+
+    @After("I make sure moderation server NOTINCLUDES text (.+)")
+    public void cleanUpText(String text) {
+        loadModerationText("NATIVE_CACHE");
+
         ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
                 MODERATION_LIST);
         if (list == null || list.size() == 0) {
-            Log.d(TAG, "No moderation text to be clean!");
+            Log.d(TAG, "No moderation text to be cleaned!");
             return;
         }
+
+        // Clean up all texts that match the content
         for (ModeratedText item : list) {
-            item.delete(new SuccessListener() {
+            if (text.equals(item.getContent())) {
+                Log.d(TAG, "Get text \"" + text + "\", clean it up...");
+                item.delete(new SuccessListener() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Clean up success!");
+                        notifyAsyncInStep();
+                    }
 
-                @Override
-                public void onSuccess() {
-                    Log.d(TAG, "Clean one text...");
-                }
-
-                @Override
-                public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                    Log.e(TAG, "Clean up failed, " + response);
-                }
-            });
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.e(TAG, "Clean up failed, " + response);
+                        notifyAsyncInStep();
+                    }
+                });
+                waitForAsyncInStep();
+            }
         }
     }
+
+    
 }
