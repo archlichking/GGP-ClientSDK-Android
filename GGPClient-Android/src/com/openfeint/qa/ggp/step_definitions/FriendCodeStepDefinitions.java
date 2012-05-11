@@ -14,6 +14,7 @@ import net.gree.asdk.api.FriendCode.CodeListener;
 import net.gree.asdk.api.FriendCode.SuccessListener;
 
 import org.apache.http.HeaderIterator;
+import org.objenesis.instantiator.basic.NewInstanceInstantiator;
 
 import android.R.integer;
 import android.util.Log;
@@ -29,12 +30,20 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     private static final String FRIEND_CODE = "friendCode";
 
+    private static final String EMPTY_CODE = "";
+
     @And("I make sure my friend code is NOTEXIST")
-    public void updateCodeAsCondition() {
+    public void cleanCodeAsCondition() {
         deleteCode();
     }
 
-    private void deleteCode() {
+    @And("I make sure my friend code is EXIST")
+    public void addCodeAsCondition() {
+        requestNoExpireTimeCode();
+    }
+
+    @When("I delete my friend code")
+    public void deleteCode() {
         notifyStepWait();
         FriendCode.deleteCode(new SuccessListener() {
             @Override
@@ -74,13 +83,15 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
             }
         };
 
-        getBlockRepo().put(FRIEND_CODE, "");
+        getBlockRepo().put(FRIEND_CODE, EMPTY_CODE);
         notifyStepWait();
         FriendCode.requestCode(expireTime, listener);
     }
 
     @Then("I should get my friend code")
     public void verifyFriendCode() {
+        if ("".equals(getBlockRepo().get(FRIEND_CODE)))
+            fail("Friend code have not return yet!");
         assertEquals("friend code length", ((Code) getBlockRepo().get(FRIEND_CODE)).getCode()
                 .length(), 7);
     }
@@ -120,11 +131,18 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                Log.e(TAG, "Add friend code failed, " + response);
+                Log.e(TAG, "Load friend code failed, " + response);
                 notifyStepPass();
             }
         };
+        getBlockRepo().put(FRIEND_CODE, EMPTY_CODE);
         notifyStepWait();
         FriendCode.loadCode(listener);
     }
+
+    @Then("my friend code should be deleted")
+    public void verifyCodeDeleted() {
+        assertEquals(EMPTY_CODE, getBlockRepo().get(FRIEND_CODE));
+    }
+
 }
