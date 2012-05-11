@@ -29,11 +29,11 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     private static final String FRIEND_CODE = "friendCode";
 
-    @Given("I make sure my friend code is NOTEXIST")
+    @And("I make sure my friend code is NOTEXIST")
     public void updateCodeAsCondition() {
         deleteCode();
     }
-    
+
     private void deleteCode() {
         notifyStepWait();
         FriendCode.deleteCode(new SuccessListener() {
@@ -93,7 +93,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
         cal.add(Calendar.HOUR, -8); // reduce 8 hours to UTC time zone
         return formater.format(cal.getTime());
     }
-    
+
     @And("my friend code expire time should be (.+)")
     public void verifyExpireTime(String expectTime) {
         String expireTime = ((Code) getBlockRepo().get(FRIEND_CODE)).getExpireTime();
@@ -105,5 +105,26 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
         } else {
             assertEquals("Expire date", expectTime, expireTime);
         }
+    }
+
+    @And("I load my friend code")
+    public void loadFriendCode() {
+        CodeListener listener = new CodeListener() {
+            @Override
+            public void onSuccess(Code code) {
+                Log.d(TAG, "Load friend code success: " + code.getCode());
+                Log.d(TAG, "Expire time is: " + code.getExpireTime());
+                getBlockRepo().put(FRIEND_CODE, code);
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Add friend code failed, " + response);
+                notifyStepPass();
+            }
+        };
+        notifyStepWait();
+        FriendCode.loadCode(listener);
     }
 }
