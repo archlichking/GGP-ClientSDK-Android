@@ -85,19 +85,21 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
                 .length(), 7);
     }
 
+    private String getExpireDate(int days) {
+        // Calculate the expire date
+        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, days);
+        cal.add(Calendar.HOUR, -8); // reduce 8 hours to UTC time zone
+        return formater.format(cal.getTime());
+    }
+    
     @And("my friend code expire time should be (.+)")
     public void verifyExpireTime(String expectTime) {
         String expireTime = ((Code) getBlockRepo().get(FRIEND_CODE)).getExpireTime();
         if (expectTime.endsWith("days")) {
-            int length = Integer.parseInt(expectTime.split(" ")[0]);
-
-            // Calculate the expire date
-            SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DAY_OF_MONTH, length);
-            cal.add(Calendar.HOUR, -8); // reduce 8 hours to UTC time zone
-            String expireDate = formater.format(cal.getTime());
-
+            int days = Integer.parseInt(expectTime.split(" ")[0]);
+            String expireDate = getExpireDate(days);
             Log.d(TAG, "Checking the expire date...");
             assertEquals("Expire date", expireDate, expireTime.substring(0, 10));
         } else {
