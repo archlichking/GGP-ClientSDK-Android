@@ -29,27 +29,26 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     private static final String FRIEND_CODE = "friendCode";
 
-    @Given("I make sure my friend code is (\\w+)")
-    public void updateCodeAsCondition(String isExistMark) {
-        if ("NOTEXIST".equals(isExistMark)) {
-            notifyStepWait();
-            FriendCode.deleteCode(new SuccessListener() {
-                @Override
-                public void onSuccess() {
-                    Log.d(TAG, "Delete friend code success!");
-                    notifyStepPass();
-                }
+    @Given("I make sure my friend code is NOTEXIST")
+    public void updateCodeAsCondition() {
+        deleteCode();
+    }
+    
+    private void deleteCode() {
+        notifyStepWait();
+        FriendCode.deleteCode(new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Delete friend code success!");
+                notifyStepPass();
+            }
 
-                @Override
-                public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                    Log.e(TAG, "Delete friend code failed, " + response);
-                    notifyStepPass();
-                }
-            });
-        } else if ("EXIST".equals(isExistMark)) {
-            // TODO add code for EXIST
-        } else
-            fail("Unknown isExistMark!");
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Delete friend code failed, " + response);
+                notifyStepPass();
+            }
+        });
     }
 
     @When("I request friend code with no expire time")
