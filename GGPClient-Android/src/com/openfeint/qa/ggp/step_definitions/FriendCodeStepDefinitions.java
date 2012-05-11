@@ -6,22 +6,20 @@ import static junit.framework.Assert.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 import net.gree.asdk.api.FriendCode;
 import net.gree.asdk.api.FriendCode.Code;
 import net.gree.asdk.api.FriendCode.CodeListener;
+import net.gree.asdk.api.FriendCode.Data;
+import net.gree.asdk.api.FriendCode.OwnerGetListener;
 import net.gree.asdk.api.FriendCode.SuccessListener;
 
 import org.apache.http.HeaderIterator;
-import org.objenesis.instantiator.basic.NewInstanceInstantiator;
 
-import android.R.integer;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.And;
-import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
@@ -29,6 +27,8 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "FriendCode_Steps";
 
     private static final String FRIEND_CODE = "friendCode";
+
+    private static final String OWNER_ID = "ownerId";
 
     private static final String EMPTY_CODE = "";
 
@@ -89,7 +89,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     }
 
     @Then("I should get my friend code")
-    public void verifyFriendCode() {
+    public void verifyFriendCodeGot() {
         if ("".equals(getBlockRepo().get(FRIEND_CODE)))
             fail("Friend code have not return yet!");
         assertEquals("friend code length", ((Code) getBlockRepo().get(FRIEND_CODE)).getCode()
@@ -142,7 +142,54 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     @Then("my friend code should be deleted")
     public void verifyCodeDeleted() {
-        assertEquals(EMPTY_CODE, getBlockRepo().get(FRIEND_CODE));
+        Log.d(TAG, "Verify the friend code is deleted...");
+        assertEquals("code is deleted", EMPTY_CODE, getBlockRepo().get(FRIEND_CODE));
     }
 
+    // TODO I just add this method to prepare the data for load owner, need to
+    // change step title when really be used
+    // @When("I verify the friend code (\\w+)")
+    // public void verifyFriendCode(String code) {
+    // notifyStepWait();
+    // FriendCode.verifyCode(code, new SuccessListener() {
+    // @Override
+    // public void onSuccess() {
+    // Log.d(TAG, "Verify friend code success!");
+    // notifyStepPass();
+    // }
+    //
+    // @Override
+    // public void onFailure(int responseCode, HeaderIterator headers, String
+    // response) {
+    // Log.e(TAG, "Verify friend code failed, " + response);
+    // notifyStepPass();
+    // }
+    // });
+    // }
+
+    @When("I load the owner of friend code I verified")
+    public void loadCodeOwner() {
+        getBlockRepo().put(OWNER_ID, "");
+        notifyStepWait();
+        FriendCode.loadOwner(new OwnerGetListener() {
+            @Override
+            public void onSuccess(Data owner) {
+                Log.d(TAG, "Get friend code owner: " + owner.getUserId());
+                getBlockRepo().put(OWNER_ID, owner.getUserId());
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Get friend code owner failed!");
+                notifyStepPass();
+            }
+        });
+    }
+
+    @Then("the owner should be user (\\w+)")
+    public void verifyCodeOwner(String ownerId) {
+        Log.d(TAG, "Verify the code owner...");
+        assertEquals("code owner", ownerId, getBlockRepo().get(OWNER_ID));
+    }
 }
