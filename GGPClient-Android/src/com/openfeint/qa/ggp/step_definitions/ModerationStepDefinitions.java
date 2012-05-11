@@ -83,8 +83,8 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
             if (text.equals(item.getContent())) {
                 Log.d(TAG, "Get the text \"" + text + "\" and checking its status...");
                 assertEquals("Text status", ModeratedText.STATUS_BEING_CHECKED, transStatus(status));
+                return;
             }
-            return;
         }
         fail("Could not find the moderation text: " + text);
     }
