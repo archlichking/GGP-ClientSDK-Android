@@ -92,8 +92,8 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     public void verifyFriendCodeGot() {
         if ("".equals(getBlockRepo().get(FRIEND_CODE)))
             fail("Friend code have not return yet!");
-        assertEquals("friend code length", ((Code) getBlockRepo().get(FRIEND_CODE)).getCode()
-                .length(), 7);
+        assertEquals("friend code length", 7, ((Code) getBlockRepo().get(FRIEND_CODE)).getCode()
+                .length());
     }
 
     private String getExpireDate(int days) {
@@ -107,14 +107,14 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     @And("my friend code expire time should be (.+)")
     public void verifyExpireTime(String expectTime) {
-        String expireTime = ((Code) getBlockRepo().get(FRIEND_CODE)).getExpireTime();
+        String realExpireTime = ((Code) getBlockRepo().get(FRIEND_CODE)).getExpireTime();
         if (expectTime.endsWith("days")) {
             int days = Integer.parseInt(expectTime.split(" ")[0]);
-            String expireDate = getExpireDate(days);
+            String expectExpireDate = getExpireDate(days);
             Log.d(TAG, "Checking the expire date...");
-            assertEquals("Expire date", expireDate, expireTime.substring(0, 10));
+            assertEquals("Expire date", expectExpireDate, realExpireTime.substring(0, 10));
         } else {
-            assertEquals("Expire date", expectTime, expireTime);
+            assertEquals("Expire date", expectTime, realExpireTime);
         }
     }
 
