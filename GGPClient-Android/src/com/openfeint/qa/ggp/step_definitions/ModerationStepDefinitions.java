@@ -37,7 +37,6 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
   private static final String TAG = "Moderation_Steps";
 
   private static String MODERATION_LIST = "moderationlist";
-  private static String MODERATION_SINGLE = "moderationsingle";
 
   @When("I send to moderation server with text (.+)")
   public void createModerationText(String text) {
@@ -118,22 +117,23 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
       return ModeratedText.STATUS_RESULT_REJECTED;
     else if ("UNKNOWN".equals(status))
       return ModeratedText.STATUS_UNKNOWN;
-    return ModeratedText.STATUS_UNKNOWN;
+    fail("only CHECKING, APPROVED, DELETED, REJECTED, UNKNOWN status can be checked");   
+    return -1;
 }
       
   @Then("status of text (.+) should be (.+)")
   public void checkStatus(String text, String status) {
     ArrayList<ModeratedText> l = (ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST);
     assertTrue(l.size() > 0);
-    boolean found = false;
+    int _found = 0;
     
     for (ModeratedText m : l) {
-      if(status.equals(m.getContent())) {
-        found = true;
-        assertEquals(ModeratedText.STATUS_BEING_CHECKED, m.getStatus());
+      if(text.equals(m.getContent())) {
+        _found++;
+        assertEquals("status should be " + status + " but is " + String.valueOf(m.getStatus()), convertModeratedTextStatus(status), m.getStatus());
       }
     }
-    assertTrue(found);
+    assertTrue(_found==1);
   }
  
   @Given("I make sure moderation server (\\w+) text (.*)")
