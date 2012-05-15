@@ -90,7 +90,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
 
     @Then("my friend code length should be (\\d+)")
     public void verifyFriendCodeGot(int length) {
-        if ("".equals(getBlockRepo().get(FRIEND_CODE)))
+        if (EMPTY_CODE.equals(getBlockRepo().get(FRIEND_CODE)))
             fail("Friend code have not return yet!");
         assertEquals("friend code length", length, ((Code) getBlockRepo().get(FRIEND_CODE))
                 .getCode().length());
