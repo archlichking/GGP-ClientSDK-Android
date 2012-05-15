@@ -329,7 +329,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                                 notifyAsyncInStep();
                             }
                         });
-
+                
                 waitForAsyncInStep();
 
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
