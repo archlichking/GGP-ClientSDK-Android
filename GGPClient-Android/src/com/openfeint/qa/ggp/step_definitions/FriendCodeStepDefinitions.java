@@ -88,12 +88,12 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
         FriendCode.requestCode(expireTime, listener);
     }
 
-    @Then("I should get my friend code")
-    public void verifyFriendCodeGot() {
+    @Then("my friend code length should be (\\d+)")
+    public void verifyFriendCodeGot(int length) {
         if ("".equals(getBlockRepo().get(FRIEND_CODE)))
             fail("Friend code have not return yet!");
-        assertEquals("friend code length", 7, ((Code) getBlockRepo().get(FRIEND_CODE)).getCode()
-                .length());
+        assertEquals("friend code length", length, ((Code) getBlockRepo().get(FRIEND_CODE))
+                .getCode().length());
     }
 
     private String getExpireDate(int days) {
