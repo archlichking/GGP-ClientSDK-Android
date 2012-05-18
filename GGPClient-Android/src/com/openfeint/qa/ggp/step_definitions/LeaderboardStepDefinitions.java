@@ -38,14 +38,25 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     private int defaultScore = 3000;
 
-    private String transLeaderboardStatus(String mark) {
+    private int transLeaderboardOrderStatus(String mark) {
         if ("YES".equals(mark))
-            return "1";
+            return 1;
         else if ("NO".equals(mark))
-            return "0";
+            return 0;
         else {
             fail("Unknown status " + mark + "!");
-            return "Unknown Status!";
+            return -1;
+        }
+    }
+
+    private boolean transLeaderboardSecretStatus(String mark) {
+        if ("YES".equals(mark))
+            return true;
+        else if ("NO".equals(mark))
+            return false;
+        else {
+            fail("Unknown status " + mark + "!");
+            return false;
         }
     }
 
@@ -122,10 +133,10 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.d(TAG, "Found the leaderboard " + boardName);
-                assertEquals("leaderboard is asc order?", transLeaderboardStatus(isAscMark),
+                assertEquals("leaderboard is asc order?", transLeaderboardOrderStatus(isAscMark),
                         board.getSort());
-                assertEquals("leaderboard is secret?", transLeaderboardStatus(isSecretMark),
-                        board.getSecret());
+                assertEquals("leaderboard is secret?", transLeaderboardSecretStatus(isSecretMark),
+                        board.isSecret());
                 return;
             }
         }
@@ -258,9 +269,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                             public void onFailure(int responseCode, HeaderIterator headers,
                                     String response) {
                                 Log.d(TAG, "No leaderboard score!");
-                                // When leaderboard doesn't have score, is also
-                                // return 404. Sucks
-                                // and I have to keep status not to failed
                                 notifyStepPass();
                             }
                         });
@@ -303,7 +311,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     }
 
     @Then("my score (-?\\d+) should be updated in leaderboard (.+)")
-    public void verifyMyScoreInLeaderboard(final int score, final String boardName) {
+    public void verifyMyScoreInLeaderboard(int score, final String boardName) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
@@ -312,9 +320,13 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
-
                                 Log.d(TAG, "Get leaderboard score success!");
-                                getBlockRepo().put(SCORE, entry[0]);
+                                // SDK updates and return empty entry instead of
+                                // return failed when score is deleted
+                                if (entry == null || entry.length == 0)
+                                    getBlockRepo().put(SCORE, new Score());
+                                else
+                                    getBlockRepo().put(SCORE, entry[0]);
                                 notifyAsyncInStep();
                             }
 
@@ -322,16 +334,16 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                             public void onFailure(int responseCode, HeaderIterator headers,
                                     String response) {
                                 Log.d(TAG, "No leaderboard score!");
-                                // When leaderboard doesn't have score, is also
-                                // return 404. Sucks
-                                // and I have to keep status not to failed
                                 getBlockRepo().put(SCORE, new Score());
                                 notifyAsyncInStep();
                             }
                         });
-                
+
                 waitForAsyncInStep();
 
+                // a small trick to match the step with ios
+                if (score == 0)
+                    score = -1;
                 assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
                 return;
             }
@@ -349,9 +361,11 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                         Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
-
                                 Log.d(TAG, "Get leaderboard score success!");
-                                getBlockRepo().put(SCORE, entry[0]);
+                                if (entry == null || entry.length == 0)
+                                    getBlockRepo().put(SCORE, new Score());
+                                else
+                                    getBlockRepo().put(SCORE, entry[0]);
                                 notifyAsyncInStep();
                             }
 
@@ -359,9 +373,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                             public void onFailure(int responseCode, HeaderIterator headers,
                                     String response) {
                                 Log.d(TAG, "No leaderboard score!");
-                                // When leaderboard doesn't have score, is also
-                                // return 404. Sucks
-                                // and I have to keep status not to failed
                                 getBlockRepo().put(SCORE, new Score());
                                 notifyAsyncInStep();
                             }

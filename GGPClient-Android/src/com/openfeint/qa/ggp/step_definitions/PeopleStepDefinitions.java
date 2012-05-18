@@ -53,7 +53,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("my (\\w+) should be (.+)")
+    @Then("my info (\\w+) should be (.+)")
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
@@ -62,7 +62,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("id".equals(column)) {
             assertEquals("userId", value, me.getId());
         } else if ("userGrade".equals(column)) {
-            assertEquals("userGrade", value, me.getUserGrade());
+            assertEquals("userGrade", value, String.valueOf(me.getUserGrade()));
         } else if ("region".equals(column)) {
             assertEquals("userRegion", value, me.getRegion());
         } else if ("subregion".equals(column)) {
@@ -87,7 +87,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     @When("I see my info from server")
     public void getUserInfoFromServer() {
         notifyStepWait();
-        GreeUser.loadUserWithId(1, 1, "@me", new GreeUserListener() {
+        GreeUser.loadUserWithId("@me", new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] people) {
                 Log.d(TAG, "Get people success!");
@@ -169,7 +169,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
         Log.d(TAG, "Checking friend info...");
         assertEquals("userId", id, friend.getId());
-        assertEquals("userGrade", grade, friend.getUserGrade());
+        assertEquals("userGrade", grade, String.valueOf(friend.getUserGrade()));
     }
 
     // This step is not using now, seems the sdk is not allow to get another
@@ -177,7 +177,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     @When("I check friend list of user (\\w+)")
     public void getSpecificUserFriends(String userId) {
         notifyStepWait();
-        GreeUser.loadUserWithId(1, 1, userId, new GreeUserListener() {
+        GreeUser.loadUserWithId(userId, new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] people) {
                 Log.d(TAG, "Get people success!");
