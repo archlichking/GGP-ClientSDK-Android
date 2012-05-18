@@ -6,6 +6,7 @@ import static junit.framework.Assert.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import net.gree.asdk.api.FriendCode;
 import net.gree.asdk.api.FriendCode.Code;
@@ -99,9 +100,9 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     private String getExpireDate(int days) {
         // Calculate the expire date
         SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+        formater.setTimeZone(TimeZone.getTimeZone("GMT"));
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_MONTH, days);
-        cal.add(Calendar.HOUR, -8); // reduce 8 hours to UTC time zone
         return formater.format(cal.getTime());
     }
 
@@ -119,6 +120,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     }
 
     @And("I load my friend code")
+    @When("I load my friend code")
     public void loadFriendCode() {
         CodeListener listener = new CodeListener() {
             @Override
