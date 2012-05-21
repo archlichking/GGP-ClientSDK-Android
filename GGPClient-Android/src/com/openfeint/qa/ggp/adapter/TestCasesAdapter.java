@@ -83,10 +83,15 @@ public class TestCasesAdapter extends BaseAdapter {
             wrapper.setSelected(isSelected);
         }
         notifyDataSetChanged();
-        // Set<String> keys = id2checkBox.keySet();
-        // for (String key : keys) {
-        // id2checkBox.get(key).setChecked(isSelected);
-        // }
+    }
+    
+    public void ToggleSelectFailed(boolean isSelected) {
+        for (CaseWrapper wrapper : testCases) {
+            if (wrapper.getTheCase().getResult() == TestCase.RESULT.FAILED) {
+                wrapper.setSelected(isSelected);
+                this.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
