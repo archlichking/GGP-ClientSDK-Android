@@ -206,6 +206,16 @@ public class MainActivity extends Activity {
             }
 
         });
+        
+        CheckBox select_failed = (CheckBox) findViewById(R.id.use_failed);
+        select_failed.setVisibility(View.VISIBLE);
+        select_failed.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                adapter.ToggleSelectFailed(isChecked);
+            }
+        });
     }
 
     private void initProgressDialog(String msg) {

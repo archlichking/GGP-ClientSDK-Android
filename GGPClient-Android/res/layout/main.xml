@@ -32,7 +32,7 @@
                 android:id="@+id/text_run_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="433" >
+                android:text="451" >
             </EditText>
         </LinearLayout>
 
@@ -51,7 +51,7 @@
                 android:id="@+id/text_suite_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="178" />
+                android:text="185" />
         </LinearLayout>
     </LinearLayout>
 
@@ -71,20 +71,28 @@
             android:layout_height="wrap_content"
             android:text="Start Selected" />
 
-        <Button
-            android:id="@+id/logout_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Logout" />
-
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+        
     <CheckBox
         android:id="@+id/use_all"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="click to select all"
+        android:text="select all"
         android:visibility="gone" />
+    
+    <CheckBox
+        android:id="@+id/use_failed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20px"
+        android:text="select failed"
+        android:visibility="gone" />
+    
+    </LinearLayout>
 
     <ListView
         android:id="@+id/result_list"
