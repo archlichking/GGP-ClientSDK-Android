@@ -10,10 +10,11 @@ public class Consts {
 
     public static final String SUCCESS = "SUCCESS";
     
-    public static final int startIndex_0 = 0;
+    public static final int STARTINDEX_0 = 0;
     
-    public static final int startIndex_1 = 1;
+    public static final int STARTINDEX_1 = 1;
 
-    public static final int pageSize = 30;
-
+    public static final int PAGESIZE_ALL = 100;
+    
+    public static final int PAGESIZE_FIRSTPAGE = 10;
 }

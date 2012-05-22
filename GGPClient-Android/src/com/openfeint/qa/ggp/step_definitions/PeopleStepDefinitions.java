@@ -3,7 +3,6 @@ package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.fail;
 
 import java.util.ArrayList;
@@ -15,11 +14,8 @@ import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 
 import org.apache.http.HeaderIterator;
-import org.objenesis.instantiator.basic.NewInstanceInstantiator;
 
 import util.Consts;
-import android.R.integer;
-import android.net.wifi.WifiConfiguration.Status;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -112,7 +108,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private void getCurrentUserFriends(int pageSize) {
         notifyStepWait();
         GreeUser me = GreePlatform.getLocalUser();
-        me.loadFriends(Consts.startIndex_1, pageSize, new GreeUserListener() {
+        me.loadFriends(Consts.STARTINDEX_1, pageSize, new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] people) {
                 Log.d(TAG, "Get people success!");
@@ -137,12 +133,12 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
     @When("I check my friend list")
     public void getAllFriends() {
-        getCurrentUserFriends(Consts.pageSize);
+        getCurrentUserFriends(Consts.PAGESIZE_ALL);
     }
 
     @When("I check my friend list first page")
     public void getFriendsOfFirstPage() {
-        getCurrentUserFriends(10);
+        getCurrentUserFriends(Consts.PAGESIZE_FIRSTPAGE);
     }
 
     @Then("friend list should be size of (\\d+)")
@@ -247,7 +243,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         notifyStepWait();
         GreeUser me = GreePlatform.getLocalUser();
         getBlockRepo().put(IGNORE_LIST, new ArrayList<String>());
-        me.loadIgnoredUserIds(Consts.startIndex_1, 10, new GreeIgnoredUserListener() {
+        me.loadIgnoredUserIds(Consts.STARTINDEX_1, 10, new GreeIgnoredUserListener() {
             @Override
             public void onSuccess(int index, int count, String[] list) {
                 Log.d(TAG, "Get ignore list success!");

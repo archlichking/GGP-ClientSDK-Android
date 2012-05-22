@@ -60,7 +60,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     public void getAchievements() {
         notifyStepWait();
         getBlockRepo().put(ACHIEVEMENT_LIST, new ArrayList<Achievement>());
-        Achievement.loadAchievements(Consts.startIndex_1, Consts.pageSize,
+        Achievement.loadAchievements(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL,
                 new AchievementListUpdateListener() {
                     @Override
                     public void onSuccess(int index, int totalListSize,

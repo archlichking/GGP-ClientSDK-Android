@@ -88,7 +88,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @When("I load list of leaderboard")
     public void getLeaderboards() {
         notifyStepWait();
-        Leaderboard.loadLeaderboards(Consts.startIndex_1, Consts.pageSize,
+        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL,
                 new LeaderboardListener() {
 
                     @Override
@@ -255,7 +255,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                 Log.d(TAG, "Found the leaderboard " + boardName);
                 getBlockRepo().put(ALL_SCORE, new ArrayList<Score>());
                 Leaderboard.getScore(board.getId(), transSelector(selection), transPeriod(period),
-                        Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
+                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
 
@@ -317,7 +317,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
-                        Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
+                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
                                 Log.d(TAG, "Get leaderboard score success!");
@@ -358,7 +358,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
                 Leaderboard.getScore(board.getId(), transSelector("EVERYONE"), transPeriod(period),
-                        Consts.startIndex_0, Consts.pageSize, new ScoreListener() {
+                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
                                 Log.d(TAG, "Get leaderboard score success!");
