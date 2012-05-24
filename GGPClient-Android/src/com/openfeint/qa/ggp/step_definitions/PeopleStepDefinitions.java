@@ -19,6 +19,7 @@ import util.Consts;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -33,6 +34,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private final static String FRIEND = "friend";
 
     private final static String IGNORE_LIST = "ignoreUsers";
+
+    private final static String IGNORE_USER = "specificIgnoreUser";
 
     @Given("I logged in with email (.+) and password (\\w+)")
     public void checkLogin(String email, String password) {
@@ -215,6 +218,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     }
 
     @Given("I make sure my ignore list (\\w+) user (\\w+)")
+    @After("I make sure my ignore list (\\w+) user (\\w+)")
     public void checkUserInIgnoreListAsCondition(String isIncludeMark, String userId) {
         // Log.i(TAG, "Expect user " + userId + " is in my ignore list...");
         // GreeUser me = GreePlatform.getLocalUser();
@@ -314,5 +318,37 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             }
         }
         assertEquals("user in ignore list", transIsIncludeMark(isIncludeMark), isExists);
+    }
+
+    @When("I check user from my ignore list with id (\\w+)")
+    public void verifyBlockedUser(final String userId) {
+        notifyStepWait();
+        getBlockRepo().put(IGNORE_USER, "");
+        GreePlatform.getLocalUser().isIgnoringUserWithId(userId, new GreeIgnoredUserListener() {
+            @Override
+            public void onSuccess(int index, int count, String[] ignoredUsers) {
+                Log.i(TAG, "Check ignore user success!");
+                if (ignoredUsers != null && ignoredUsers.length > 0) {
+                    getBlockRepo().put(IGNORE_USER, ignoredUsers[0]);
+                } else {
+                    Log.d(TAG, "The list returned is null!");
+                }
+                notifyAsyncInStep();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Check ignore user failed!");
+                notifyAsyncInStep();
+            }
+        });
+    }
+
+    @Then("status of (\\w+) in my ignore list should be TRUE")
+    public void verifyUserBlocked(String userId) {
+        String returnUser = (String) getBlockRepo().get(IGNORE_USER);
+        if ("".equals(returnUser))
+            fail("Not ignore user return from server!");
+        assertEquals("user is blocked", userId, returnUser);
     }
 }
