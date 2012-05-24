@@ -278,7 +278,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         getIgnoreUser(Consts.PAGESIZE_ALL);
     }
 
-    @When("When I load first page of my ignore list")
+    @When("I load first page of my ignore list")
     public void getIgnoreUserOfFirstPage() {
         getIgnoreUser(Consts.PAGESIZE_FIRSTPAGE);
     }

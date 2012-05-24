@@ -20,6 +20,7 @@ import android.util.Log;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
+import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
@@ -30,6 +31,8 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Moderation_Steps";
 
     private static String MODERATION_LIST = "moderationlist";
+
+    private static String TEXT_ID = "textId";
 
     /*
      * Helper: get a list of textIds from the repo
@@ -47,8 +50,10 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I send to moderation server with text (.+)")
+    @Given("I make sure moderation server INCLUDES text (.+)")
     public void sendModeration(String text) {
         getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
+        getBlockRepo().put(TEXT_ID, "");
         notifyStepWait();
         ModeratedText.create(text, new ModeratedTextListener() {
             @Override
@@ -57,6 +62,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
                 ModeratedText.logTextInfo(textInfo);
                 ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
                         .asList(textInfo));
+                getBlockRepo().put(TEXT_ID, textInfo[0].getTextId());
                 notifyStepPass();
             }
 
@@ -204,45 +210,50 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     @Then("status of text (.+) should be (.+)")
     public void checkStatus(String text, String status) {
         ArrayList<ModeratedText> l = (ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST);
-        assertTrue(l.size() > 0);
-        int _found = 0;
-
-        if (l == null || l.size() == 0)
-            fail("No moderation text in the list!");
+        String textId = (String) getBlockRepo().get(TEXT_ID);
+        assertTrue("have text id to verify", !"".equals(textId));
 
         for (ModeratedText m : l) {
-            if (text.equals(m.getContent())) {
-                _found++;
+            if (textId.equals(m.getTextId())) {
                 assertEquals("status of moderation text" + text, transStatus(status), m.getStatus());
+                return;
             }
         }
-        assertTrue("found moderation text", _found == 1);
+        fail("Can not find the text!");
     }
 
-    @And("I make sure moderation server (\\w+) text (.*)")
-    @After("I make sure moderation server (\\w+) text (.*)")
-    public void makeSureTextInServer(String ad, String text) {
-        if ("NOTINCLUDES".equals(ad)) {
-            //
-            // for (ModeratedText m : (ArrayList<ModeratedText>)
-            // getBlockRepo().get(MODERATION_LIST)) {
-            // m.delete(new SuccessListener() {
-            //
-            // @Override
-            // public void onSuccess() {
-            // Log.d(TAG, "Delete moderated text success.");
-            // notifyAsyncInStep();
-            // }
-            //
-            // @Override
-            // public void onFailure(int responseCode, HeaderIterator headers,
-            // String response) {
-            // Log.d(TAG, "Delete moderated text failed!");
-            // notifyAsyncInStep();
-            // }
-            // });
-            // waitForAsyncInStep();
-            // }
+    @When("I update text (.+) with new text (.+)")
+    public void updateText(String text, String newText) {
+        ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
+                MODERATION_LIST);
+        notifyStepWait();
+        list.get(0).update(newText, new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.i(TAG, "Update moderation text success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Update moderation text failed!");
+                notifyStepPass();
+            }
+        });
+    }
+
+    @Then("new text should be (.+)")
+    public void verifyTextUpdated(String newText) {
+        ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
+                MODERATION_LIST);
+        String textId = (String) getBlockRepo().get(TEXT_ID);
+        assertTrue("have text id to verify", !"".equals(textId));
+        for (ModeratedText t : list) {
+            if (textId.equals(t.getTextId())) {
+                assertEquals("Updated text", newText, t.getContent());
+                return;
+            }
         }
+        fail("Can not find the text updated!");
     }
 }
