@@ -238,12 +238,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         // }
     }
 
-    @When("I load my ignore list")
-    public void getMyIgnoreList() {
+    private void getIgnoreUser(int pageSize) {
         notifyStepWait();
         GreeUser me = GreePlatform.getLocalUser();
         getBlockRepo().put(IGNORE_LIST, new ArrayList<String>());
-        me.loadIgnoredUserIds(Consts.STARTINDEX_1, 10, new GreeIgnoredUserListener() {
+        me.loadIgnoredUserIds(Consts.STARTINDEX_1, pageSize, new GreeIgnoredUserListener() {
             @Override
             public void onSuccess(int index, int count, String[] list) {
                 Log.d(TAG, "Get ignore list success!");
@@ -268,6 +267,16 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
                 notifyStepPass();
             }
         });
+    }
+
+    @When("I load my ignore list")
+    public void getAllIgnoreUser() {
+        getIgnoreUser(Consts.PAGESIZE_ALL);
+    }
+
+    @When("When I load first page of my ignore list")
+    public void getIgnoreUserOfFirstPage() {
+        getIgnoreUser(Consts.PAGESIZE_FIRSTPAGE);
     }
 
     @Then("my ignore list should be size of (\\d+)")
