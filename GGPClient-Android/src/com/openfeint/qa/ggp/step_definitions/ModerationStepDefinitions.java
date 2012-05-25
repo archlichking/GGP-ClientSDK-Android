@@ -33,7 +33,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
 
     private static String MODERATION_LIST = "moderationlist";
 
-    private static String MODERATION_TEXT = "moderationtest";
+    private static String MODERATION_TEXT = "moderationtext";
 
     @When("I send to moderation server with text (.+)")
     @Given("I make sure moderation server INCLUDES text (.+)")
@@ -45,7 +45,6 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
             public void onSuccess(ModeratedText[] textInfo) {
                 Log.d(TAG, "Create moderated text success!");
                 ModeratedText.logTextInfo(textInfo);
-                Log.e(TAG, "new id is: " + textInfo[0].getTextId());
                 getBlockRepo().put(MODERATION_TEXT, textInfo[0]);
                 notifyStepPass();
             }
@@ -114,8 +113,6 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     private ModeratedText getTextFromList(String text_id) {
         ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
                 MODERATION_LIST);
-        Log.e(TAG, "id in the list is: " + list.get(0).getTextId() + " and text: "
-                + list.get(0).getContent());
         for (ModeratedText text : list) {
             if (text_id.equals(text.getTextId()))
                 return text;
@@ -154,7 +151,6 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     @After("I make sure moderation server NOTINCLUDES text (.+)")
     public void cleanUpText(String text) {
         ModeratedText t = getTextIfExist();
-        Log.e(TAG, "text to be delete is: " + t.getTextId());
         notifyStepWait();
         t.delete(new SuccessListener() {
             @Override
