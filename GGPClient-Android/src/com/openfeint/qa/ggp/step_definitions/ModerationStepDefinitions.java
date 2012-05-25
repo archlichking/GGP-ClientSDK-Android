@@ -5,6 +5,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import android.util.Log;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
+import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
@@ -31,38 +33,25 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
 
     private static String MODERATION_LIST = "moderationlist";
 
-    /*
-     * Helper: get a list of textIds from the repo
-     */
-    private String[] getTextIdsSaved() {
-        ArrayList<ModeratedText> moderationList = (ArrayList<ModeratedText>) getBlockRepo().get(
-                MODERATION_LIST);
-        ArrayList<String> textIdsA = new ArrayList<String>();
-        Iterator<ModeratedText> iterator = moderationList.iterator();
-        while (iterator.hasNext()) {
-            textIdsA.add(iterator.next().getTextId());
-            Log.d(TAG, textIdsA.toString());
-        }
-        return (String[]) textIdsA.toArray(new String[textIdsA.size()]);
-    }
+    private static String MODERATION_TEXT = "moderationtext";
 
     @When("I send to moderation server with text (.+)")
+    @Given("I make sure moderation server INCLUDES text (.+)")
     public void sendModeration(String text) {
-        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
+        getBlockRepo().remove(MODERATION_TEXT);
         notifyStepWait();
         ModeratedText.create(text, new ModeratedTextListener() {
             @Override
             public void onSuccess(ModeratedText[] textInfo) {
-                Log.d(TAG, "onSuccess");
+                Log.d(TAG, "Create moderated text success!");
                 ModeratedText.logTextInfo(textInfo);
-                ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
-                        .asList(textInfo));
+                getBlockRepo().put(MODERATION_TEXT, textInfo[0]);
                 notifyStepPass();
             }
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                Log.e(TAG, "Get moderated text failed!");
+                Log.e(TAG, "Create moderated text failed!");
                 notifyStepPass();
             }
         });
@@ -84,75 +73,62 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
         return -100;
     }
 
+    private ModeratedText getTextIfExist() {
+        if (getBlockRepo().get(MODERATION_TEXT) == null)
+            fail("No moderation text stored in the Repo!");
+        return (ModeratedText) getBlockRepo().get(MODERATION_TEXT);
+    }
+
     @Then("status of text (.+) should be (\\w+)")
-    public void verifyModerationText(String text, String status) {
-        ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
-                MODERATION_LIST);
-        if (list == null || list.size() == 0)
-            fail("No moderation text in the list!");
-        for (ModeratedText item : list) {
-            if (text.equals(item.getContent())) {
-                Log.d(TAG, "Get the text \"" + text + "\" and checking its status...");
-                assertEquals("Text status", ModeratedText.STATUS_BEING_CHECKED, transStatus(status));
-                return;
-            }
-        }
-        fail("Could not find the moderation text: " + text);
+    public void verifyModerationStatus(String text, String status) {
+        ModeratedText t = getTextIfExist();
+        assertEquals("Text status", transStatus(status), t.getStatus());
     }
 
-    private boolean transTarget(String target) {
-        if ("NATIVE_CACHE".equals(target)) {
-            return false;
-        } else if ("SERVER".equals(target)) {
-            return true;
-        } else {
-            fail("Unknown target to load moderation text!");
-            return false;
-        }
-    }
-
-    // @When("I load from (.+ ) with moderation text (.+)")
-    // public void loadFromServer(String source, final String text) {
-    //
-    // if ("SERVER".equals(source)) {
-    // notifyStepWait();
-    //
-    // ModeratedText.loadFromIds(getTextIdsSaved(), new ModeratedTextListener()
-    // {
-    // // ArrayList<String> textA = new ArrayList<String>();
-    //
-    // @Override
-    // public void onSuccess(ModeratedText[] textInfo) {
-    // Log.d(TAG, "Get moderated text from Id success!");
-    // /*
-    // * replace the existing MODERATION_LIST
-    // */
-    // getBlockRepo()
-    // .put(MODERATION_LIST, new
-    // ArrayList<ModeratedText>(Arrays.asList(textInfo)));
-    // notifyStepPass();
-    // }
-    //
-    // @Override
-    // public void onFailure(int responseCode, HeaderIterator headers, String
-    // response) {
-    // Log.e(TAG, "Get moderated text from Id failed!");
-    //
-    // notifyStepPass();
-    // }
-    // });
-    // }
-    // }
-
-    @When("I load from (\\w+) with moderation text (.+)")
-    public void loadModerationText(String target) {
-        boolean isLoadFromServer = transTarget(target);
-        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
-        ModeratedText.loadFromLocalCache(isLoadFromServer, new ModeratedTextListener() {
+    @When("I load from SERVER with moderation text (.+)")
+    public void loadTextWithId(String text) {
+        ModeratedText old_text = getTextIfExist();
+        String[] ids = {
+            old_text.getTextId()
+        };
+        notifyStepWait();
+        getBlockRepo().remove(MODERATION_TEXT);
+        ModeratedText.loadFromIds(ids, new ModeratedTextListener() {
 
             @Override
             public void onSuccess(ModeratedText[] textInfo) {
-                Log.d(TAG, "Get moderated text success!");
+                Log.d(TAG, "Get moderated text form server success!");
+                getBlockRepo().put(MODERATION_TEXT, textInfo[0]);
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Get moderated text form server failed! " + response);
+                notifyStepPass();
+            }
+        });
+    }
+
+    private ModeratedText getTextFromList(String text_id) {
+        ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
+                MODERATION_LIST);
+        for (ModeratedText text : list) {
+            if (text_id.equals(text.getTextId()))
+                return text;
+        }
+        fail("Can not find text with id: " + text_id + " in the list!");
+        return null;
+    }
+
+    @When("I load from NATIVE_CACHE with moderation text (.+)")
+    public void loadModerationText(String text) {
+        getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
+        ModeratedText.loadFromLocalCache(false, new ModeratedTextListener() {
+
+            @Override
+            public void onSuccess(ModeratedText[] textInfo) {
+                Log.d(TAG, "Get moderated text form native cache success!");
                 Log.d(TAG, "Get " + textInfo.length + " text!");
                 ((ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST)).addAll(Arrays
                         .asList(textInfo));
@@ -161,88 +137,60 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                Log.e(TAG, "Get moderated text failed! " + response);
+                Log.e(TAG, "Get moderated text form native cache failed! " + response);
                 notifyAsyncInStep();
             }
         });
         waitForAsyncInStep();
+        ModeratedText old_text = getTextIfExist();
+        // Get text from native cache will return a list, so find text we want
+        // and store for verifing
+        getBlockRepo().put(MODERATION_TEXT, getTextFromList(old_text.getTextId()));
     }
 
     @After("I make sure moderation server NOTINCLUDES text (.+)")
     public void cleanUpText(String text) {
-        loadModerationText("NATIVE_CACHE");
-
-        ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
-                MODERATION_LIST);
-        if (list == null || list.size() == 0) {
-            Log.d(TAG, "No moderation text to be cleaned!");
-            return;
-        }
-
-        // Clean up all texts that match the content
-        for (ModeratedText item : list) {
-            if (text.equals(item.getContent())) {
-                Log.d(TAG, "Get text \"" + text + "\", clean it up...");
-                item.delete(new SuccessListener() {
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "Clean up success!");
-                        notifyAsyncInStep();
-                    }
-
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "Clean up failed, " + response);
-                        notifyAsyncInStep();
-                    }
-                });
-                waitForAsyncInStep();
+        ModeratedText t = getTextIfExist();
+        notifyStepWait();
+        t.delete(new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Clean up success!");
+                notifyStepPass();
             }
-        }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Clean up failed, " + response);
+                notifyStepPass();
+            }
+        });
     }
 
-    @Then("status of text (.+) should be (.+)")
-    public void checkStatus(String text, String status) {
-        ArrayList<ModeratedText> l = (ArrayList<ModeratedText>) getBlockRepo().get(MODERATION_LIST);
-        assertTrue(l.size() > 0);
-        int _found = 0;
-
-        if (l == null || l.size() == 0)
-            fail("No moderation text in the list!");
-
-        for (ModeratedText m : l) {
-            if (text.equals(m.getContent())) {
-                _found++;
-                assertEquals("status of moderation text" + text, transStatus(status), m.getStatus());
+    @When("I update text (.+) with new text (.+)")
+    public void updateText(String text, final String newText) {
+        final ModeratedText t = getTextIfExist();
+        notifyStepWait();
+        t.update(newText, new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.i(TAG, "Update moderation text success!");
+                Log.i(TAG, "Local text object also updated to: " + t.getContent());
+                assertEquals("local moderation text", newText, t.getContent());
+                notifyStepPass();
             }
-        }
-        assertTrue("found moderation text", _found == 1);
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Update moderation text failed!");
+                notifyStepPass();
+            }
+        });
     }
 
-    @And("I make sure moderation server (\\w+) text (.*)")
-    @After("I make sure moderation server (\\w+) text (.*)")
-    public void makeSureTextInServer(String ad, String text) {
-        if ("NOTINCLUDES".equals(ad)) {
-            //
-            // for (ModeratedText m : (ArrayList<ModeratedText>)
-            // getBlockRepo().get(MODERATION_LIST)) {
-            // m.delete(new SuccessListener() {
-            //
-            // @Override
-            // public void onSuccess() {
-            // Log.d(TAG, "Delete moderated text success.");
-            // notifyAsyncInStep();
-            // }
-            //
-            // @Override
-            // public void onFailure(int responseCode, HeaderIterator headers,
-            // String response) {
-            // Log.d(TAG, "Delete moderated text failed!");
-            // notifyAsyncInStep();
-            // }
-            // });
-            // waitForAsyncInStep();
-            // }
-        }
+    @Then("new text should be (.+)")
+    public void verifyTextUpdated(String newText) {
+        ModeratedText t = getTextIfExist();
+        assertEquals("Updated text", newText, t.getContent());
     }
 }
