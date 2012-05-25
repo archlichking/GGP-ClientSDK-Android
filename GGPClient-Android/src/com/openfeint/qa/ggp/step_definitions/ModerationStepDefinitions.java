@@ -223,14 +223,17 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I update text (.+) with new text (.+)")
-    public void updateText(String text, String newText) {
+    public void updateText(String text, final String newText) {
         ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
                 MODERATION_LIST);
         notifyStepWait();
-        list.get(0).update(newText, new SuccessListener() {
+        final ModeratedText t = (ModeratedText) list.get(0);
+        t.update(newText, new SuccessListener() {
             @Override
             public void onSuccess() {
                 Log.i(TAG, "Update moderation text success!");
+                Log.i(TAG, "Local text object also updated to: " + t.getContent());
+                assertEquals("local moderation text", newText, t.getContent());
                 notifyStepPass();
             }
 
