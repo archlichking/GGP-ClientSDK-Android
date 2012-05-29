@@ -60,7 +60,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 		getBlockRepo().put(HAS_APP, me.getHasApp());
 	}
 
-	@Then("my hasTheApplication should be True")
+	@Then("my hasTheApplication should be true")
 	public void checkUserHasApp() {
 		assertTrue((Boolean) getBlockRepo().get(HAS_APP));
 	}
