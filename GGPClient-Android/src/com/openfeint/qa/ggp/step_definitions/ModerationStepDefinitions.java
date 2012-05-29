@@ -166,6 +166,27 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
             }
         });
     }
+    @When("I delete from moderation server with text (.+)")
+    public void deleteText(String text) {
+    	final ModeratedText t = getTextIfExist();
+    	if (!text.equals(t.getContent())) {
+    		fail(text + " is not previously created");
+    	}
+    	notifyStepWait();
+        t.delete(new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Delete moderation success.");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Delete moderation failed! " + response);
+                notifyStepPass();
+            }
+        });	
+    }
 
     @When("I update text (.+) with new text (.+)")
     public void updateText(String text, final String newText) {
