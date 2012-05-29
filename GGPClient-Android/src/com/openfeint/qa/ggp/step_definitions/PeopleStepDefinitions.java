@@ -57,6 +57,9 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 	@When("I see my hasTheApplication")
 	public void getUserHasApp() {
 		GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
+		if (me == null) {
+			fail("Unable to get MYSELF");
+		}
 		getBlockRepo().put(HAS_APP, me.getHasApp());
 	}
 
