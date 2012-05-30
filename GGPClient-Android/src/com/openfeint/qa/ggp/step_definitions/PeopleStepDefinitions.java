@@ -54,9 +54,9 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @When("I check if I (.+) application of id APP_ID")
-    public void getUserHasApp(String hasFlag, String appId) {
-        if (hasMarker == "HAVE") {
+    @When("I check if I (.+) application of id (.+)")
+    public void getUserHasApp(String hasMarker, String appId) {
+        if ("HAVE".equals(hasMarker)) {
             GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
             if (me == null) {
                 fail("Unable to get MYSELF");
@@ -65,7 +65,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("I HAVE application of id APP_ID should be TRUE")
+    @Then("I HAVE application of id (.+) should be TRUE")
     public void checkUserHasApp(String appId) {
         assertTrue((Boolean) getBlockRepo().get(HAS_APP));
     }
