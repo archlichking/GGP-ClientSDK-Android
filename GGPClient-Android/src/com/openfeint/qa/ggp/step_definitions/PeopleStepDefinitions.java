@@ -31,6 +31,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
     private final static String MYSELF = "me";
 
+    private final static String HAS_APP = "hasApp";
+
     private final static String FRIEND = "friend";
 
     private final static String IGNORE_LIST = "ignoreUsers";
@@ -52,7 +54,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("my info (\\w+) should be (.+)")
+    @Then("my info (.+) should be (.+)")
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
@@ -78,6 +80,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             assertEquals("age", value, me.getAge());
         } else if ("timezone".equals(column)) {
             assertEquals("timezone", value, me.getTimezone());
+        } else if ("has the application".equals(column)) {
+            assertEquals("has the application", value, String.valueOf(me.getHasApp()));
         } else {
             fail("Unknown column of user info!");
         }
@@ -225,7 +229,6 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         // me.isIgnoringUserWithId(userId, ignoredUserListener);
         // waitForAsyncInStep();
         //
-        // if (getBlockRepo().get(IGNORE_LIST) == null)
         // fail("Did not get the ignore list!");
         // ArrayList<String> ignoreList = (ArrayList<String>)
         // getBlockRepo().get(IGNORE_LIST);
