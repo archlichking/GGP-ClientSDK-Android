@@ -54,23 +54,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @When("I check if I (.+) application of id (.+)")
-    public void getUserHasApp(String hasMarker, String appId) {
-        if ("HAVE".equals(hasMarker)) {
-            GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
-            if (me == null) {
-                fail("Unable to get MYSELF");
-            }
-            getBlockRepo().put(HAS_APP, me.getHasApp());
-        }
-    }
-
-    @Then("I HAVE application of id (.+) should be TRUE")
-    public void checkUserHasApp(String appId) {
-        assertTrue((Boolean) getBlockRepo().get(HAS_APP));
-    }
-
-    @Then("my info (\\w+) should be (.+)")
+    @Then("my info (.+) should be (.+)")
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
@@ -96,6 +80,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             assertEquals("age", value, me.getAge());
         } else if ("timezone".equals(column)) {
             assertEquals("timezone", value, me.getTimezone());
+        } else if ("has the application".equals(column)) {
+            assertEquals("has the application", value, String.valueOf(me.getHasApp()));
         } else {
             fail("Unknown column of user info!");
         }
