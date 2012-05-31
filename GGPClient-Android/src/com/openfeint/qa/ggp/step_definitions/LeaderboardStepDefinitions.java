@@ -88,8 +88,12 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @Given("I load list of leaderboard")
     @When("I load list of leaderboard")
     public void getLeaderboards() {
+        getLeaderboard(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
+    }
+
+    private void getLeaderboard(int startIndex, int pageSize) {
         notifyStepWait();
-        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL,
+        Leaderboard.loadLeaderboards(startIndex, pageSize,
                 new LeaderboardListener() {
 
                     @Override
@@ -401,36 +405,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     @Given("I load the first page of leaderboard list with page size (.+)")
     public void getTheFirstPageOfLeaderboards(String pageSize) {
-        notifyStepWait();
-        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Integer.parseInt(pageSize.trim()),
-                new LeaderboardListener() {
-
-                    @Override
-                    public void onSuccess(int index, int totalListSize, Leaderboard[] leaderboards) {
-                        Log.d(TAG, "Get the first page of Leaderboards success!");
-                        getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                        for (int i = 0; i < leaderboards.length; i++) {
-                            Log.d(TAG, "Leaderboard " + i + ": " + leaderboards[i].getName());
-                        }
-                        ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST))
-                                .addAll(Arrays.asList(leaderboards));
-                        notifyStepPass();
-
-                    }
-
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "Get the first page of Leadboards failed!");
-                        getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                        notifyStepPass();
-                    }
-                });
+        getLeaderboard(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
 
-    @Then("the size of the first page of leaderboard should be less then page size (\\d+)")
-    public void verifyTheFirstPageOfLeaderboardsCount(String pageSize) {
-        ArrayList<Leaderboard> l = ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST));
-        if (l == null) fail("get the first page of leaderboard failed!");
-        assertTrue("the size of the first page of leaderboard should be " + pageSize + " or less", l.size() <= Integer.parseInt(pageSize.trim()));
-    }
 }
