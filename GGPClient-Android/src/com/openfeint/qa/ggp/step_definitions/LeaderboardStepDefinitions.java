@@ -403,7 +403,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         fail("cannot find the score of user name: " + pName);
     }
 
-    @Given("I load the first page of leaderboard list with page size (.+)")
+    @When("I load the first page of leaderboard list with page size (.+)")
     public void getTheFirstPageOfLeaderboards(String pageSize) {
         getLeaderboard(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
