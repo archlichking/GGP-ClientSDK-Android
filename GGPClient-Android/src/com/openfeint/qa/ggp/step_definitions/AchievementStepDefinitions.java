@@ -1,3 +1,4 @@
+
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
@@ -57,29 +58,31 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
 
     @When("I load list of achievement")
     @Given("I load list of achievement")
-    public void getAchievements() {
+    public void getAllAchievements() {
+        getAchievements(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
+    }
+
+    private void getAchievements(int startIndex, int pageSize) {
         notifyStepWait();
         getBlockRepo().put(ACHIEVEMENT_LIST, new ArrayList<Achievement>());
-        Achievement.loadAchievements(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL,
-                new AchievementListUpdateListener() {
-                    @Override
-                    public void onSuccess(int index, int totalListSize,
-                            Achievement[] requestedElements) {
-                        Log.d(TAG, "Get achievement list success!");
-                        if (requestedElements != null) {
-                            Log.i(TAG, "Adding achievement datas");
-                            ((ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST))
-                                    .addAll(Arrays.asList(requestedElements));
-                        }
-                        notifyStepPass();
-                    }
+        Achievement.loadAchievements(startIndex, pageSize, new AchievementListUpdateListener() {
+            @Override
+            public void onSuccess(int index, int totalListSize, Achievement[] requestedElements) {
+                Log.d(TAG, "Get achievement list success!");
+                if (requestedElements != null) {
+                    Log.i(TAG, "Adding achievement datas");
+                    ((ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST)).addAll(Arrays
+                            .asList(requestedElements));
+                }
+                notifyStepPass();
+            }
 
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "Get achievement list failed!");
-                        notifyStepPass();
-                    }
-                });
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Get achievement list failed!");
+                notifyStepPass();
+            }
+        });
     }
 
     @Then("I should have total achievements (\\d+)")
@@ -159,6 +162,12 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     public void verifyScoreUpdated(String operator, int changeValue) {
         // TODO So far, sdk is not support to get the total score of user, will
         // add this verification after sdk to support it
+    }
+
+    @When("I load the first page of achievement list with page size (\\d+)")
+    @Then("I load the first page of achievement list with page size (\\d+)")
+    public void getFirstPageAchievements(String pageSize) {
+        getAchievements(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
 
 }
