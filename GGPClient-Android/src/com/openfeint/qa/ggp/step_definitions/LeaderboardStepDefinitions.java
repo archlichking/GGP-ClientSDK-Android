@@ -2,6 +2,7 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -87,8 +88,12 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @Given("I load list of leaderboard")
     @When("I load list of leaderboard")
     public void getLeaderboards() {
+        getLeaderboard(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
+    }
+
+    private void getLeaderboard(int startIndex, int pageSize) {
         notifyStepWait();
-        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL,
+        Leaderboard.loadLeaderboards(startIndex, pageSize,
                 new LeaderboardListener() {
 
                     @Override
@@ -396,6 +401,11 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             }
         }
         fail("cannot find the score of user name: " + pName);
+    }
+
+    @When("I load the first page of leaderboard list with page size (.+)")
+    public void getTheFirstPageOfLeaderboards(String pageSize) {
+        getLeaderboard(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
 
 }
