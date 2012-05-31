@@ -399,10 +399,10 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         fail("cannot find the score of user name: " + pName);
     }
 
-    @Given("I load the first page of leaderboard list with page size (\\d+)")
+    @Given("I load the first page of leaderboard list with page size (.+)")
     public void getTheFirstPageOfLeaderboards(String pageSize) {
         notifyStepWait();
-        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Integer.parseInt(pageSize),
+        Leaderboard.loadLeaderboards(Consts.STARTINDEX_1, Integer.parseInt(pageSize.trim()),
                 new LeaderboardListener() {
 
                     @Override
@@ -431,6 +431,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     public void verifyTheFirstPageOfLeaderboardsCount(String pageSize) {
         ArrayList<Leaderboard> l = ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST));
         if (l == null) fail("get the first page of leaderboard failed!");
-        assertTrue("the size of the first page of leaderboard should be " + pageSize + " or less", l.size() <= Integer.parseInt(pageSize));
+        assertTrue("the size of the first page of leaderboard should be " + pageSize + " or less", l.size() <= Integer.parseInt(pageSize.trim()));
     }
 }
