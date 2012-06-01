@@ -165,7 +165,6 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I load the first page of achievement list with page size (\\d+)")
-    @Then("I load the first page of achievement list with page size (\\d+)")
     public void getFirstPageAchievements(String pageSize) {
         getAchievements(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
