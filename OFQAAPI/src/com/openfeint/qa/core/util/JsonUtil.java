@@ -9,17 +9,24 @@ import java.io.IOException;
 
 public class JsonUtil {
     
-    public static String getJsonValueByKey(String key, BufferedReader json) {
-        String value = "";
+    private JSONObject configObject;
+    
+    public JsonUtil(BufferedReader json) {
         try {
-            JSONObject tempJsonObject = new JSONObject(json.readLine());
-            JSONObject configObject = tempJsonObject.getJSONObject("auto_config");
-            value = configObject.getString(key);
+            configObject = new JSONObject(json.readLine()).getJSONObject("auto_config");
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
+    
+    public String getJsonValueByKey(String key) {
+        String value = "";
+        try {
+            value = configObject.getString(key);
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         return value;

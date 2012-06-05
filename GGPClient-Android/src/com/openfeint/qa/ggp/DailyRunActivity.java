@@ -1,13 +1,13 @@
 
 package com.openfeint.qa.ggp;
 
+import java.io.BufferedReader;
 import java.util.Arrays;
 
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
 import util.RawFileUtil;
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -18,8 +18,11 @@ import com.openfeint.qa.core.caze.TestCase;
 import com.openfeint.qa.core.caze.builder.CaseBuilder;
 import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
+import com.openfeint.qa.core.exception.TCMIsnotReachableException;
+import com.openfeint.qa.core.net.PlainHttpCommunicator;
 import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
+import com.openfeint.qa.core.util.JsonUtil;
 
 public class DailyRunActivity extends Activity {
 
@@ -31,9 +34,13 @@ public class DailyRunActivity extends Activity {
 
     private TestCase[] case_list;
 
-    private final String suite_id = "188";
+    private boolean is_create_run;
 
-    private final String run_id = "458";
+    private String suite_id;
+
+    private String run_id;
+
+    private String run_desc;
 
     private boolean need_reload = false;
 
@@ -95,16 +102,16 @@ public class DailyRunActivity extends Activity {
         super.onResume();
         // initDebugButton();
         Log.d(TAG, "Begin the daily run....");
-//        do {
-//            loadCase();
-//        } while (need_reload);
-//
-//        runAndSubmitCase();
-    }
 
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.d(TAG, "Saving state!");
+        do {
+            getConfig(); //Get Configuration for this run
+        } while (need_reload);
+        
+        do {
+            loadCase(); //Load test case from TCMS
+        } while (need_reload);
+
+        runAndSubmitCase(); //Run test cases loaded and submit result
     }
 
     AuthorizeListener listener = new AuthorizeListener() {
@@ -138,5 +145,38 @@ public class DailyRunActivity extends Activity {
                 runAndSubmitCase();
             }
         });
+    }
+
+    private void getConfig() {
+        PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
+        try {
+            Log.d(TAG, "========= Load Configuration ==========");
+            BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
+            if (br != null) {
+                JsonUtil config = new JsonUtil(br);
+
+                String mark = config.getJsonValueByKey("is_create_run");
+                Log.d(TAG, "is_create_run: " + mark);
+                if ("true".equals(mark))
+                    is_create_run = true;
+                else
+                    is_create_run = false;
+
+                suite_id = config.getJsonValueByKey("suite_id");
+                Log.d(TAG, "suite_id: " + suite_id);
+
+                run_id = config.getJsonValueByKey("run_id");
+                Log.d(TAG, "run_id: " + run_id);
+
+                run_desc = config.getJsonValueByKey("description");
+                Log.d(TAG, "description: " + run_desc);
+
+                need_reload = false;
+            }
+        } catch (TCMIsnotReachableException e) {
+            need_reload = true;
+            e.printStackTrace();
+        } finally {
+        }
     }
 }
