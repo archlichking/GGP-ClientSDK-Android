@@ -30,8 +30,7 @@ public class StringUtil {
         // keep only GIVEN, THEN, WHEN
         while (i < temp.size()) {
             String s = temp.get(i).replace("\t", "");
-            if (!s.startsWith(CommandUtil.GIVEN_FILTER) 
-                    && !s.startsWith(CommandUtil.WHEN_FILTER)
+            if (!s.startsWith(CommandUtil.GIVEN_FILTER) && !s.startsWith(CommandUtil.WHEN_FILTER)
                     && !s.startsWith(CommandUtil.THEN_FILTER)
                     && !s.startsWith(CommandUtil.AND_FILTER)
                     && !s.startsWith(CommandUtil.BEFORE_FILTER)
@@ -55,13 +54,15 @@ public class StringUtil {
 
     public static Properties buildProperties(String config) {
         Properties p = new Properties();
-        StringReader sr = new StringReader(config);
+
         try {
+            StringReader sr = new StringReader(config);
             p.load(sr);
         } catch (IOException ioe) {
             ioe.printStackTrace();
+        } catch(NullPointerException npe){
+            // do nothing, used by plainhttpexception
         }
         return p;
     }
-
 }
