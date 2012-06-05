@@ -2,12 +2,14 @@
 package com.openfeint.qa.ggp;
 
 import com.openfeint.qa.core.caze.TestCase;
-import com.openfeint.qa.core.caze.TestCaseDelegate;
 import com.openfeint.qa.core.caze.builder.CaseBuilder;
 import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
+import com.openfeint.qa.core.exception.TCMIsnotReachableException;
+import com.openfeint.qa.core.net.PlainHttpCommunicator;
 import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
+import com.openfeint.qa.core.util.JsonUtil;
 import com.openfeint.qa.ggp.adapter.CaseWrapper;
 import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
 
@@ -32,6 +34,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -113,14 +116,34 @@ public class MainActivity extends Activity {
 
     private Runnable loading_case_thread = new Runnable() {
         public void run() {
+            
+            PlainHttpCommunicator htp = new PlainHttpCommunicator(null, null);
+            try {
+                BufferedReader br = htp.getJsonResponse("http://192.168.100.158:3000/config");
+                if(br != null){
+                    String value = JsonUtil.getJsonValueByKey("suite_id", br);
+                    
+                    System.out.println(value);
+                }
+                
+            } catch (TCMIsnotReachableException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } finally {
+            }
+            
+            
+            
+            
+            
             // change to CaseBuilderFactory.FILE_BUILDER to load from
             // res.raw/sample_case.txt
 
             // or use TCM_BUILDER
             // rfu.getTextFromRawResource(R.raw.tcm)
             // to use TCM
-            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
-                    rfu.getTextFromRawResource(R.raw.tcm),
+            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.FILE_BUILDER,
+                    rfu.getTextFromRawResource(R.raw.sample_case),
                     rfu.getTextFromRawResource(R.raw.step_def, "step_path"), MainActivity.this);
 
             try {
