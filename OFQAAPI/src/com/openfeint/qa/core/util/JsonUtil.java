@@ -15,13 +15,14 @@ public class JsonUtil {
             JSONObject tempJsonObject = new JSONObject(json.readLine());
             JSONObject configObject = tempJsonObject.getJSONObject("auto_config");
             value = configObject.getString(key);
+            json.reset();
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        } 
         return value;
     }
 }
