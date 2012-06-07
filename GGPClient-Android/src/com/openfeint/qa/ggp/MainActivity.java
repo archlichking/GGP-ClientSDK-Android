@@ -35,6 +35,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -116,26 +117,23 @@ public class MainActivity extends Activity {
 
     private Runnable loading_case_thread = new Runnable() {
         public void run() {
-            
+
             PlainHttpCommunicator htp = new PlainHttpCommunicator(null, null);
             try {
                 BufferedReader br = htp.getJsonResponse("http://192.168.100.158:3000/config");
-                if(br != null){
-                    String value = JsonUtil.getJsonValueByKey("suite_id", br);
-                    
-                    System.out.println(value);
+                if (br != null) {
+                    String value = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
+                    String value2 = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
+                    String value3 = JsonUtil.getAutoConfigJsonValueByKey("description", br);
+                    System.out.println(value + value2 + value3);
                 }
-                
+
             } catch (TCMIsnotReachableException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             } finally {
             }
-            
-            
-            
-            
-            
+
             // change to CaseBuilderFactory.FILE_BUILDER to load from
             // res.raw/sample_case.txt
 
@@ -229,11 +227,11 @@ public class MainActivity extends Activity {
             }
 
         });
-        
+
         CheckBox select_failed = (CheckBox) findViewById(R.id.use_failed);
         select_failed.setVisibility(View.VISIBLE);
         select_failed.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            
+
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 adapter.ToggleSelectFailed(isChecked);

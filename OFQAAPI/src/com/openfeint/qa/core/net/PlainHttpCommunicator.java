@@ -25,7 +25,11 @@ public class PlainHttpCommunicator extends NetCommunicator {
     public BufferedReader getJsonResponse(String url) throws TCMIsnotReachableException {
           try {
             HttpResponse response = this.pullGet(this.buildHttpGet(url));
-            return new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+            BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+            if(br.markSupported()){
+                br.mark(br.toString().length());
+            }
+            return br;
         } catch (Exception e) {
             return null;
         }

@@ -8,25 +8,19 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class JsonUtil {
-    
-    private JSONObject configObject;
-    
-    public JsonUtil(BufferedReader json) {
-        try {
-            configObject = new JSONObject(json.readLine()).getJSONObject("auto_config");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    
-    public String getJsonValueByKey(String key) {
+
+    public static String getAutoConfigJsonValueByKey(String key, BufferedReader json) {
         String value = "";
         try {
+            JSONObject tempJsonObject = new JSONObject(json.readLine());
+            JSONObject configObject = tempJsonObject.getJSONObject("auto_config");
             value = configObject.getString(key);
+            json.reset();
         } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return value;
