@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class JsonUtil {
-    
+
     public static String getAutoConfigJsonValueByKey(String key, BufferedReader json) {
         String value = "";
         try {
@@ -22,7 +22,7 @@ public class JsonUtil {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } 
+        }
         return value;
     }
 }
