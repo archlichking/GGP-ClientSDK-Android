@@ -122,9 +122,9 @@ public class MainActivity extends Activity {
             try {
                 BufferedReader br = htp.getJsonResponse("http://192.168.100.158:3000/config");
                 if (br != null) {
-                    String value = JsonUtil.getJsonValueByKey("suite_id", br);
-                    String value2 = JsonUtil.getJsonValueByKey("run_id", br);
-                    String value3 = JsonUtil.getJsonValueByKey("description", br);
+                    String value = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
+                    String value2 = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
+                    String value3 = JsonUtil.getAutoConfigJsonValueByKey("description", br);
                     System.out.println(value + value2 + value3);
                 }
 

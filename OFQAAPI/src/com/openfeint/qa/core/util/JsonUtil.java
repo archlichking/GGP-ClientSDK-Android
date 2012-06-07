@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class JsonUtil {
     
-    public static String getJsonValueByKey(String key, BufferedReader json) {
+    public static String getAutoConfigJsonValueByKey(String key, BufferedReader json) {
         String value = "";
         try {
             JSONObject tempJsonObject = new JSONObject(json.readLine());
