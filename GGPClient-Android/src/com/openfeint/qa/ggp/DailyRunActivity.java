@@ -48,6 +48,7 @@ public class DailyRunActivity extends Activity {
     private Button start_button;
 
     private void loadCase() {
+        Log.d(TAG, "==================== Load Cases From TCMS ====================");
         CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
                 rfu.getTextFromRawResource(R.raw.tcm),
                 rfu.getTextFromRawResource(R.raw.step_def, "step_path"), DailyRunActivity.this);
@@ -64,6 +65,7 @@ public class DailyRunActivity extends Activity {
 
     private Runnable run_case_thread = new Runnable() {
         public void run() {
+            Log.d(TAG, "==================== Begin to Run ====================");
             case_list = runner.getAllCases();
             // TODO debug message
             Log.d(TAG, "All test case loaded are below:");
@@ -101,17 +103,16 @@ public class DailyRunActivity extends Activity {
     public void onResume() {
         super.onResume();
         // initDebugButton();
-        Log.d(TAG, "Begin the daily run....");
 
         do {
-            getConfig(); //Get Configuration for this run
-        } while (need_reload);
-        
-        do {
-            loadCase(); //Load test case from TCMS
+            getConfig(); // Get Configuration for this run
         } while (need_reload);
 
-        runAndSubmitCase(); //Run test cases loaded and submit result
+        do {
+            loadCase(); // Load test case from TCMS
+        } while (need_reload);
+
+        runAndSubmitCase(); // Run test cases loaded and submit result
     }
 
     AuthorizeListener listener = new AuthorizeListener() {
@@ -150,25 +151,24 @@ public class DailyRunActivity extends Activity {
     private void getConfig() {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
-            Log.d(TAG, "========= Load Configuration ==========");
+            Log.d(TAG, "==================== Load Configuration ====================");
             BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
             if (br != null) {
-                JsonUtil config = new JsonUtil(br);
 
-                String mark = config.getJsonValueByKey("is_create_run");
+                String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
                 Log.d(TAG, "is_create_run: " + mark);
                 if ("true".equals(mark))
                     is_create_run = true;
                 else
                     is_create_run = false;
 
-                suite_id = config.getJsonValueByKey("suite_id");
+                suite_id = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
                 Log.d(TAG, "suite_id: " + suite_id);
 
-                run_id = config.getJsonValueByKey("run_id");
+                run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
                 Log.d(TAG, "run_id: " + run_id);
 
-                run_desc = config.getJsonValueByKey("description");
+                run_desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
                 Log.d(TAG, "description: " + run_desc);
 
                 need_reload = false;

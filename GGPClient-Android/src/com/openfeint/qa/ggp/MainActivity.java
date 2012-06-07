@@ -78,10 +78,11 @@ public class MainActivity extends Activity {
                 case TOAST_DISPLAY:
                     Toast.makeText(getBaseContext(), (String) msg.obj, Toast.LENGTH_SHORT).show();
                     break;
-                case TIME_OUT_LIMITATION:
-                    Toast.makeText(getBaseContext(), "Loading time out!", Toast.LENGTH_SHORT)
-                            .show();
-                    break;
+                // case TIME_OUT_LIMITATION:
+                // Toast.makeText(getBaseContext(), "Loading time out!",
+                // Toast.LENGTH_SHORT)
+                // .show();
+                // break;
                 default:
                     break;
             }
@@ -118,30 +119,14 @@ public class MainActivity extends Activity {
     private Runnable loading_case_thread = new Runnable() {
         public void run() {
 
-            PlainHttpCommunicator htp = new PlainHttpCommunicator(null, null);
-            try {
-                BufferedReader br = htp.getJsonResponse("http://192.168.100.158:3000/config");
-                if (br != null) {
-                    String value = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
-                    String value2 = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
-                    String value3 = JsonUtil.getAutoConfigJsonValueByKey("description", br);
-                    System.out.println(value + value2 + value3);
-                }
-
-            } catch (TCMIsnotReachableException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } finally {
-            }
-
             // change to CaseBuilderFactory.FILE_BUILDER to load from
             // res.raw/sample_case.txt
 
             // or use TCM_BUILDER
             // rfu.getTextFromRawResource(R.raw.tcm)
             // to use TCM
-            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.FILE_BUILDER,
-                    rfu.getTextFromRawResource(R.raw.sample_case),
+            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
+                    rfu.getTextFromRawResource(R.raw.tcm),
                     rfu.getTextFromRawResource(R.raw.step_def, "step_path"), MainActivity.this);
 
             try {
@@ -288,6 +273,8 @@ public class MainActivity extends Activity {
         initRunCaseButton();
         initResultList();
         LoginGGP();
+        // For debug
+        // testJsonConfig();
     }
 
     @Override
@@ -318,6 +305,28 @@ public class MainActivity extends Activity {
     private void LoginGGP() {
         if (!Authorizer.isAuthorized()) {
             Authorizer.authorize(this, listener);
+        }
+    }
+
+    // Test coffe api
+    private void testJsonConfig() {
+
+        PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
+        try {
+            BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
+            if (br != null) {
+                String is_Create_Run = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
+                Log.d(TAG, "is_create_run: " + is_Create_Run);
+                String suite_id = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
+                Log.d(TAG, "suite_id: " + suite_id);
+                String run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
+                Log.d(TAG, "run_id: " + run_id);
+                String desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
+                Log.d(TAG, "description: " + desc);
+            }
+        } catch (TCMIsnotReachableException e) {
+            e.printStackTrace();
+        } finally {
         }
     }
 }
