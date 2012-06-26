@@ -5,13 +5,22 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
+import net.gree.asdk.core.Core;
+import net.gree.asdk.core.Session;
+import net.gree.asdk.core.auth.AuthorizerCore;
+import net.gree.asdk.core.auth.OAuthStorage;
+import net.gree.asdk.core.request.OnResponseCallback;
+import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 
 import org.apache.http.HeaderIterator;
 
@@ -23,6 +32,7 @@ import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
+import com.openfeint.qa.core.util.CredentialStorage;
 
 public class PeopleStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
@@ -40,8 +50,116 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private final static String IGNORE_USER = "specificIgnoreUser";
 
     @Given("I logged in with email (.+) and password (\\w+)")
-    public void checkLogin(String email, String password) {
-        getUserInfoFromCache();
+    public void setCurrentLoginUser(String email, String password) {
+        Log.d(TAG, "current user is : " + GreePlatform.getLocalUser().getNickname());
+        HashMap<String, String> credential = getCredential(email, password);
+        String user_id = credential.get(CredentialStorage.KEY_USERID);
+        if (GreePlatform.getLocalUser() == null
+                || !GreePlatform.getLocalUser().getId().equals(user_id)) {
+            hackLogin(credential);
+        } else {
+            Log.i(TAG, "Already login with email " + email);
+        }
+    }
+
+    @When("I switch account with email (.+) and password (\\w+)")
+    public void switchLoginUser(String email, String password) {
+        Log.d(TAG, "current user is : " + GreePlatform.getLocalUser().getNickname());
+        HashMap<String, String> credential = getCredential(email, password);
+        hackLogin(credential);
+    }
+
+    private HashMap<String, String> getCredential(String email, String password) {
+        CredentialStorage credentialStorage = CredentialStorage.getInstance();
+        String key = email + "&" + password;
+        HashMap<String, String> credential = credentialStorage.getCredentialByKey(key);
+        if (credential == null) {
+            fail("Can not get credential with key:" + key);
+        }
+        return credential;
+    }
+
+    private void hackLogin(HashMap<String, String> credential) {
+        // Get token & secret of the user
+        String user_id = credential.get(CredentialStorage.KEY_USERID);
+        String token = credential.get(CredentialStorage.KEY_TOKEN);
+        String secret = credential.get(CredentialStorage.KEY_SECRET);
+        Log.i(TAG, "Try Login Userid: " + user_id + "\nToken: " + token + "\nand secret: " + secret);
+
+        AuthorizerCore core = AuthorizerCore.getInstance();
+        try {
+            // get mOAuth field of AuthorizerCore
+            Field oAuth_field = core.getClass().getDeclaredField("mOAuth");
+            oAuth_field.setAccessible(true);
+            // get OAuth class
+            Class<?> OAuthClass = Class.forName("net.gree.asdk.core.auth.OAuth");
+            // get consumer by invoke getConsumer method of OAuth class
+            final CommonsHttpOAuthConsumer consumer = (CommonsHttpOAuthConsumer) OAuthClass
+                    .getMethod("getConsumer").invoke(oAuth_field.get(core));
+            // Set token & secret
+            consumer.setTokenWithSecret(token, secret);
+            
+            //get mOAuthStorage field of AuthorizerCore
+            Field mOAuthStorage_field = core.getClass().getDeclaredField("mOAuthStorage");
+            mOAuthStorage_field.setAccessible(true);
+            //set user_id, token & secret
+            OAuthStorage oAuth_storage = (OAuthStorage) mOAuthStorage_field.get(core);
+            oAuth_storage.setUserId(user_id);
+            oAuth_storage.setToken(token);
+            oAuth_storage.setSecret(secret);
+
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        // Update session & local user
+        Log.d(TAG, "Updating session...");
+        new Session().refreshSessionId(GreePlatform.getContext(), new OnResponseCallback<String>() {
+            @Override
+            public void onSuccess(int responseCode, HeaderIterator headers, String response) {
+                Log.i(TAG, "Update session success!");
+                notifyAsyncInStep();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                notifyAsyncInStep();
+                fail("Update session failed!");
+            }
+        });
+        waitForAsyncInStep();
+        Log.d(TAG, "Updating local user...");
+        Core.getInstance().updateLocalUser(new GreeUserListener() {
+            @Override
+            public void onSuccess(int index, int count, GreeUser[] users) {
+                notifyAsyncInStep();
+                Log.i(TAG, "Update local user to: " + users[0].getNickname());
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                notifyAsyncInStep();
+                fail("Update local user failed!");
+            }
+        });
+        waitForAsyncInStep();
     }
 
     @When("I see my info from native cache")

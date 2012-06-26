@@ -1,22 +1,15 @@
 
 package com.openfeint.qa.ggp;
 
-import com.openfeint.qa.core.caze.TestCase;
-import com.openfeint.qa.core.caze.builder.CaseBuilder;
-import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
-import com.openfeint.qa.core.exception.CaseBuildFailedException;
-import com.openfeint.qa.core.exception.TCMIsnotReachableException;
-import com.openfeint.qa.core.net.PlainHttpCommunicator;
-import com.openfeint.qa.core.net.TCMCommunicator;
-import com.openfeint.qa.core.runner.TestRunner;
-import com.openfeint.qa.core.util.JsonUtil;
-import com.openfeint.qa.ggp.adapter.CaseWrapper;
-import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
 import util.RawFileUtil;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
@@ -34,12 +27,18 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import com.openfeint.qa.core.caze.TestCase;
+import com.openfeint.qa.core.caze.builder.CaseBuilder;
+import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
+import com.openfeint.qa.core.exception.CaseBuildFailedException;
+import com.openfeint.qa.core.exception.TCMIsnotReachableException;
+import com.openfeint.qa.core.net.PlainHttpCommunicator;
+import com.openfeint.qa.core.net.TCMCommunicator;
+import com.openfeint.qa.core.runner.TestRunner;
+import com.openfeint.qa.core.util.CredentialStorage;
+import com.openfeint.qa.core.util.JsonUtil;
+import com.openfeint.qa.ggp.adapter.CaseWrapper;
+import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
 
 public class MainActivity extends Activity {
     private Button start_button;
@@ -125,8 +124,8 @@ public class MainActivity extends Activity {
             // or use TCM_BUILDER
             // rfu.getTextFromRawResource(R.raw.tcm)
             // to use TCM
-            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
-                    rfu.getTextFromRawResource(R.raw.tcm),
+            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.FILE_BUILDER,
+                    rfu.getTextFromRawResource(R.raw.sample_case),
                     rfu.getTextFromRawResource(R.raw.step_def, "step_path"), MainActivity.this);
 
             try {
@@ -272,7 +271,8 @@ public class MainActivity extends Activity {
         initLoadCaseButton();
         initRunCaseButton();
         initResultList();
-        LoginGGP();
+        loadCredentialJson("12697");
+        // LoginGGP();
         // For debug
         // testJsonConfig();
     }
@@ -329,4 +329,12 @@ public class MainActivity extends Activity {
         } finally {
         }
     }
+
+    private void loadCredentialJson(String app_id) {
+        String data = rfu.getTextFromRawResource(R.raw.credentials_config_12697);
+        Log.e(TAG, "Json content: \n" + data);
+        CredentialStorage.initialize();
+        CredentialStorage.getInstance().initCredentialStorageWithAppId(app_id, data);
+    }
+
 }
