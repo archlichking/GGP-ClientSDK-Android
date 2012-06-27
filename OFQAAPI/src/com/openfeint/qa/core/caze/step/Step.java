@@ -106,7 +106,7 @@ public class Step implements Observer {
                 String exp = "timeout exception in step [" + ref_class.getName() + "."
                         + ref_method.getName() + "]";
                 try {
-                    boolean t = crossStepSync.tryAcquire(1, 10000, TimeUnit.MILLISECONDS);
+                    boolean t = crossStepSync.tryAcquire(1, 20000, TimeUnit.MILLISECONDS);
                     if (!t) {
                         crossStepSync = new Semaphore(0, true);
                         throw new InvocationTargetException(new Exception(exp), exp);
@@ -123,7 +123,7 @@ public class Step implements Observer {
             Log.e(StringUtil.DEBUG_TAG, ek.getCause().getMessage());
         } catch (InvocationTargetException er) {
             // most case failed reason raised here
-            comm = command + " ==> " + er.getCause().getMessage();
+            comm = "[" + er.getCause().getMessage() + "]" + " in step [" + command + "]";
             // for NullPointointException use
             er.printStackTrace();
             Log.e(StringUtil.DEBUG_TAG, comm);
