@@ -333,7 +333,7 @@ public class MainActivity extends Activity {
     private void loadCredentialJson(String app_id) {
         String data = rfu.getTextFromRawResource(R.raw.credentials_config_12697);
         Log.e(TAG, "Json content: \n" + data);
-        CredentialStorage.getInstance().initCredentialStorageWithAppId(app_id, data);
+        CredentialStorage.initCredentialStorageWithAppId(app_id, data);
     }
 
 }

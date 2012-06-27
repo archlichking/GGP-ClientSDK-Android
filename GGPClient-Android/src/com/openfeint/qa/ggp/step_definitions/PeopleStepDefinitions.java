@@ -49,6 +49,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
     private final static String IGNORE_USER = "specificIgnoreUser";
 
+    private static String login_result;
+
     @Given("I logged in with email (.+) and password (\\w+)")
     public void setCurrentLoginUser(String email, String password) {
         Log.d(TAG, "current user is : " + GreePlatform.getLocalUser().getNickname());
@@ -80,6 +82,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     }
 
     private void hackLogin(HashMap<String, String> credential) {
+        login_result = "success";
         // Get token & secret of the user
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         String token = credential.get(CredentialStorage.KEY_TOKEN);
@@ -98,11 +101,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
                     .getMethod("getConsumer").invoke(oAuth_field.get(core));
             // Set token & secret
             consumer.setTokenWithSecret(token, secret);
-            
-            //get mOAuthStorage field of AuthorizerCore
+
+            // get mOAuthStorage field of AuthorizerCore
             Field mOAuthStorage_field = core.getClass().getDeclaredField("mOAuthStorage");
             mOAuthStorage_field.setAccessible(true);
-            //set user_id, token & secret
+            // set user_id, token & secret
             OAuthStorage oAuth_storage = (OAuthStorage) mOAuthStorage_field.get(core);
             oAuth_storage.setUserId(user_id);
             oAuth_storage.setToken(token);
@@ -113,19 +116,14 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (InvocationTargetException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -140,26 +138,30 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                login_result = "Update session failed!";
                 notifyAsyncInStep();
-                fail("Update session failed!");
             }
         });
         waitForAsyncInStep();
+        if (!"success".equals(login_result))
+            fail(login_result);
         Log.d(TAG, "Updating local user...");
         Core.getInstance().updateLocalUser(new GreeUserListener() {
             @Override
             public void onSuccess(int index, int count, GreeUser[] users) {
-                notifyAsyncInStep();
                 Log.i(TAG, "Update local user to: " + users[0].getNickname());
+                notifyAsyncInStep();
             }
 
             @Override
             public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                login_result = "Update local user failed!";
                 notifyAsyncInStep();
-                fail("Update local user failed!");
             }
         });
         waitForAsyncInStep();
+        if (!"success".equals(login_result))
+            fail(login_result);
     }
 
     @When("I see my info from native cache")
