@@ -24,6 +24,10 @@ public class CredentialStorage {
     public static final String KEY_SECRET = "oauthSecret";
     
     private static CredentialStorage sInstance;
+    
+    private CredentialStorage() {
+        
+    }
 
     public void initCredentialStorageWithAppId(String app_id, String data) {
         if (current_appid == null || !current_appid.equals(app_id)) {
@@ -32,13 +36,9 @@ public class CredentialStorage {
         }
     }
     
-    public static void initialize() {
-        sInstance = new CredentialStorage();
-    }
-    
-    public static CredentialStorage getInstance() {
+    public static synchronized CredentialStorage getInstance() {
         if (sInstance == null) {
-            throw new RuntimeException("Not initialized CredentialStorage!");
+            sInstance = new CredentialStorage();
         }
         return sInstance;
     }
