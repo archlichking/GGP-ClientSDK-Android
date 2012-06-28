@@ -446,7 +446,6 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
     @When("I check user from my ignore list with id (\\w+)")
     public void verifyBlockedUser(final String userId) {
-        notifyStepWait();
         getBlockRepo().put(IGNORE_USER, "");
         GreePlatform.getLocalUser().isIgnoringUserWithId(userId, new GreeIgnoredUserListener() {
             @Override
@@ -466,6 +465,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
                 notifyAsyncInStep();
             }
         });
+        waitForAsyncInStep();
     }
 
     @Then("status of (\\w+) in my ignore list should be TRUE")

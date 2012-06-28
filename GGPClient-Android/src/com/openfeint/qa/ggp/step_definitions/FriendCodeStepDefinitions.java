@@ -67,6 +67,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I request friend code with expire time (.+)")
+    @And("I request friend code with expire time (.+)")
     public void requestFriendCode(String expireTime) {
         CodeListener listener = new CodeListener() {
             @Override
