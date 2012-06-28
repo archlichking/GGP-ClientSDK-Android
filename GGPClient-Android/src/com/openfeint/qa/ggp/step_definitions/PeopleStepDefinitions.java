@@ -29,6 +29,7 @@ import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
+import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -53,7 +54,6 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
 
     @Given("I logged in with email (.+) and password (\\w+)")
     public void setCurrentLoginUser(String email, String password) {
-        Log.d(TAG, "current user is : " + GreePlatform.getLocalUser().getNickname());
         HashMap<String, String> credential = getCredential(email, password);
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         if (GreePlatform.getLocalUser() == null
@@ -64,7 +64,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @When("I switch account with email (.+) and password (\\w+)")
+    @And("I switch to user (.+) with password (\\w+)")
+    @After("I switch to user (.+) with password (\\w+)")
     public void switchLoginUser(String email, String password) {
         Log.d(TAG, "current user is : " + GreePlatform.getLocalUser().getNickname());
         HashMap<String, String> credential = getCredential(email, password);

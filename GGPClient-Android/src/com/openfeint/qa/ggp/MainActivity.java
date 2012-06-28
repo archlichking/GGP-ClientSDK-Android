@@ -2,6 +2,7 @@
 package com.openfeint.qa.ggp;
 
 import java.io.BufferedReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -124,8 +125,8 @@ public class MainActivity extends Activity {
             // or use TCM_BUILDER
             // rfu.getTextFromRawResource(R.raw.tcm)
             // to use TCM
-            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.FILE_BUILDER,
-                    rfu.getTextFromRawResource(R.raw.sample_case),
+            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
+                    rfu.getTextFromRawResource(R.raw.tcm),
                     rfu.getTextFromRawResource(R.raw.step_def, "step_path"), MainActivity.this);
 
             try {
@@ -271,8 +272,8 @@ public class MainActivity extends Activity {
         initLoadCaseButton();
         initRunCaseButton();
         initResultList();
-        loadCredentialJson("12697");
-        // LoginGGP();
+        loadCredentialJson();
+//        LoginGGP();
         // For debug
         // testJsonConfig();
     }
@@ -330,9 +331,31 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void loadCredentialJson(String app_id) {
-        String data = rfu.getTextFromRawResource(R.raw.credentials_config_12697);
-        Log.e(TAG, "Json content: \n" + data);
+    private void loadCredentialJson() {
+        // LocalStorage localStorage = LocalStorage.getInstance(this);
+        // Map<String, ?> params = localStorage.getParams();
+        // Log.e(TAG,
+        // "-----------------------Looking into local storage:---------------------------");
+        // for (String key: params.keySet()) {
+        // Log.e(TAG, key + ":  " + params.get(key));
+        // }
+        String app_id = "15265";
+        String field_name = "credentials_config_" + app_id;
+        int resource_id = 0;
+        try {
+            Field field = R.raw.class.getDeclaredField(field_name);
+            resource_id = (Integer) field.get(null);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        String data = rfu.getTextFromRawResource(resource_id);
+//        Log.e(TAG, "Json content: \n" + data);
         CredentialStorage.initCredentialStorageWithAppId(app_id, data);
     }
 
