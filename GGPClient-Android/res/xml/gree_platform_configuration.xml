@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <properties>
-	<debug>true</debug>
-
-	<applicationName>GREE</applicationName>
-	<app_fullname>GGP Sample App</app_fullname>
-	<!-- <developmentMode>sandbox</developmentMode> <serverUrlSuffix>stg1</serverUrlSuffix> 
-		<applicationId>11787</applicationId> <consumerKey>97f61d7b8f43</consumerKey> 
-		<consumerSecret>38a4325e76d9b66fb5cd2bda5a2eaa59</consumerSecret> <applicationId>607</applicationId> 
-		<consumerKey>ec26c5b8495b</consumerKey> <consumerSecret>8b76971b196a05737c4f667fb5bcb5b2</consumerSecret> 
-		<developmentMode>developSandbox</developmentMode> <serverUrlSuffix>ggpsb-qa</serverUrlSuffix> -->
-		
+	<enableLogging>true</enableLogging>
+    <logLevel>100</logLevel>
+	
+    <!--
 	<applicationId>12697</applicationId>
 	<consumerKey>3c47b530df23</consumerKey>
 	<consumerSecret>c6958d092a3db174de86678f31d86d01</consumerSecret>
 	<developmentMode>sandbox</developmentMode>
+	-->
+	
+	<applicationId>15265</applicationId> 
+	<consumerKey>2417700eda96</consumerKey> 
+	<consumerSecret>9f3c6403c47cd9567fe64cfb1065346b</consumerSecret>
+	<developmentMode>sandbox</developmentMode>
+	
 
 	<use_push_notification>true</use_push_notification>
 	<use_in_app_notification>true</use_in_app_notification>

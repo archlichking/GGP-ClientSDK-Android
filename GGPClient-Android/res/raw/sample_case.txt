@@ -1,8 +1,8 @@
 Scenario: first test
 
-Given I logged in with email auto3@163.com and password 123456
+Given I logged in with email auto3@136.com and password 123456
 When I check my friend list
 Then friend list should be size of 13
-When I switch account with email auto4@163.com and password 123456
+And I switch to user auto4@136.com with password 123456
 When I check my friend list
-Then friend list should be size of 3
+Then friend list should be size of 1
