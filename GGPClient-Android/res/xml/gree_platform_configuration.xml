@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <properties>
 	<enableLogging>true</enableLogging>
-    <logLevel>100</logLevel>
+    <logLevel>50</logLevel>
 	
     <!--
 	<applicationId>12697</applicationId>
