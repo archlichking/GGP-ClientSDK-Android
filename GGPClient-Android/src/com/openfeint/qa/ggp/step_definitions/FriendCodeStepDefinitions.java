@@ -180,6 +180,7 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
         FriendCode.verifyCode(code, new SuccessListener() {
             @Override
             public void onSuccess() {
+                getBlockRepo().put(ERROR_CODE, null);
                 Log.d(TAG, "Verify friend code success!");
                 notifyStepPass();
             }
