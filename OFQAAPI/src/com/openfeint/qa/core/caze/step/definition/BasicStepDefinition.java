@@ -15,7 +15,7 @@ public abstract class BasicStepDefinition extends Observable {
 
     private Semaphore inStepSync = new Semaphore(0, true);
 
-    protected int TIMEOUT = 5000;
+    protected int TIMEOUT = 15000;
 
     protected static Hashtable<String, Object> getBlockRepo() {
         if (null == blockRepo) {
@@ -51,7 +51,7 @@ public abstract class BasicStepDefinition extends Observable {
             boolean t = inStepSync.tryAcquire(1, TIMEOUT, TimeUnit.MILLISECONDS);
             if (!t) {
                 inStepSync = new Semaphore(0, true);
-                throw new AssertionFailedError();
+                throw new AssertionFailedError("Request time out!");
             }
         } catch (InterruptedException e) {
             inStepSync = new Semaphore(0, true);

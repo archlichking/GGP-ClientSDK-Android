@@ -23,8 +23,10 @@ import util.Consts;
 
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 import junit.framework.AssertionFailedError;
 
@@ -93,29 +95,28 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     private void getLeaderboard(int startIndex, int pageSize) {
         notifyStepWait();
-        Leaderboard.loadLeaderboards(startIndex, pageSize,
-                new LeaderboardListener() {
+        Leaderboard.loadLeaderboards(startIndex, pageSize, new LeaderboardListener() {
 
-                    @Override
-                    public void onSuccess(int index, int totalListSize, Leaderboard[] leaderboards) {
-                        Log.d(TAG, "Get Leaderboards success!");
-                        getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                        for (int i = 0; i < leaderboards.length; i++) {
-                            Log.d(TAG, "Leaderboard " + i + ": " + leaderboards[i].getName());
-                        }
-                        ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST))
-                                .addAll(Arrays.asList(leaderboards));
-                        notifyStepPass();
+            @Override
+            public void onSuccess(int index, int totalListSize, Leaderboard[] leaderboards) {
+                Log.d(TAG, "Get Leaderboards success!");
+                getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
+                for (int i = 0; i < leaderboards.length; i++) {
+                    Log.d(TAG, "Leaderboard " + i + ": " + leaderboards[i].getName());
+                }
+                ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST)).addAll(Arrays
+                        .asList(leaderboards));
+                notifyStepPass();
 
-                    }
+            }
 
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "Get Leadboards failed!");
-                        getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                        notifyStepPass();
-                    }
-                });
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Get Leadboards failed!");
+                getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
+                notifyStepPass();
+            }
+        });
     }
 
     @Then("I should have total leaderboards (\\d+)")
@@ -318,9 +319,11 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @Then("my score (-?\\d+) should be updated in leaderboard (.+)")
     public void verifyMyScoreInLeaderboard(int score, final String boardName) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
+        int format = Leaderboard.FORMAT_VALUE;
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
+                format = board.getFormat();
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
                         Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
@@ -328,10 +331,11 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                                 Log.d(TAG, "Get leaderboard score success!");
                                 // SDK updates and return empty entry instead of
                                 // return failed when score is deleted
-                                if (entry == null || entry.length == 0)
+                                if (entry == null || entry.length == 0) {
                                     getBlockRepo().put(SCORE, new Score());
-                                else
+                                } else {
                                     getBlockRepo().put(SCORE, entry[0]);
+                                }
                                 notifyAsyncInStep();
                             }
 
@@ -349,7 +353,13 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                 // a small trick to match the step with ios
                 if (score == 0)
                     score = -1;
-                assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
+                if (format == Leaderboard.FORMAT_TIME) {
+                    String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
+                            score % 60);
+                    assertEquals(time, ((Score) getBlockRepo().get(SCORE)).getScoreAsString());
+                } else {
+                    assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
+                }
                 return;
             }
         }
