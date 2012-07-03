@@ -23,6 +23,7 @@ import net.gree.asdk.api.FriendCode.OwnerGetListener;
 import net.gree.asdk.api.FriendCode.SuccessListener;
 
 import org.apache.http.HeaderIterator;
+import org.mockito.internal.matchers.Null;
 import org.objenesis.instantiator.basic.NewInstanceInstantiator;
 
 import util.Consts;
@@ -176,11 +177,13 @@ public class FriendCodeStepDefinitions extends BasicStepDefinition {
     @And("I verify friend code of user (.+)")
     public void verifyFriendCode(String user) {
         notifyStepWait();
+        if (EMPTY_CODE.equals(getBlockRepo().get(FRIEND_CODE)))
+            fail("Friend code have not return yet!");
         String code = ((HashMap<String, Code>) getBlockRepo().get(FRIEND_CODE)).get(user).getCode();
         FriendCode.verifyCode(code, new SuccessListener() {
             @Override
             public void onSuccess() {
-                getBlockRepo().put(ERROR_CODE, null);
+                getBlockRepo().remove(ERROR_CODE);
                 Log.d(TAG, "Verify friend code success!");
                 notifyStepPass();
             }
