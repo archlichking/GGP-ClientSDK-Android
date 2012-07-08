@@ -7,12 +7,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
+import net.gree.asdk.api.ui.RequestDialog;
 import util.RawFileUtil;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -62,11 +65,21 @@ public class MainActivity extends Activity {
 
     private static final int TIME_OUT = 2;
 
+    public static final int REQUEST_POPUP = 1;
+
     private static final String TAG = "MainActivity";
 
     private TestCasesAdapter adapter;
 
     private static final int TIME_OUT_LIMITATION = 30000;
+
+    private static MainActivity mainActivity;
+
+    private static RequestDialog requestDialog;
+
+    public static Bitmap dialog_bitmap;
+
+    public static boolean is_dialog_opened;
 
     private Handler load_done_handler = new Handler() {
         @Override
@@ -273,7 +286,10 @@ public class MainActivity extends Activity {
         initRunCaseButton();
         initResultList();
         loadCredentialJson();
-//        LoginGGP();
+        mainActivity = MainActivity.this;
+
+        // testScreenshot();
+        // LoginGGP();
         // For debug
         // testJsonConfig();
     }
@@ -332,13 +348,6 @@ public class MainActivity extends Activity {
     }
 
     private void loadCredentialJson() {
-        // LocalStorage localStorage = LocalStorage.getInstance(this);
-        // Map<String, ?> params = localStorage.getParams();
-        // Log.e(TAG,
-        // "-----------------------Looking into local storage:---------------------------");
-        // for (String key: params.keySet()) {
-        // Log.e(TAG, key + ":  " + params.get(key));
-        // }
         String app_id = "15265";
         String field_name = "credentials_config_" + app_id;
         int resource_id = 0;
@@ -355,8 +364,46 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         String data = rfu.getTextFromRawResource(resource_id);
-//        Log.e(TAG, "Json content: \n" + data);
+        // Log.e(TAG, "Json content: \n" + data);
         CredentialStorage.initCredentialStorageWithAppId(app_id, data);
+    };
+
+    public Handler popup_handler = new Handler() {
+        @Override
+        public void handleMessage(Message message) {
+            switch (message.what) {
+                case REQUEST_POPUP:
+                    Log.d(TAG, "Trying to open request dialog...");
+                    is_dialog_opened = false;
+                    Handler handler = new Handler() {
+                        public void handleMessage(Message message) {
+                            switch (message.what) {
+                                case RequestDialog.OPENED:
+                                    Log.i(TAG, "Reqest Dialog opened.");
+                                    is_dialog_opened = true;
+                                    break;
+                                case RequestDialog.CLOSED:
+                                    Log.i(TAG, "Request Dialog closed.");
+                                    break;
+                                default:
+                            }
+                        }
+                    };
+                    requestDialog = new RequestDialog(MainActivity.this);
+                    requestDialog.setParams((TreeMap<String, Object>) message.obj);
+                    requestDialog.setHandler(handler);
+                    requestDialog.show();
+                    break;
+                default:
+            }
+        }
+    };
+
+    public static MainActivity getInstance() {
+        return mainActivity;
     }
 
+    public RequestDialog getRequestDialog() {
+        return requestDialog;
+    }
 }
