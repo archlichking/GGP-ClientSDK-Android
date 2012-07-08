@@ -6,16 +6,19 @@ import static junit.framework.Assert.fail;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.TreeMap;
 
 import junit.framework.Assert;
+import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.RequestDialog;
 import net.gree.asdk.core.ui.PopupDialog;
 import net.gree.asdk.core.ui.WebViewPopupDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
@@ -26,6 +29,7 @@ import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.ggp.MainActivity;
+import com.openfeint.qa.ggp.R;
 
 public class PopupStepDefinitions extends BasicStepDefinition {
 
@@ -88,7 +92,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        String data = "(function() {function waitPageLoading(){if(document.getElementById('btn-msg-choosed'))"
+                        String data = "(function() {function waitPageLoading(){if(document.getElementById('btn-msg-choosed')"
+                                + "&&'undefined'!=typeof(window.popupStep))"
                                 + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
                         view.loadUrl("javascript:" + data);
                     }
@@ -103,6 +108,9 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
             Log.d(TAG, "Popup is loaded!!!");
 
+            // saveImageAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
+            // "expect_request_dialog.png");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -110,17 +118,26 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     }
 
     // TODO just for debug ignore this
-    // @When("I debug picture comparison")
-    // public void screenshotComparison() {
-    // String sdcard_path =
-    // Environment.getExternalStorageDirectory().getAbsolutePath();
-    // File test2_file = new File(sdcard_path + "/test2.png");
-    // File test1_file = new File(sdcard_path + "/test1.png");
-    // double sRate = compareImage(test1_file, test2_file);
-    // double sRate2 = compareImage(the_same_file, expect_file);
-    // Log.e(TAG, "sRate: " + sRate);
-    // Log.e(TAG, "sRate2 should be 100: " + sRate2);
-    // }
+    @When("I debug picture comparison")
+    public void screenshotComparison() {
+        String sdcard_path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        Bitmap image_from_laptop = zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                .getContext().getResources(), R.drawable.expect_request_dialog), 408, 580);
+        File file_from_device = new File(sdcard_path + "/expect_request_dialog.png");
+        double sRate = compareImage(image_from_laptop, getBitmapFromFile(file_from_device));
+        Log.e(TAG, "sRate: " + sRate);
+    }
+
+    private static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+        Matrix matrix = new Matrix();
+        float scaleWidth = ((float) width / w);
+        float scaleHeight = ((float) height / h);
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap newbmp = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
+        return newbmp;
+    }
 
     private WebView getWebViewFromPopup(PopupDialog popup) throws Exception {
         Method getWebViewClientMethod = WebViewPopupDialog.class.getDeclaredMethod("getWebView");
@@ -241,10 +258,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 }
             }
 
-            // Begin image comparison
-            String sdcard_path = Environment.getExternalStorageDirectory().getAbsolutePath();
-            File file = new File(sdcard_path + "/expect_request_dialog.png");
-            Bitmap expect_image = getBitmapFromFile(file);
+            Bitmap expect_image = zoomBitmap(BitmapFactory.decodeResource(GreePlatform.getContext()
+                    .getResources(), R.drawable.expect_request_dialog), 408, 580);
             double sRate = compareImage(MainActivity.dialog_bitmap, expect_image);
             Log.d(TAG, "Similarity rate: " + sRate);
             Assert.assertTrue("popup similarity is bigger than 80%", sRate > 80);
@@ -252,6 +267,43 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    //TODO for data preparation
+    private void saveImageAsExpectedResult(String path, String img_name) {
+        File img = new File(path, img_name);
+        MainActivity activity = MainActivity.getInstance();
+        final RequestDialog requestDialog = activity.getRequestDialog();
+        try {
+            final WebView view = getWebViewFromPopup(requestDialog);
+            FileOutputStream fos = new FileOutputStream(img);
+            // Call main thread to build bitmap of popup
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.dialog_bitmap = null;
+                    view.buildDrawingCache();
+                    MainActivity.dialog_bitmap = view.getDrawingCache();
+                }
+            });
+
+            // wait bitmap of popup created
+            int times = 0;
+            while (MainActivity.dialog_bitmap == null && times < 5) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (MainActivity.dialog_bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)) {
+                Log.d(TAG, "Create expected image for popup success!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @After("I did dismiss (\\w+) popup")
