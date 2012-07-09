@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import junit.framework.Assert;
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.RequestDialog;
+import net.gree.asdk.core.ui.AuthorizableDialog;
 import net.gree.asdk.core.ui.PopupDialog;
 import net.gree.asdk.core.ui.WebViewPopupDialog;
 import android.graphics.Bitmap;
@@ -26,6 +27,7 @@ import android.webkit.WebView;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
+import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.ggp.MainActivity;
@@ -35,21 +37,42 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     private final String TAG = "Popup_Steps";
 
-    public static final String PARAMS = "params";
+    private static final String POPUP_PARAMS = "popup_params";
+
+    private static final String POPUP_TYPE = "popup_type";
 
     public static final String HANDLER = "handler";
 
-    private static boolean is_popup_loading_done;
+    private boolean is_popup_loading_done;
 
-    @When("I did open (\\w+) popup")
-    public void openPopup(String type) {
+    public static final int UNKNOWN_POPUP = 0;
+
+    public static final int REQUEST_POPUP = 1;
+
+    @And("I initialize (\\w+) popup with title (.+) and body (.+)")
+    public void initPopupDialog(String type, String title, String body) {
         TreeMap<String, Object> params = new TreeMap<String, Object>();
-        params.put("title", "auto test title");
-        params.put("body", "auto test body");
+        params.put("title", title);
+        params.put("body", body);
 
+        getBlockRepo().put(POPUP_PARAMS, params);
+        if ("request".equals(type)) {
+            getBlockRepo().put(POPUP_TYPE, REQUEST_POPUP);
+        } else {
+            Log.e(TAG, "unknown popup type!");
+            getBlockRepo().put(POPUP_TYPE, UNKNOWN_POPUP);
+        }
+    }
+
+    @When("I did open popup")
+    public void openPopup() {
         MainActivity activity = MainActivity.getInstance();
-        Message msg = activity.popup_handler.obtainMessage(MainActivity.REQUEST_POPUP);
-        msg.obj = params;
+        if ((Integer) getBlockRepo().get(POPUP_TYPE) == UNKNOWN_POPUP) {
+            return;
+        }
+        Message msg = activity.popup_handler
+                .obtainMessage((Integer) getBlockRepo().get(POPUP_TYPE));
+        msg.obj = getBlockRepo().get(POPUP_PARAMS);
         activity.popup_handler.sendMessage(msg);
 
         while (!MainActivity.is_dialog_opened) {
@@ -87,26 +110,26 @@ public class PopupStepDefinitions extends BasicStepDefinition {
             Thread.sleep(3000);
 
             int times = 0;
-            while (!is_popup_loading_done && times <= 20) {
+            Runnable check_task = new Runnable() {
+                @Override
+                public void run() {
+                    String data = "(function() {function waitPageLoading(){if(document.getElementById('btn-msg-choosed')"
+                            + "&&'undefined'!=typeof(window.popupStep))"
+                            + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
+                    view.loadUrl("javascript:" + data);
+                }
+            };
+            while (!is_popup_loading_done && times <= 10) {
                 Log.d(TAG, "still waiting...");
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String data = "(function() {function waitPageLoading(){if(document.getElementById('btn-msg-choosed')"
-                                + "&&'undefined'!=typeof(window.popupStep))"
-                                + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
-                        view.loadUrl("javascript:" + data);
-                    }
-                });
+                activity.runOnUiThread(check_task);
                 Thread.sleep(5000);
                 times++;
             }
 
-            if (!is_popup_loading_done) {
-                fail("Popup is not loading completed!");
-            }
+            if (is_popup_loading_done) {
+                Log.d(TAG, "Popup is loaded!!!");
 
-            Log.d(TAG, "Popup is loaded!!!");
+            }
 
             // saveImageAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
             // "expect_request_dialog.png");
@@ -269,7 +292,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    //TODO for data preparation
+    // TODO for data preparation
     private void saveImageAsExpectedResult(String path, String img_name) {
         File img = new File(path, img_name);
         MainActivity activity = MainActivity.getInstance();
@@ -306,15 +329,16 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     }
 
-    @After("I did dismiss (\\w+) popup")
-    public void dismissPopup(String type) {
+    @After("I did dismiss popup")
+    public void dismissPopup() {
         MainActivity activity = MainActivity.getInstance();
-        final RequestDialog requestDialog = activity.getRequestDialog();
+        final AuthorizableDialog dialog = activity.getRequestDialog();
+
         // call main thread to dismiss the popup
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                requestDialog.dismiss();
+                dialog.dismiss();
             }
         });
     }

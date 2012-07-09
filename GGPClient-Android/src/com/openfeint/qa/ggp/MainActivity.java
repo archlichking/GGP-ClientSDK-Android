@@ -43,6 +43,7 @@ import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
 import com.openfeint.qa.ggp.adapter.CaseWrapper;
 import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
+import com.openfeint.qa.ggp.step_definitions.PopupStepDefinitions;
 
 public class MainActivity extends Activity {
     private Button start_button;
@@ -65,8 +66,6 @@ public class MainActivity extends Activity {
 
     private static final int TIME_OUT = 2;
 
-    public static final int REQUEST_POPUP = 1;
-
     private static final String TAG = "MainActivity";
 
     private TestCasesAdapter adapter;
@@ -80,6 +79,8 @@ public class MainActivity extends Activity {
     public static Bitmap dialog_bitmap;
 
     public static boolean is_dialog_opened;
+    
+    public static boolean is_dialog_closed;
 
     private Handler load_done_handler = new Handler() {
         @Override
@@ -271,10 +272,6 @@ public class MainActivity extends Activity {
         result_list = (ListView) findViewById(R.id.result_list);
     }
 
-    private void submitToTCM(Collection<TestCase> tcs) {
-
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -372,9 +369,10 @@ public class MainActivity extends Activity {
         @Override
         public void handleMessage(Message message) {
             switch (message.what) {
-                case REQUEST_POPUP:
+                case PopupStepDefinitions.REQUEST_POPUP:
                     Log.d(TAG, "Trying to open request dialog...");
                     is_dialog_opened = false;
+                    is_dialog_closed = false;
                     Handler handler = new Handler() {
                         public void handleMessage(Message message) {
                             switch (message.what) {
@@ -384,6 +382,7 @@ public class MainActivity extends Activity {
                                     break;
                                 case RequestDialog.CLOSED:
                                     Log.i(TAG, "Request Dialog closed.");
+                                    is_dialog_closed = true;
                                     break;
                                 default:
                             }
