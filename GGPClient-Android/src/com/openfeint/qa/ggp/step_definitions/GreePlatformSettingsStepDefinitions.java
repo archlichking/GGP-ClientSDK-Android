@@ -11,6 +11,7 @@ import net.gree.asdk.core.storage.LocalStorage;
 import net.gree.asdk.core.util.CoreData;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 
@@ -21,6 +22,11 @@ public class GreePlatformSettingsStepDefinitions extends BasicStepDefinition {
     @When("I enable debug logging")
     public void enableLogging() {
         GreePlatformSettings.enableLogging(true);
+    }
+    
+    @And("I make sure debug logging is not enabled")
+    public void disableLogging() {
+        GreePlatformSettings.enableLogging(false);
     }
 
     @Then("debug logging should be opened")
@@ -70,5 +76,62 @@ public class GreePlatformSettingsStepDefinitions extends BasicStepDefinition {
                 Injector.getInstance(LocalStorage.class).getString(InternalSettings.WriteToFile));
         // check CoreData
         assertEquals(filePath, CoreData.get(InternalSettings.WriteToFile));
+    }
+
+    @And("I make sure notification is not enabled")
+    public void disableNotification() {
+        setNotification(false);
+    }
+
+    @When("I enable notification")
+    public void enableNotification() {
+        setNotification(true);
+    }
+
+    private void setNotification(boolean isEnable) {
+        GreePlatformSettings.setNotificationEnabled(isEnable);
+    }
+
+    @And("I make sure local notification is not enabled")
+    public void disableLocalNotification() {
+        setLocalNotification(false);
+    }
+
+    @When("I enable local notification")
+    public void enableLocalNotification() {
+        setLocalNotification(true);
+    }
+
+    private void setLocalNotification(boolean isEnable) {
+        GreePlatformSettings.setLocalNotificationEnabled(isEnable);
+    }
+
+    @And("I make sure notification at screen bottom is not enabled")
+    public void disableNotificationAtScreenBotton() {
+        setNotificationAtScreenBotton(false);
+    }
+
+    @When("I enable notification at screen bottom")
+    public void enableNotificationAtScreenBotton() {
+        setNotificationAtScreenBotton(true);
+    }
+
+    private void setNotificationAtScreenBotton(boolean isBottom) {
+        GreePlatformSettings.setNotificationsAtScreenBottom(isBottom);
+    }
+
+    @Then("notification should be enabled")
+    public void verifyNotificationEnabled() {
+        assertEquals(true, GreePlatformSettings.getNotificationEnabled());
+    }
+
+    @Then("local notification should be enabled")
+    public void verifyLocalNotificationEnabled() {
+        assertEquals(true, GreePlatformSettings.getLocalNotificationEnabled());
+    }
+
+    @Then("notification at screen bottom should be enabled")
+    public void verifyNotificationAtScreenBottom() {
+        assertEquals(true, GreePlatformSettings.isNotificationsAtScreenBottom());
     }
 }
