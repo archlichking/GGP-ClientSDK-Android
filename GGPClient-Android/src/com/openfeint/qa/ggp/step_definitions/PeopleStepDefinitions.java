@@ -2,6 +2,7 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -15,6 +16,7 @@ import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
+import net.gree.asdk.api.IconDownloadListener;
 import net.gree.asdk.core.Core;
 import net.gree.asdk.core.Session;
 import net.gree.asdk.core.auth.AuthorizerCore;
@@ -25,6 +27,7 @@ import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -49,6 +52,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private final static String IGNORE_LIST = "ignoreUsers";
 
     private final static String IGNORE_USER = "specificIgnoreUser";
+
+    private final static String THUMBNAIL = "thumbnail";
 
     private static String login_result;
 
@@ -474,5 +479,55 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         if ("".equals(returnUser))
             fail("Not ignore user return from server!");
         assertEquals("user is blocked", userId, returnUser);
+    }
+
+    @When("I load my image with size (\\w+)")
+    public void loadStandardThumbnail(String type) {
+        int size = -100;
+        if ("standard".equals(type)) {
+            size = GreeUser.THUMBNAIL_SIZE_STANDARD;
+        } else if ("small".equals(type)) {
+            size = GreeUser.THUMBNAIL_SIZE_SMALL;
+        } else if ("large".equals(type)) {
+            size = GreeUser.THUMBNAIL_SIZE_LARGE;
+        } else if ("huge".equals(type)) {
+            size = GreeUser.THUMBNAIL_SIZE_HUGE;
+        }
+        if (size == -100)
+            return;
+        loadThumbnailBySize(size);
+    }
+
+    private void loadThumbnailBySize(int size) {
+        notifyStepWait();
+        getBlockRepo().remove(THUMBNAIL);
+        GreePlatform.getLocalUser().loadThumbnail(size, new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load thumbnail success!");
+                getBlockRepo().put(THUMBNAIL, image);
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load thumbnail failed!");
+                notifyStepPass();
+            }
+        });
+    }
+
+    @Then("my image should be not null")
+    public void verifyThumbnailNotNull() {
+        assertNotNull("Thumbnail returned", getBlockRepo().get(THUMBNAIL));
+    }
+
+    @And("my image should be height (\\d+) and width (\\d+)")
+    public void verifyThumbnailSize(int height, int width) {
+        Bitmap thumbnail = (Bitmap) getBlockRepo().get(THUMBNAIL);
+        if (thumbnail == null)
+            fail("thumbnail is null!");
+        assertEquals("thumbnail height", height, thumbnail.getHeight());
+        assertEquals("thumbnail width", width, thumbnail.getWidth());
     }
 }
