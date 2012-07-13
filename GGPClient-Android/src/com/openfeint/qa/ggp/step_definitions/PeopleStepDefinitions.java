@@ -493,8 +493,6 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-        if (size == -100)
-            return;
         loadThumbnailBySize(size);
     }
 
