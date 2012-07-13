@@ -58,9 +58,9 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED) {
-                    wrapper.getTheCase().setExecuted(false);
-                }
+//                if (wrapper.getTheCase().getResult() == TestCase.RESULT.UNTEST) {
+//                    wrapper.getTheCase().setExecuted(false);
+//                }
                 list.add(wrapper.getTheCase().getId());
             }
         }
@@ -118,6 +118,8 @@ public class TestCasesAdapter extends BaseAdapter {
             sResult = "T";
         } else if (result == TestCase.RESULT.RETESTED) {
             sResult = "R";
+        }else if (result == TestCase.RESULT.BLOCKED) {
+            sResult = "B";
         }
         holder.result.setText(sResult);
         holder.case_id.setText(wrapper.getTheCase().getId());

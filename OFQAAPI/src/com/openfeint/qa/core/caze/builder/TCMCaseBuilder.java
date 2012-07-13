@@ -37,6 +37,18 @@ public class TCMCaseBuilder extends CaseBuilder {
                         StringUtil.TCM_LINE_SPLIT);
                 String[] raw_steps = StringUtil.extractSteps(raw_case);
                 TestCase tc = new TestCase();
+                tc.setId(o.getString("id"));
+                tc.setTitle(o.getString("title"));
+                if(o.getString("title").toLowerCase().contains("ios only")){
+                    Log.e(StringUtil.DEBUG_TAG,
+                            "not an android case " + o.getString("id") + "["
+                                    + o.getString("title") + "]");
+                    tc.setExecuted(true);
+                    tc.setResult(TestCase.RESULT.BLOCKED);
+                    tc.setResultComment("Not an Android SDK case, skipped");
+                    tcs.add(tc);
+                    continue;
+                }
                 // pase case steps
                 ArrayList<Step> steps = new ArrayList<Step>();
                 for (String step : raw_steps) {
@@ -50,11 +62,8 @@ public class TCMCaseBuilder extends CaseBuilder {
                         tc.setResult(TestCase.RESULT.RETESTED);
                         tc.setResultComment("probably one or two step is not defined");
                         break;
-
                     }
                 }
-                tc.setId(o.getString("id"));
-                tc.setTitle(o.getString("title"));
                 tc.setSteps(steps.toArray(new Step[steps.size()]));
 
                 tcs.add(tc);
