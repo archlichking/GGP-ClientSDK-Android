@@ -2,31 +2,42 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
 
-import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
-import com.openfeint.qa.core.command.After;
-import com.openfeint.qa.core.command.Given;
-import com.openfeint.qa.core.command.Then;
-import com.openfeint.qa.core.command.When;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+import junit.framework.Assert;
 import net.gree.asdk.api.Achievement;
 import net.gree.asdk.api.Achievement.AchievementChangeListener;
 import net.gree.asdk.api.Achievement.AchievementListUpdateListener;
+import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.IconDownloadListener;
 
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.After;
+import com.openfeint.qa.core.command.And;
+import com.openfeint.qa.core.command.Given;
+import com.openfeint.qa.core.command.Then;
+import com.openfeint.qa.core.command.When;
 
 public class AchievementStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Achievement_Steps";
 
-    private static String ACHIEVEMENT_LIST = "achievementlist";
+    private static final String ACHIEVEMENT_LIST = "achievement_list";
+
+    private static final String ICON = "achievement_icon";
 
     private boolean transLockStatus(String statusMark) {
         if ("LOCK".equals(statusMark))
@@ -58,6 +69,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
 
     @When("I load list of achievement")
     @Given("I load list of achievement")
+    @And("I load list of achievement")
     public void getAllAchievements() {
         getAchievements(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
     }
@@ -115,6 +127,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
 
     @Given("I make sure status of achievement (.+) is (\\w+)")
     @After("I make sure status of achievement (.+) is (\\w+)")
+    @And("I make sure status of achievement (.+) is (\\w+)")
     @When("I update status of achievement (.+) to (\\w+)")
     public void updateLockStatusByName(String achiName, String statusMark) {
         ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);
@@ -169,4 +182,77 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
         getAchievements(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
 
+    @When("I load icon of achievement (.+)")
+    public void loadIcon(String achiName) {
+        ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);
+        if (a == null)
+            fail("No achievement in the list!");
+
+        for (Achievement achi : a) {
+            if (achiName.equals(achi.getName())) {
+                notifyStepWait();
+                getBlockRepo().remove(ICON);
+                achi.loadIcon(new IconDownloadListener() {
+                    @Override
+                    public void onSuccess(Bitmap image) {
+                        Log.d(TAG, "load icon success!");
+                        getBlockRepo().put(ICON, image);
+                        notifyStepPass();
+                    }
+
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.e(TAG, "load thumbnail failed!");
+                        notifyStepPass();
+                    }
+                });
+                return;
+            }
+        }
+    }
+
+    @Then("achievement icon of (.+) should be not null")
+    public void verifyIconNotNull() {
+        assertNotNull("icon returned", getBlockRepo().get(ICON));
+
+        // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
+        // "achievement_unlocked_icon.png");
+    }
+
+    @Then("the achievement icon should be (.+)")
+    public void verifyIcon(String type) {
+        int icon_id = -100;
+        if ("locked icon".equals(type)) {
+            icon_id = GreePlatform.getResource(GreePlatform.getContext(),
+                    "drawable/achievement_locked_icon");
+        } else if ("unlocked icon".equals(type)) {
+            icon_id = GreePlatform.getResource(GreePlatform.getContext(),
+                    "drawable/achievement_unlocked_icon");
+        }
+
+        if (getBlockRepo().get(ICON) == null)
+            fail("achievement icon is null!");
+        Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+        Bitmap expect_image = PopupStepDefinitions.zoomBitmap(
+                BitmapFactory.decodeResource(GreePlatform.getContext().getResources(), icon_id),
+                bitmap.getWidth(), bitmap.getHeight());
+        double sRate = PopupStepDefinitions.compareImage(bitmap, expect_image);
+        Log.d(TAG, "Similarity rate: " + sRate);
+        Assert.assertTrue("achievement icon similarity is bigger than 80%", sRate > 80);
+    }
+
+    // TODO for data preparation
+    private void saveIconAsExpectedResult(String path, String icon_name) {
+        try {
+            Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+            File icon = new File(path, icon_name);
+            FileOutputStream fos = new FileOutputStream(icon);
+            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)) {
+                Log.d(TAG, "Create expected icon for achievement success!");
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }
