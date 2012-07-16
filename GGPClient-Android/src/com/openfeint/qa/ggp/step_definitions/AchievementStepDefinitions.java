@@ -211,14 +211,6 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("achievement icon of (.+) should be not null")
-    public void verifyIconNotNull() {
-        assertNotNull("icon returned", getBlockRepo().get(ICON));
-
-        // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
-        // "achievement_unlocked_icon.png");
-    }
-
     @Then("the achievement icon should be (.+)")
     public void verifyIcon(String type) {
         int icon_id = -100;
