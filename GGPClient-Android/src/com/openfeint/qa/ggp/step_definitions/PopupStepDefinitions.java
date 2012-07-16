@@ -151,7 +151,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         Log.e(TAG, "sRate: " + sRate);
     }
 
-    private static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
+    public static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
         Matrix matrix = new Matrix();
@@ -188,10 +188,10 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         return bm;
     }
 
-    private Object[][] getRGBList(Bitmap bm) {
+    private static Object[][] getRGBList(Bitmap bm) {
 
         if (bm == null) {
-            Log.e(TAG, "Bitmap is null!");
+            Log.e("Image Compare", "Bitmap is null!");
             return null;
         }
 
@@ -213,7 +213,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     }
 
     // return similarity as a integer rate between 0~100
-    private double compareImage(Bitmap img1, Bitmap img2) {
+    public static double compareImage(Bitmap img1, Bitmap img2) {
         Object[][] list1 = getRGBList(img1);
         Object[][] list2 = getRGBList(img2);
 
