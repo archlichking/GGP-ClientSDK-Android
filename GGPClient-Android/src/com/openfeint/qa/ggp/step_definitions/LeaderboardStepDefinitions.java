@@ -2,15 +2,17 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
-import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
-import com.openfeint.qa.core.command.After;
-import com.openfeint.qa.core.command.Given;
-import com.openfeint.qa.core.command.Then;
-import com.openfeint.qa.core.command.When;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+import junit.framework.Assert;
+import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.IconDownloadListener;
 import net.gree.asdk.api.Leaderboard;
 import net.gree.asdk.api.Leaderboard.LeaderboardListener;
 import net.gree.asdk.api.Leaderboard.Score;
@@ -20,24 +22,28 @@ import net.gree.asdk.api.Leaderboard.SuccessListener;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-
-import junit.framework.AssertionFailedError;
+import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.After;
+import com.openfeint.qa.core.command.And;
+import com.openfeint.qa.core.command.Given;
+import com.openfeint.qa.core.command.Then;
+import com.openfeint.qa.core.command.When;
+import com.openfeint.qa.ggp.R;
 
 public class LeaderboardStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "Leaderboard_Steps";
 
-    private static String LEADERBOARD_LIST = "leaderboardlist";
+    private static final String LEADERBOARD_LIST = "leaderboardlist";
 
-    private static String SCORE = "score";
+    private static final String SCORE = "score";
 
-    private static String ALL_SCORE = "allscore";
+    private static final String ALL_SCORE = "allscore";
+
+    private static final String ICON = "leaderboard_icon";
 
     private int defaultScore = 3000;
 
@@ -89,6 +95,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     @Given("I load list of leaderboard")
     @When("I load list of leaderboard")
+    @And("I load list of leaderboard")
     public void getLeaderboards() {
         getLeaderboard(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
     }
@@ -418,4 +425,58 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         getLeaderboard(Consts.STARTINDEX_1, Integer.valueOf(pageSize));
     }
 
+    @When("I load icon of leaderboard (.+)")
+    public void loadIcon(String boardName) {
+        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
+        for (Leaderboard board : l) {
+            if (boardName.equals(board.getName())) {
+                notifyStepWait();
+                board.loadThumbnail(new IconDownloadListener() {
+                    @Override
+                    public void onSuccess(Bitmap image) {
+                        Log.d(TAG, "load icon success!");
+                        getBlockRepo().put(ICON, image);
+                        notifyStepPass();
+                    }
+
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.e(TAG, "load icon failed!");
+                        notifyStepPass();
+                    }
+                });
+                return;
+            }
+        }
+    }
+
+    @Then("leaderboard icon should return correctly")
+    public void verifyIcon() {
+        if (getBlockRepo().get(ICON) == null)
+            fail("leaderboard icon is null!");
+        Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+        Bitmap expect_image = PopupStepDefinitions.zoomBitmap(BitmapFactory.decodeResource(
+                GreePlatform.getContext().getResources(), R.drawable.leaderboard_icon), bitmap
+                .getWidth(), bitmap.getHeight());
+        double sRate = PopupStepDefinitions.compareImage(bitmap, expect_image);
+        Log.d(TAG, "Similarity rate: " + sRate);
+        Assert.assertTrue("leaderboard icon similarity is bigger than 80%", sRate > 80);
+        // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
+        // "leaderboard_icon.png");
+    }
+
+    // TODO for data preparation
+    private void saveIconAsExpectedResult(String path, String icon_name) {
+        try {
+            Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+            File icon = new File(path, icon_name);
+            FileOutputStream fos = new FileOutputStream(icon);
+            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
+                Log.d(TAG, "Create expected icon for leaderboard success!");
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

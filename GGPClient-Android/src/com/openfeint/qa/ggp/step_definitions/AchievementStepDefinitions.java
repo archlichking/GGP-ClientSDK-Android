@@ -2,7 +2,6 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
 
 import java.io.File;
@@ -202,7 +201,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
 
                     @Override
                     public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "load thumbnail failed!");
+                        Log.e(TAG, "load icon failed!");
                         notifyStepPass();
                     }
                 });
@@ -213,6 +212,9 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
 
     @Then("the achievement icon should be (.+)")
     public void verifyIcon(String type) {
+        if (getBlockRepo().get(ICON) == null)
+            fail("achievement icon is null!");
+        
         int icon_id = -100;
         if ("locked icon".equals(type)) {
             icon_id = GreePlatform.getResource(GreePlatform.getContext(),
@@ -221,9 +223,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             icon_id = GreePlatform.getResource(GreePlatform.getContext(),
                     "drawable/achievement_unlocked_icon");
         }
-
-        if (getBlockRepo().get(ICON) == null)
-            fail("achievement icon is null!");
+        
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
         Bitmap expect_image = PopupStepDefinitions.zoomBitmap(
                 BitmapFactory.decodeResource(GreePlatform.getContext().getResources(), icon_id),
@@ -239,7 +239,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
             File icon = new File(path, icon_name);
             FileOutputStream fos = new FileOutputStream(icon);
-            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)) {
+            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
                 Log.d(TAG, "Create expected icon for achievement success!");
             }
 

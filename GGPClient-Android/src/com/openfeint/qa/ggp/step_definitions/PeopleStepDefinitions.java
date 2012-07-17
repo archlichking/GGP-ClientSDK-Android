@@ -2,16 +2,19 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import junit.framework.Assert;
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
@@ -28,6 +31,7 @@ import org.apache.http.HeaderIterator;
 
 import util.Consts;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -37,6 +41,7 @@ import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.core.util.CredentialStorage;
+import com.openfeint.qa.ggp.R;
 
 public class PeopleStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
@@ -54,6 +59,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private final static String IGNORE_USER = "specificIgnoreUser";
 
     private final static String THUMBNAIL = "thumbnail";
+
+    private final static String THUMBNAIL_SIZE = "thumbnail_size";
 
     private static String login_result;
 
@@ -493,6 +500,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
+        getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 
@@ -515,17 +523,54 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         });
     }
 
-    @Then("my image should be not null")
-    public void verifyThumbnailNotNull() {
-        assertNotNull("Thumbnail returned", getBlockRepo().get(THUMBNAIL));
-    }
-
-    @And("my image should be height (\\d+) and width (\\d+)")
+    @Then("my image should be height (\\d+) and width (\\d+)")
     public void verifyThumbnailSize(int height, int width) {
         Bitmap thumbnail = (Bitmap) getBlockRepo().get(THUMBNAIL);
         if (thumbnail == null)
             fail("thumbnail is null!");
         assertEquals("thumbnail height", height, thumbnail.getHeight());
         assertEquals("thumbnail width", width, thumbnail.getWidth());
+        // saveThumbnailAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
+        // "thumbnail_" + getBlockRepo().get(THUMBNAIL_SIZE) + ".png");
+    }
+
+    @And("the returned thumbnail should be (.+)")
+    public void verifyThumbnail(String type) {
+        if (getBlockRepo().get(THUMBNAIL) == null)
+            fail("user thumbnail is null!");
+
+        int thumbnail_id = -100;
+        if ("small thumbnail".equals(type)) {
+            thumbnail_id = R.drawable.thumbnail_small;
+        } else if ("standard thumbnail".equals(type)) {
+            thumbnail_id = R.drawable.thumbnail_standard;
+        } else if ("large thumbnail".equals(type)) {
+            thumbnail_id = R.drawable.thumbnail_large;
+        } else if ("huge thumbnail".equals(type)) {
+            thumbnail_id = R.drawable.thumbnail_huge;
+        }
+
+        Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
+        Bitmap expect_image = PopupStepDefinitions.zoomBitmap(BitmapFactory.decodeResource(
+                GreePlatform.getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap
+                .getHeight());
+        double sRate = PopupStepDefinitions.compareImage(bitmap, expect_image);
+        Log.d(TAG, "Similarity rate: " + sRate);
+        Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
+    }
+
+    // TODO for data preparation
+    private void saveThumbnailAsExpectedResult(String path, String icon_name) {
+        try {
+            Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
+            File icon = new File(path, icon_name);
+            FileOutputStream fos = new FileOutputStream(icon);
+            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
+                Log.d(TAG, "Create expected thumbnail success!");
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
