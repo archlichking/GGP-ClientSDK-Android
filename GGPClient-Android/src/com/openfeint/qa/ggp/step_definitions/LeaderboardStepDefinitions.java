@@ -268,7 +268,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                 Log.d(TAG, "Found the leaderboard " + boardName);
                 getBlockRepo().put(ALL_SCORE, new ArrayList<Score>());
                 Leaderboard.getScore(board.getId(), transSelector(selection), transPeriod(period),
-                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
+                        Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
 
@@ -332,7 +332,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
                 format = board.getFormat();
                 Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
-                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
+                        Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
                                 Log.d(TAG, "Get leaderboard score success!");
@@ -380,7 +380,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
                 Leaderboard.getScore(board.getId(), transSelector("EVERYONE"), transPeriod(period),
-                        Consts.STARTINDEX_0, Consts.PAGESIZE_ALL, new ScoreListener() {
+                        Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
                                 Log.d(TAG, "Get leaderboard score success!");
