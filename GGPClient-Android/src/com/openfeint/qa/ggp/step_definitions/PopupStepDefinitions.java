@@ -1,8 +1,6 @@
 
 package com.openfeint.qa.ggp.step_definitions;
 
-import static junit.framework.Assert.fail;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -231,7 +229,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                     int[] value2 = (int[]) list2[i][j];
                     boolean flag = true;
                     for (int k = 0; k < value1.length && k < value2.length; k++) {
-                        if (Math.abs(value1[k] - value2[k]) > 10) {
+                        if (Math.abs(value1[k] - value2[k]) > 16) {
                             flag = false;
                             busi++;
                             break;
