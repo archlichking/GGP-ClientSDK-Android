@@ -148,7 +148,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
         getBlockRepo().put(MODERATION_TEXT, getTextFromList(old_text.getTextId()));
     }
 
-    @After("I make sure moderation server NOTINCLUDES text (.+)")
+    @After("I make sure moderation server NOTINCLUDE text (.+)")
     public void cleanUpText(String text) {
         ModeratedText t = getTextIfExist();
         notifyStepWait();

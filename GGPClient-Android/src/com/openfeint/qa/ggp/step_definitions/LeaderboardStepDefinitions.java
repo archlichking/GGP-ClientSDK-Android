@@ -374,7 +374,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     }
 
     @Then("my (\\w+) score ranking of leaderboard (.+) should be (\\d+)")
-    public void verifyRankingByName(String period, final String boardName, final int ranking) {
+    public void verifyRankingByName(String period, final String boardName, int ranking) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
@@ -400,6 +400,9 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                             }
                         });
                 waitForAsyncInStep();
+                // a small trick to match the step with ios
+                if (ranking == 0)
+                    ranking = -1;
                 assertEquals(ranking, ((Score) getBlockRepo().get(SCORE)).getRank());
                 return;
             }
