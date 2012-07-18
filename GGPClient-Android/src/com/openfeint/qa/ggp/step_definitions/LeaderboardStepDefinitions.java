@@ -115,7 +115,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                 ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST)).addAll(Arrays
                         .asList(leaderboards));
                 notifyStepPass();
-
             }
 
             @Override
@@ -180,10 +179,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                                 String response) {
                             Log.e(TAG, "delete Leadboard score failed!");
                             if (response != null)
-                                Log.e(TAG,
-                                        "response: "
-                                                + response.substring(response
-                                                        .indexOf("\"message\"")));
+                                Log.e(TAG, "response: " + response);
                             notifyStepPass();
                         }
                     });
@@ -293,33 +289,30 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     @When("I delete my score in leaderboard (.+)")
     public void deleteMyScoreInLeaderboard(final String boardName) {
-        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
+        notifyStepWait();
+        Leaderboard board = getBoardFromList(boardName);
+        String boardId = Consts.INVALID_INT_STRING;
         // Record score updated for the below steps
-        for (Leaderboard board : l) {
-            if (boardName.equals(board.getName())) {
-                notifyStepWait();
-                Log.d(TAG, "Found the leaderboard " + boardName);
-                Leaderboard.deleteScore(board.getId(), new SuccessListener() {
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "delete leaderboard score success!");
-                        notifyStepPass();
-                    }
-
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "delete Leadboard score failed!");
-                        if (response != null)
-                            Log.e(TAG,
-                                    "response: "
-                                            + response.substring(response.indexOf("\"message\"")));
-                        notifyStepPass();
-                    }
-                });
-                return;
-            }
+        if (board != null) {
+            boardId = board.getId();
         }
-        fail("cannot find the leaderboard named: " + boardName);
+
+        Log.d(TAG, "Found the leaderboard " + boardName);
+        Leaderboard.deleteScore(boardId, new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "delete leaderboard score success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "delete Leadboard score failed!");
+                if (response != null)
+                    Log.e(TAG, "response: " + response);
+                notifyStepPass();
+            }
+        });
     }
 
     private Leaderboard getBoardFromList(String boardName) {
@@ -337,15 +330,22 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         int format = getMyScore(boardName);
         waitForAsyncInStep();
 
-        // a small trick to match the step with ios
-        if (score == 0)
-            score = -1;
         if (format == Leaderboard.FORMAT_TIME) {
-            String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
-                    score % 60);
+            String time = "";
+            if (score != 0)
+                time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60, score % 60);
             assertEquals("high score", time, ((Score) getBlockRepo().get(SCORE)).getScoreAsString());
         } else {
-            assertEquals("high score", score, ((Score) getBlockRepo().get(SCORE)).getScore());
+            // a small trick to match the step with ios
+            if (score == 0)
+                score = -1;
+            long returnScore;
+            try {
+                returnScore = ((Score) getBlockRepo().get(SCORE)).getScore();
+            } catch (NullPointerException e) {
+                returnScore = -1;
+            }
+            assertEquals("high score", score, returnScore);
         }
     }
 
@@ -356,7 +356,8 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         if (format == Leaderboard.FORMAT_TIME) {
             String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
                     score % 60);
-            assertTrue(!time.equals(((Score) getBlockRepo().get(SCORE)).getScoreAsString()));
+            assertTrue("score is not updated",
+                    !time.equals(((Score) getBlockRepo().get(SCORE)).getScoreAsString()));
         } else {
             long returnScore;
             try {
@@ -364,7 +365,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             } catch (NullPointerException e) {
                 returnScore = Consts.INVALID_INT;
             }
-            assertTrue(score != returnScore);
+            assertTrue("score is not updated", score != returnScore);
         }
     }
 
