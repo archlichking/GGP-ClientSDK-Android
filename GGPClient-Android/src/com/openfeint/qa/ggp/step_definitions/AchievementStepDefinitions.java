@@ -149,7 +149,6 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
                 return;
             }
         }
-        fail("Could not find the achievement named " + achiName);
     }
 
     @Then("status of achievement (.+) should be (\\w+)")

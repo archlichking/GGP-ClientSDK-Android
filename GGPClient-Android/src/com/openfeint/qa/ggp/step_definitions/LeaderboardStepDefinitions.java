@@ -214,17 +214,16 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @When("I add score to leaderboard (.+) with score (-?\\d+)")
     public void createScoreByName(String boardName, int score) {
         notifyStepWait();
-        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        String board_id = Consts.INVALID_INT_STRING;
+        String boardId = Consts.INVALID_INT_STRING;
+        Leaderboard board = getBoardFromList(boardName);
+
         // Record score updated for the below steps
-        for (Leaderboard board : l) {
-            if (boardName.equals(board.getName())) {
-                board_id = board.getId();
-                break;
-            }
+        if (board != null) {
+            boardId = board.getId();
         }
+
         Log.i(TAG, "Try to create new score for leaderboard...");
-        Leaderboard.createScore(board_id, score, new SuccessListener() {
+        Leaderboard.createScore(boardId, score, new SuccessListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, "Update leaderboard score success!");
@@ -297,7 +296,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             boardId = board.getId();
         }
 
-        Log.d(TAG, "Found the leaderboard " + boardName);
         Leaderboard.deleteScore(boardId, new SuccessListener() {
             @Override
             public void onSuccess() {
@@ -319,6 +317,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
+                Log.d(TAG, "Found the leaderboard " + boardName);
                 return board;
             }
         }
@@ -485,7 +484,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    //TODO now all leaderboard have the same icon
+    // TODO now all leaderboard have the same icon
     @Then("leaderboard icon of (.+) should be correct")
     public void verifyIcon(String boardName) {
         if (getBlockRepo().get(ICON) == null)
