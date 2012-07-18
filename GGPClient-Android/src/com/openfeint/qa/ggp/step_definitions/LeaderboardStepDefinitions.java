@@ -485,8 +485,9 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("leaderboard icon should return correctly")
-    public void verifyIcon() {
+    //TODO now all leaderboard have the same icon
+    @Then("leaderboard icon of (.+) should be correct")
+    public void verifyIcon(String boardName) {
         if (getBlockRepo().get(ICON) == null)
             fail("leaderboard icon is null!");
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
