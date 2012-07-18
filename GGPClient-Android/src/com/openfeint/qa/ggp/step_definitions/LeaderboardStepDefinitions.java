@@ -3,6 +3,7 @@ package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
+import static junit.framework.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -70,7 +71,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     }
 
     private int transSelector(String selector) {
-        int iSelector = -100;
+        int iSelector = Consts.INVALID_INT;
         if ("FRIENDS".equals(selector)) {
             iSelector = Score.FRIENDS_SCORES;
         } else if ("EVERYONE".equals(selector)) {
@@ -82,7 +83,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     }
 
     private int transPeriod(String period) {
-        int iPeriod = -100;
+        int iPeriod = Consts.INVALID_INT;
         if ("DAILY".equals(period)) {
             iPeriod = Score.DAILY;
         } else if ("WEEKLY".equals(period)) {
@@ -216,34 +217,32 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     @When("I add score to leaderboard (.+) with score (-?\\d+)")
     public void createScoreByName(String boardName, int score) {
+        notifyStepWait();
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
+        String board_id = Consts.INVALID_INT_STRING;
         // Record score updated for the below steps
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
-                notifyStepWait();
-                Log.d(TAG, "Fond the leaderboard " + boardName);
-                Log.i(TAG, "Try to create new score for leaderboard...");
-                Leaderboard.createScore(board.getId(), score, new SuccessListener() {
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "Update leaderboard score success!");
-                        notifyStepPass();
-                    }
-
-                    @Override
-                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
-                        Log.e(TAG, "Update Leadboard score failed!");
-                        if (response != null)
-                            Log.e(TAG,
-                                    "response: "
-                                            + response.substring(response.indexOf("\"message\"")));
-                        notifyStepPass();
-                    }
-                });
-                return;
+                board_id = board.getId();
+                break;
             }
         }
-        fail("cannot find the leaderboard named: " + boardName);
+        Log.i(TAG, "Try to create new score for leaderboard...");
+        Leaderboard.createScore(board_id, score, new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Update leaderboard score success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Update Leadboard score failed!");
+                if (response != null)
+                    Log.e(TAG, "response: " + response);
+                notifyStepPass();
+            }
+        });
     }
 
     @Given("I load top friend score list for leaderboard (.*) for period (\\w+)")
@@ -323,54 +322,86 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         fail("cannot find the leaderboard named: " + boardName);
     }
 
-    @Then("my score (-?\\d+) should be updated in leaderboard (.+)")
-    public void verifyMyScoreInLeaderboard(int score, final String boardName) {
+    private Leaderboard getBoardFromList(String boardName) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        int format = Leaderboard.FORMAT_VALUE;
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
-                Log.i(TAG, "Try to get leaderboard ranking and score...");
-                format = board.getFormat();
-                Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod("TOTAL"),
-                        Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
-                            @Override
-                            public void onSuccess(Score[] entry) {
-                                Log.d(TAG, "Get leaderboard score success!");
-                                // SDK updates and return empty entry instead of
-                                // return failed when score is deleted
-                                if (entry == null || entry.length == 0) {
-                                    getBlockRepo().put(SCORE, new Score());
-                                } else {
-                                    getBlockRepo().put(SCORE, entry[0]);
-                                }
-                                notifyAsyncInStep();
-                            }
-
-                            @Override
-                            public void onFailure(int responseCode, HeaderIterator headers,
-                                    String response) {
-                                Log.d(TAG, "No leaderboard score!");
-                                getBlockRepo().put(SCORE, new Score());
-                                notifyAsyncInStep();
-                            }
-                        });
-
-                waitForAsyncInStep();
-
-                // a small trick to match the step with ios
-                if (score == 0)
-                    score = -1;
-                if (format == Leaderboard.FORMAT_TIME) {
-                    String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
-                            score % 60);
-                    assertEquals(time, ((Score) getBlockRepo().get(SCORE)).getScoreAsString());
-                } else {
-                    assertEquals(score, ((Score) getBlockRepo().get(SCORE)).getScore());
-                }
-                return;
+                return board;
             }
         }
-        fail("cannot find the leaderboard named: " + boardName);
+        return null;
+    }
+
+    @Then("my score (-?\\d+) should be updated in leaderboard (.+)")
+    public void verifyMyScoreInLeaderboard(int score, final String boardName) {
+        int format = getMyScore(boardName);
+        waitForAsyncInStep();
+
+        // a small trick to match the step with ios
+        if (score == 0)
+            score = -1;
+        if (format == Leaderboard.FORMAT_TIME) {
+            String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
+                    score % 60);
+            assertEquals("high score", time, ((Score) getBlockRepo().get(SCORE)).getScoreAsString());
+        } else {
+            assertEquals("high score", score, ((Score) getBlockRepo().get(SCORE)).getScore());
+        }
+    }
+
+    @Then("my score (-?\\d+) should not be updated in leaderboard (.+)")
+    public void verifyMyScoreNotBeUpdated(int score, String boardName) {
+        int format = getMyScore(boardName);
+        waitForAsyncInStep();
+        if (format == Leaderboard.FORMAT_TIME) {
+            String time = String.format("%01d:%02d:%02d", score / 3600, score % 3600 / 60,
+                    score % 60);
+            assertTrue(!time.equals(((Score) getBlockRepo().get(SCORE)).getScoreAsString()));
+        } else {
+            long returnScore;
+            try {
+                returnScore = ((Score) getBlockRepo().get(SCORE)).getScore();
+            } catch (NullPointerException e) {
+                returnScore = Consts.INVALID_INT;
+            }
+            assertTrue(score != returnScore);
+        }
+    }
+
+    private int getMyScore(String boardName) {
+        int format = Leaderboard.FORMAT_VALUE;
+        String boardId = Consts.INVALID_INT_STRING;
+
+        Leaderboard board = getBoardFromList(boardName);
+        if (board != null) {
+            boardId = board.getId();
+            format = board.getFormat();
+        }
+
+        Log.i(TAG, "Try to get leaderboard ranking and score...");
+        Leaderboard.getScore(boardId, transSelector("ME"), transPeriod("TOTAL"),
+                Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
+                    @Override
+                    public void onSuccess(Score[] entry) {
+                        Log.d(TAG, "Get leaderboard score success!");
+                        // SDK updates and return empty entry instead of
+                        // return failed when score is deleted
+                        if (entry == null || entry.length == 0) {
+                            getBlockRepo().put(SCORE, new Score());
+                        } else {
+                            getBlockRepo().put(SCORE, entry[0]);
+                        }
+                        notifyAsyncInStep();
+                    }
+
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.d(TAG, "No leaderboard score!");
+                        getBlockRepo().put(SCORE, new Score());
+                        notifyAsyncInStep();
+                    }
+                });
+        return format;
     }
 
     @Then("my (\\w+) score ranking of leaderboard (.+) should be (\\d+)")
