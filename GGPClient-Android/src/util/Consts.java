@@ -17,4 +17,8 @@ public class Consts {
     public static final int PAGESIZE_ALL = 100;
     
     public static final int PAGESIZE_FIRSTPAGE = 10;
+    
+    public static final int INVALID_INT = -100;
+    
+    public static final String INVALID_INT_STRING = "-100";
 }

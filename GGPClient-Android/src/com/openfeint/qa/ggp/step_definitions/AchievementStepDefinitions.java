@@ -210,11 +210,11 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @Then("the achievement icon should be (.+)")
-    public void verifyIcon(String type) {
+    @Then("achievement icon of (.+) should be (.+)")
+    public void verifyIcon(String achiName, String type) {
         if (getBlockRepo().get(ICON) == null)
             fail("achievement icon is null!");
-        
+
         int icon_id = -100;
         if ("locked icon".equals(type)) {
             icon_id = GreePlatform.getResource(GreePlatform.getContext(),
@@ -223,7 +223,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             icon_id = GreePlatform.getResource(GreePlatform.getContext(),
                     "drawable/achievement_unlocked_icon");
         }
-        
+
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
         Bitmap expect_image = PopupStepDefinitions.zoomBitmap(
                 BitmapFactory.decodeResource(GreePlatform.getContext().getResources(), icon_id),

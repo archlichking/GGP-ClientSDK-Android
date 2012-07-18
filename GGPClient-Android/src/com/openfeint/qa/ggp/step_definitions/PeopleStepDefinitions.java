@@ -271,12 +271,12 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         });
     }
 
-    @When("I check my friend list")
+    @When("I load my friend list")
     public void getAllFriends() {
         getCurrentUserFriends(Consts.PAGESIZE_ALL);
     }
 
-    @When("I check my friend list first page")
+    @When("I load first page of my friend list")
     public void getFriendsOfFirstPage() {
         getCurrentUserFriends(Consts.PAGESIZE_FIRSTPAGE);
     }
@@ -486,6 +486,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         if ("".equals(returnUser))
             fail("Not ignore user return from server!");
         assertEquals("user is blocked", userId, returnUser);
+    }
+
+    @Then("status of (\\w+) in my ignore list should be FALSE")
+    public void verifyUserNotBlocked(String userId) {
+        assertEquals("user is not blocked", "", (String) getBlockRepo().get(IGNORE_USER));
     }
 
     @When("I load my image with size (\\w+)")
