@@ -65,6 +65,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     private static String login_result;
 
     @Given("I logged in with email (.+) and password (\\w+)")
+    @And("I logged in with email (.+) and password (\\w+)")
     public void setCurrentLoginUser(String email, String password) {
         HashMap<String, String> credential = getCredential(email, password);
         String user_id = credential.get(CredentialStorage.KEY_USERID);
