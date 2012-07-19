@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.TreeMap;
 
+import javax.security.auth.PrivateCredentialPermission;
+
 import junit.framework.Assert;
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.RequestDialog;
-import net.gree.asdk.core.ui.AuthorizableDialog;
 import net.gree.asdk.core.ui.PopupDialog;
 import net.gree.asdk.core.ui.WebViewPopupDialog;
 import android.graphics.Bitmap;
@@ -33,7 +34,7 @@ import com.openfeint.qa.ggp.R;
 
 public class PopupStepDefinitions extends BasicStepDefinition {
 
-    private final String TAG = "Popup_Steps";
+    private static final String TAG = "Popup_Steps";
 
     private static final String POPUP_PARAMS = "popup_params";
 
@@ -41,11 +42,13 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     public static final String HANDLER = "handler";
 
-    private boolean is_popup_loading_done;
+    private static boolean is_popup_loading_done;
 
-    public static final int UNKNOWN_POPUP = 0;
+    public static final int POPUP_UNKNOWN = 0;
 
-    public static final int REQUEST_POPUP = 1;
+    public static final int POPUP_REQUEST = 1;
+
+    public static final int POPUP_PAYMENT = 4;
 
     @And("I initialize (\\w+) popup with title (.+) and body (.+)")
     public void initPopupDialog(String type, String title, String body) {
@@ -55,22 +58,33 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
         getBlockRepo().put(POPUP_PARAMS, params);
         if ("request".equals(type)) {
-            getBlockRepo().put(POPUP_TYPE, REQUEST_POPUP);
+            getBlockRepo().put(POPUP_TYPE, POPUP_REQUEST);
         } else {
             Log.e(TAG, "unknown popup type!");
-            getBlockRepo().put(POPUP_TYPE, UNKNOWN_POPUP);
+            getBlockRepo().put(POPUP_TYPE, POPUP_UNKNOWN);
         }
     }
 
     @When("I did open popup")
-    public void openPopup() {
+    public void openPopupByType() {
         MainActivity activity = MainActivity.getInstance();
-        if ((Integer) getBlockRepo().get(POPUP_TYPE) == UNKNOWN_POPUP) {
+        if ((Integer) getBlockRepo().get(POPUP_TYPE) == POPUP_UNKNOWN) {
             return;
         }
         Message msg = activity.popup_handler
                 .obtainMessage((Integer) getBlockRepo().get(POPUP_TYPE));
         msg.obj = getBlockRepo().get(POPUP_PARAMS);
+
+        String popupElementId = "";
+        if (POPUP_REQUEST == (Integer) getBlockRepo().get(POPUP_TYPE)) {
+            popupElementId = "btn-msg-choosed";
+        }
+        openPopup(msg, popupElementId);
+    }
+
+    public static void openPopup(Message msg, final String popupElementId) {
+        MainActivity activity = MainActivity.getInstance();
+
         activity.popup_handler.sendMessage(msg);
 
         while (!MainActivity.is_dialog_opened) {
@@ -81,12 +95,12 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 e.printStackTrace();
             }
         }
-        final RequestDialog requestDialog = activity.getRequestDialog();
-        if (requestDialog == null)
-            Log.e(TAG, "Request Dialog is null!!!");
+        final PopupDialog popupDialog = activity.getPopupDialog();
+        if (popupDialog == null)
+            Log.e(TAG, "Popup Dialog is null!!!");
 
         try {
-            final WebView view = getWebViewFromPopup(requestDialog);
+            final WebView view = getWebViewFromPopup(popupDialog);
 
             // add javascript interface into webview before it loaded
             is_popup_loading_done = false;
@@ -106,18 +120,19 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
             // Check if page is loaded
             Thread.sleep(3000);
-
             int times = 0;
             Runnable check_task = new Runnable() {
                 @Override
                 public void run() {
-                    String data = "(function() {function waitPageLoading(){if(document.getElementById('btn-msg-choosed')"
-                            + "&&'undefined'!=typeof(window.popupStep))"
+                    String data = "(function() {function waitPageLoading(){if(document.getElementById('"
+                            + popupElementId
+                            + "')&&'undefined'!=typeof(window.popupStep))"
                             + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
                     view.loadUrl("javascript:" + data);
                 }
             };
-            while (!is_popup_loading_done && times <= 10) {
+
+            while (!is_popup_loading_done && times <= 5) {
                 Log.d(TAG, "still waiting...");
                 activity.runOnUiThread(check_task);
                 Thread.sleep(5000);
@@ -128,10 +143,6 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 Log.d(TAG, "Popup is loaded!!!");
 
             }
-
-            // saveImageAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
-            // "expect_request_dialog.png");
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -160,7 +171,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         return newbmp;
     }
 
-    private WebView getWebViewFromPopup(PopupDialog popup) throws Exception {
+    public static WebView getWebViewFromPopup(PopupDialog popup) throws Exception {
         Method getWebViewClientMethod = WebViewPopupDialog.class.getDeclaredMethod("getWebView");
         getWebViewClientMethod.setAccessible(true);
         return (WebView) getWebViewClientMethod.invoke(popup);
@@ -253,11 +264,11 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     @Then("request popup should open as we expected")
     public void verifyRequestPopup() {
         MainActivity activity = MainActivity.getInstance();
-        final RequestDialog requestDialog = activity.getRequestDialog();
-        if (requestDialog == null)
-            Log.e(TAG, "Request Dialog is null!!!");
+        final PopupDialog popupDialog = activity.getPopupDialog();
+        if (popupDialog == null)
+            Log.e(TAG, "Popup Dialog is null!!!");
         try {
-            final WebView view = getWebViewFromPopup(requestDialog);
+            final WebView view = getWebViewFromPopup(popupDialog);
 
             // Call main thread to build bitmap of popup
             activity.runOnUiThread(new Runnable() {
@@ -280,7 +291,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
             }
 
             Bitmap expect_image = zoomBitmap(BitmapFactory.decodeResource(GreePlatform.getContext()
-                    .getResources(), R.drawable.expect_request_dialog), 408, 580);
+                    .getResources(), R.drawable.expect_request_dialog),
+                    MainActivity.dialog_bitmap.getWidth(), MainActivity.dialog_bitmap.getHeight());
             double sRate = compareImage(MainActivity.dialog_bitmap, expect_image);
             Log.d(TAG, "Similarity rate: " + sRate);
             Assert.assertTrue("popup similarity is bigger than 80%", sRate > 80);
@@ -294,7 +306,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     private void saveImageAsExpectedResult(String path, String img_name) {
         File img = new File(path, img_name);
         MainActivity activity = MainActivity.getInstance();
-        final RequestDialog requestDialog = activity.getRequestDialog();
+        final RequestDialog requestDialog = (RequestDialog) activity.getPopupDialog();
         try {
             final WebView view = getWebViewFromPopup(requestDialog);
             FileOutputStream fos = new FileOutputStream(img);
@@ -330,7 +342,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     @After("I did dismiss popup")
     public void dismissPopup() {
         MainActivity activity = MainActivity.getInstance();
-        final AuthorizableDialog dialog = activity.getRequestDialog();
+        final PopupDialog dialog = activity.getPopupDialog();
 
         // call main thread to dismiss the popup
         activity.runOnUiThread(new Runnable() {
