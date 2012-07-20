@@ -84,6 +84,11 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         openPopup(msg, popupElementId);
     }
 
+    /**
+     * @param msg the message to open popup, must be handled in MainActivity
+     * @param popupElementId JS will check whether this element exists to
+     *            determine popup loaded
+     */
     public static void openPopup(Message msg, final String popupElementId) {
         MainActivity activity = MainActivity.getInstance();
 
@@ -243,7 +248,14 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         return list;
     }
 
-    // return similarity as a integer rate between 0~100
+    /**
+     * return similarity as a integer rate between 0~100
+     * 
+     * @param img1 the image to be compare
+     * @param img2 the image to be compare
+     * @return the similarity rate of the comparison, if it bigger than 80, we
+     *         can say the view show is what we want
+     */
     public static double compareImage(Bitmap img1, Bitmap img2) {
         Object[][] list1 = getRGBList(img1);
         Object[][] list2 = getRGBList(img2);
