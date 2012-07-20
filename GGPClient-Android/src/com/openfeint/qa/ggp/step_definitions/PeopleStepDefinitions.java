@@ -21,8 +21,10 @@ import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 import net.gree.asdk.api.IconDownloadListener;
 import net.gree.asdk.core.Core;
+import net.gree.asdk.core.Injector;
 import net.gree.asdk.core.Session;
 import net.gree.asdk.core.auth.AuthorizerCore;
+import net.gree.asdk.core.auth.IAuthorizer;
 import net.gree.asdk.core.auth.OAuthStorage;
 import net.gree.asdk.core.request.OnResponseCallback;
 import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -102,7 +104,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         String secret = credential.get(CredentialStorage.KEY_SECRET);
         Log.i(TAG, "Try Login Userid: " + user_id + "\nToken: " + token + "\nand secret: " + secret);
 
-        AuthorizerCore core = AuthorizerCore.getInstance();
+        AuthorizerCore core = (AuthorizerCore) Injector.getInstance(IAuthorizer.class);
         try {
             // get mOAuth field of AuthorizerCore
             Field oAuth_field = core.getClass().getDeclaredField("mOAuth");

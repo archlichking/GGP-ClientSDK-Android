@@ -4,7 +4,6 @@ package com.openfeint.qa.ggp;
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
@@ -12,6 +11,12 @@ import java.util.TreeMap;
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
 import net.gree.asdk.api.ui.RequestDialog;
+import net.gree.asdk.api.wallet.Payment;
+import net.gree.asdk.api.wallet.Payment.PaymentListener;
+import net.gree.asdk.core.ui.PopupDialog;
+
+import org.apache.http.HeaderIterator;
+
 import util.RawFileUtil;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -37,7 +42,6 @@ import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
 import com.openfeint.qa.core.exception.TCMIsnotReachableException;
 import com.openfeint.qa.core.net.PlainHttpCommunicator;
-import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
@@ -74,12 +78,12 @@ public class MainActivity extends Activity {
 
     private static MainActivity mainActivity;
 
-    private static RequestDialog requestDialog;
+    private static PopupDialog popupDialog;
 
     public static Bitmap dialog_bitmap;
 
     public static boolean is_dialog_opened;
-    
+
     public static boolean is_dialog_closed;
 
     private Handler load_done_handler = new Handler() {
@@ -162,8 +166,10 @@ public class MainActivity extends Activity {
             /* optional */
 
             Log.i(TAG, "---------- Submitting result to TCM ---------");
-            TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-            tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases());
+            // TCMCommunicator tcm = new
+            // TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+            // tcm.setTestCasesResult(run_text.getText().toString(),
+            // adapter.getSelectedCases());
             Log.i(TAG, "---------- result submitted ----");
 
             is_under_progress = false;
@@ -369,7 +375,7 @@ public class MainActivity extends Activity {
         @Override
         public void handleMessage(Message message) {
             switch (message.what) {
-                case PopupStepDefinitions.REQUEST_POPUP:
+                case PopupStepDefinitions.POPUP_REQUEST:
                     Log.d(TAG, "Trying to open request dialog...");
                     is_dialog_opened = false;
                     is_dialog_closed = false;
@@ -388,11 +394,66 @@ public class MainActivity extends Activity {
                             }
                         }
                     };
-                    requestDialog = new RequestDialog(MainActivity.this);
+                    RequestDialog requestDialog = new RequestDialog(MainActivity.this);
                     requestDialog.setParams((TreeMap<String, Object>) message.obj);
                     requestDialog.setHandler(handler);
                     requestDialog.show();
+                    popupDialog = requestDialog;
                     break;
+                case PopupStepDefinitions.POPUP_PAYMENT:
+                    Log.d(TAG, "Trying to open payment dialog...");
+                    is_dialog_opened = false;
+                    is_dialog_closed = false;
+                    final Payment payment = (Payment) message.obj;
+                    payment.setHandler(new Handler() {
+                        public void handleMessage(Message message) {
+                            switch (message.what) {
+                                case Payment.OPENED:
+                                    Log.d("Payment", "PaymentDialog opened.");
+                                    is_dialog_opened = true;
+                                    try {
+                                        Field dialog_field = Payment.class
+                                                .getDeclaredField("mPaymentDialog");
+                                        dialog_field.setAccessible(true);
+                                        int count = 0;
+                                        while (dialog_field.get(payment) == null && count < 10) {
+                                            Thread.sleep(1000);
+                                            count++;
+                                        }
+                                        popupDialog = (PopupDialog) dialog_field.get(payment);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    break;
+                                case Payment.CANCELLED:
+                                    Log.d("Payment", "PaymentDialog canceled.");
+                                case Payment.ABORTED:
+                                    Log.d("Payment", "PaymentDialog closed.");
+                                    is_dialog_closed = true;
+                                    break;
+                            }
+                        }
+                    });
+                    payment.request(MainActivity.this, new PaymentListener() {
+                        @Override
+                        public void onSuccess(int responseCode, HeaderIterator headers,
+                                String paymentId) {
+                            Log.d(TAG, "payment.request() succeeded.");
+                        }
+
+                        @Override
+                        public void onFailure(int responseCode, HeaderIterator headers,
+                                String paymentId, String response) {
+                            Log.d(TAG, "payment.request() failed.");
+                        }
+
+                        @Override
+                        public void onCancel(int responseCode, HeaderIterator headers,
+                                String paymentId) {
+                            Log.d(TAG, "payment.request() canceled.");
+                        }
+                    });
+
                 default:
             }
         }
@@ -402,7 +463,7 @@ public class MainActivity extends Activity {
         return mainActivity;
     }
 
-    public RequestDialog getRequestDialog() {
-        return requestDialog;
+    public PopupDialog getPopupDialog() {
+        return popupDialog;
     }
 }

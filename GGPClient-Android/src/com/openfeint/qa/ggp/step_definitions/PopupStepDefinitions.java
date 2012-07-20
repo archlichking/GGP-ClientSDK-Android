@@ -1,6 +1,9 @@
 
 package com.openfeint.qa.ggp.step_definitions;
 
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,9 +12,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.TreeMap;
 
-import javax.security.auth.PrivateCredentialPermission;
-
-import junit.framework.Assert;
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.RequestDialog;
 import net.gree.asdk.core.ui.PopupDialog;
@@ -50,6 +50,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     public static final int POPUP_PAYMENT = 4;
 
+    public static String valueToBeVerified;
+
     @And("I initialize (\\w+) popup with title (.+) and body (.+)")
     public void initPopupDialog(String type, String title, String body) {
         TreeMap<String, Object> params = new TreeMap<String, Object>();
@@ -87,17 +89,33 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
         activity.popup_handler.sendMessage(msg);
 
+        int count = 0;
         while (!MainActivity.is_dialog_opened) {
+            if (count >= 10) {
+                fail("popup can not open!");
+            }
             Log.d(TAG, "waiting popup to open...");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            count++;
+        }
+
+        count = 0;
+        while (activity.getPopupDialog() == null) {
+            if (count >= 5) {
+                fail("popup dialog is null!");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count++;
         }
         final PopupDialog popupDialog = activity.getPopupDialog();
-        if (popupDialog == null)
-            Log.e(TAG, "Popup Dialog is null!!!");
 
         try {
             final WebView view = getWebViewFromPopup(popupDialog);
@@ -114,13 +132,18 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                             Log.d(TAG, "tell native that popup is loaded...");
                             is_popup_loading_done = true;
                         }
+
+                        public void returnValueFromPopup(String val) {
+                            Log.d(TAG, "return value from popup.");
+                            valueToBeVerified = val;
+                        }
                     }, "popupStep");
                 }
             });
 
             // Check if page is loaded
             Thread.sleep(3000);
-            int times = 0;
+            count = 0;
             Runnable check_task = new Runnable() {
                 @Override
                 public void run() {
@@ -132,11 +155,11 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 }
             };
 
-            while (!is_popup_loading_done && times <= 5) {
-                Log.d(TAG, "still waiting...");
+            while (!is_popup_loading_done && count <= 8) {
+                Log.d(TAG, "waiting popup to load...");
                 activity.runOnUiThread(check_task);
                 Thread.sleep(5000);
-                times++;
+                count++;
             }
 
             if (is_popup_loading_done) {
@@ -295,7 +318,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                     MainActivity.dialog_bitmap.getWidth(), MainActivity.dialog_bitmap.getHeight());
             double sRate = compareImage(MainActivity.dialog_bitmap, expect_image);
             Log.d(TAG, "Similarity rate: " + sRate);
-            Assert.assertTrue("popup similarity is bigger than 80%", sRate > 80);
+            assertTrue("popup similarity is bigger than 80%", sRate > 80);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -343,7 +366,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     public void dismissPopup() {
         MainActivity activity = MainActivity.getInstance();
         final PopupDialog dialog = activity.getPopupDialog();
-
+        if (dialog == null)
+            return;
         // call main thread to dismiss the popup
         activity.runOnUiThread(new Runnable() {
             @Override
