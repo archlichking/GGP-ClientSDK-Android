@@ -134,7 +134,6 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                         }
 
                         public void returnValueFromPopup(String val) {
-                            Log.d(TAG, "return value from popup.");
                             valueToBeVerified = val;
                         }
                     }, "popupStep");

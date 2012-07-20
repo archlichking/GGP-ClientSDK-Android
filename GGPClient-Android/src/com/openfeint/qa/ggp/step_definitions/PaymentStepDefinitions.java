@@ -25,13 +25,22 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     private static final String ITEM_LIST = "item_list";
 
     @SuppressWarnings("unchecked")
-    @When("I add payment item \\[(.+)\\]")
-    public void addPaymentItem(String itemString) {
-        String[] values = itemString.split(",");
+    @When("I add payment item with ID (\\w+), NAME (.+), UNIT_PRICE (\\d+) and QUANTITY (\\d+)")
+    public void addPaymentItem(String itemId, String itemName, int unitPrice, int quantity) {
         getBlockRepo().put(ITEM_LIST, new ArrayList<PaymentItem>());
-        PaymentItem item = new PaymentItem(values[0], values[1], Double.parseDouble(values[2]),
-                Integer.parseInt(values[3]));
+        PaymentItem item = new PaymentItem(itemId, itemName, unitPrice, quantity);
         ((ArrayList<PaymentItem>) getBlockRepo().get(ITEM_LIST)).add(item);
+    }
+
+    @SuppressWarnings("unchecked")
+    @And("I update payment item with IMAGE_URL (.+) and DESCRIPTION (.+)")
+    public void updatePaymentItem(String imgUrl, String desc) {
+        if (getBlockRepo().get(ITEM_LIST) == null) {
+            Log.e(TAG, "no payment item to be update!");
+            return;
+        }
+        ((ArrayList<PaymentItem>) getBlockRepo().get(ITEM_LIST)).get(0).setImageUrl(imgUrl);
+        ((ArrayList<PaymentItem>) getBlockRepo().get(ITEM_LIST)).get(0).setDescription(desc);
     }
 
     @SuppressWarnings("unchecked")
@@ -55,17 +64,16 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     public void verifyPaymentPopupInfo(String column, String expectValue) {
         String statementToGetElement = "";
         if ("NAME".equals(column)) {
-            statementToGetElement = "document.getElementsByClassName('title large')[0]";
+            statementToGetElement = "document.getElementsByClassName('title large')[0].textContent";
         } else if ("UNIT_PRICE".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[0]";
+            statementToGetElement = "document.getElementsByTagName('li')[0].textContent";
         } else if ("QUANTITY".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[1]";
+            statementToGetElement = "document.getElementsByTagName('li')[1].textContent";
         } else if ("IMAGE_URL".equals(column)) {
-            statementToGetElement = "document.getElementsByClassName('sentence medium minor')[0]";
+            statementToGetElement = "document.getElementsByTagName('img')[0].src";
         } else if ("DESCRIPTION".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[2]";
+            statementToGetElement = "document.getElementsByTagName('li')[2].textContent";
         }
-        Log.d(TAG, "get value of column: " + statementToGetElement);
         PopupStepDefinitions.valueToBeVerified = null;
         getValueFromPopup(statementToGetElement);
         int count = 0;
@@ -78,20 +86,8 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
             }
             count++;
         }
-        verifyValueFromPopup(column, expectValue);
-    }
-
-    private void verifyValueFromPopup(String column, String expectValue) {
-        Log.d(TAG, "expect: " + expectValue + " and actual: "
-                + PopupStepDefinitions.valueToBeVerified);
-        if ("DESCRIPTION".equals(column) || "IMAGE_URL".equals(column)) {
-            assertEquals("value from payment popup", expectValue,
-                    PopupStepDefinitions.valueToBeVerified.trim());
-        } else if ("NAME".equals(column) || "UNIT_PRICE".equals(column)
-                || "QUANTITY".equals(column)) {
-            assertTrue("value from payment popup",
-                    PopupStepDefinitions.valueToBeVerified.contains(expectValue));
-        }
+        assertTrue("value from payment popup",
+                PopupStepDefinitions.valueToBeVerified.contains(expectValue));
     }
 
     private void getValueFromPopup(final String statementToGetElement) {
@@ -105,7 +101,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 @Override
                 public void run() {
                     view.loadUrl("javascript:(function(){window.popupStep.returnValueFromPopup("
-                            + statementToGetElement + ".textContent)}) ()");
+                            + statementToGetElement + ")}) ()");
                 }
             });
 
