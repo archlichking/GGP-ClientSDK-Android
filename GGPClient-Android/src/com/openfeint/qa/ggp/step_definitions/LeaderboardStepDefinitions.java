@@ -158,6 +158,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     @Given("I make sure my score (\\w+) in leaderboard (.+)")
     @After("I make sure my score (\\w+) in leaderboard (.+)")
+    @And("I make sure my score (\\w+) in leaderboard (.+)")
     public void updateScoreAsCondition(String isExistsMark, String boardName) {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
         if (!"NOTEXISTS".equals(isExistsMark) && !"EXISTS".equals(isExistsMark))
