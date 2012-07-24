@@ -2,28 +2,25 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.TreeMap;
+import java.io.Serializable;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.RequestDialog;
 import net.gree.asdk.core.ui.PopupDialog;
-import net.gree.asdk.core.ui.WebViewPopupDialog;
+import util.ActionQueue;
+import util.ActionQueueListener;
+import util.PopupUtil;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 import android.webkit.WebView;
 
+import com.openfeint.qa.core.caze.step.Step;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
 import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
@@ -32,7 +29,7 @@ import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.ggp.MainActivity;
 import com.openfeint.qa.ggp.R;
 
-public class PopupStepDefinitions extends BasicStepDefinition {
+public class PopupStepDefinitions extends BasicStepDefinition implements Serializable {
 
     private static final String TAG = "Popup_Steps";
 
@@ -41,268 +38,84 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     private static final String POPUP_TYPE = "popup_type";
 
     public static final String HANDLER = "handler";
-
-    private static boolean is_popup_loading_done;
-
-    public static final int POPUP_UNKNOWN = 0;
-
-    public static final int POPUP_REQUEST = 1;
-
-    public static final int POPUP_PAYMENT = 4;
-
-    public static String valueToBeVerified;
-
+    
+    private static boolean is_action_end_success;
+    
     @And("I initialize (\\w+) popup with title (.+) and body (.+)")
     public void initPopupDialog(String type, String title, String body) {
-        TreeMap<String, Object> params = new TreeMap<String, Object>();
-        params.put("title", title);
-        params.put("body", body);
+        String[] params = {
+                title, body
+        };
 
         getBlockRepo().put(POPUP_PARAMS, params);
         if ("request".equals(type)) {
-            getBlockRepo().put(POPUP_TYPE, POPUP_REQUEST);
+            getBlockRepo().put(POPUP_TYPE, ActionQueue.POPUP_REQUEST);
         } else {
             Log.e(TAG, "unknown popup type!");
-            getBlockRepo().put(POPUP_TYPE, POPUP_UNKNOWN);
+            getBlockRepo().put(POPUP_TYPE, ActionQueue.POPUP_UNKNOWN);
         }
     }
 
     @When("I did open popup")
     public void openPopupByType() {
-        MainActivity activity = MainActivity.getInstance();
-        if ((Integer) getBlockRepo().get(POPUP_TYPE) == POPUP_UNKNOWN) {
+        if ((Integer) getBlockRepo().get(POPUP_TYPE) == ActionQueue.POPUP_UNKNOWN) {
             return;
         }
-        Message msg = activity.popup_handler
-                .obtainMessage((Integer) getBlockRepo().get(POPUP_TYPE));
-        msg.obj = getBlockRepo().get(POPUP_PARAMS);
+        // Sent out broadcast to action queue
+        Intent intent = new Intent();
+        intent.setAction(ActionQueue.ACTION_REQUEST_POPUP);
+        intent.putExtra(ActionQueue.PARAMS, (String[]) getBlockRepo().get(POPUP_PARAMS));
 
-        String popupElementId = "";
-        if (POPUP_REQUEST == (Integer) getBlockRepo().get(POPUP_TYPE)) {
-            popupElementId = "btn-msg-choosed";
-        }
-        openPopup(msg, popupElementId);
-    }
+        intent.putExtra(ActionQueue.LISTENER, new ActionQueueListener() {
+            private static final long serialVersionUID = 1L;
 
-    /**
-     * @param msg the message to open popup, must be handled in MainActivity
-     * @param popupElementId JS will check whether this element exists to
-     *            determine popup loaded
-     */
-    public static void openPopup(Message msg, final String popupElementId) {
-        MainActivity activity = MainActivity.getInstance();
+            @Override
+            protected void onSuccess() {
+                Log.d(TAG, "Popup is loaded success...");
+                notifyEnd();
+            }
 
-        activity.popup_handler.sendMessage(msg);
-
+            @Override
+            protected void onFailure() {
+                Log.e(TAG, "Popup can not load!!");
+                notifyEnd();
+            }
+        });
+        is_action_end_success = false;
+        GreePlatform.getContext().sendBroadcast(intent);
         int count = 0;
-        while (!MainActivity.is_dialog_opened) {
-            if (count >= 10) {
-                fail("popup can not open!");
-            }
-            Log.d(TAG, "waiting popup to open...");
+        while (!is_action_end_success) {
+            if (count >=8) {
+                Log.e(TAG, "open popup time out!");
+                return;
+            } 
             try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            count++;
-        }
-
-        count = 0;
-        while (activity.getPopupDialog() == null) {
-            if (count >= 5) {
-                fail("popup dialog is null!");
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            count++;
-        }
-        final PopupDialog popupDialog = activity.getPopupDialog();
-
-        try {
-            final WebView view = getWebViewFromPopup(popupDialog);
-
-            // add javascript interface into webview before it loaded
-            is_popup_loading_done = false;
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    view.getSettings().setJavaScriptEnabled(true);
-                    view.addJavascriptInterface(new Object() {
-                        @SuppressWarnings("unused")
-                        public void notifyPopupLoadingDone() {
-                            Log.d(TAG, "tell native that popup is loaded...");
-                            is_popup_loading_done = true;
-                        }
-
-                        public void returnValueFromPopup(String val) {
-                            valueToBeVerified = val;
-                        }
-                    }, "popupStep");
-                }
-            });
-
-            // Check if page is loaded
-            Thread.sleep(3000);
-            count = 0;
-            Runnable check_task = new Runnable() {
-                @Override
-                public void run() {
-                    String data = "(function() {function waitPageLoading(){if(document.getElementById('"
-                            + popupElementId
-                            + "')&&'undefined'!=typeof(window.popupStep))"
-                            + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
-                    view.loadUrl("javascript:" + data);
-                }
-            };
-
-            while (!is_popup_loading_done && count <= 8) {
-                Log.d(TAG, "waiting popup to load...");
-                activity.runOnUiThread(check_task);
+                Log.d(TAG, "wait 5 secs...");
                 Thread.sleep(5000);
-                count++;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
-            if (is_popup_loading_done) {
-                Log.d(TAG, "Popup is loaded!!!");
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            count++;
         }
-
     }
-
-    // TODO just for debug ignore this
-    @When("I debug picture comparison")
-    public void screenshotComparison() {
-        String sdcard_path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        Bitmap image_from_laptop = zoomBitmap(BitmapFactory.decodeResource(GreePlatform
-                .getContext().getResources(), R.drawable.expect_request_dialog), 408, 580);
-        File file_from_device = new File(sdcard_path + "/expect_request_dialog.png");
-        double sRate = compareImage(image_from_laptop, getBitmapFromFile(file_from_device));
-        Log.e(TAG, "sRate: " + sRate);
-    }
-
-    public static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
-        int w = bitmap.getWidth();
-        int h = bitmap.getHeight();
-        Matrix matrix = new Matrix();
-        float scaleWidth = ((float) width / w);
-        float scaleHeight = ((float) height / h);
-        matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap newbmp = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
-        return newbmp;
-    }
-
-    public static WebView getWebViewFromPopup(PopupDialog popup) throws Exception {
-        Method getWebViewClientMethod = WebViewPopupDialog.class.getDeclaredMethod("getWebView");
-        getWebViewClientMethod.setAccessible(true);
-        return (WebView) getWebViewClientMethod.invoke(popup);
-    }
-
-    private Bitmap getBitmapFromFile(File file) {
-        FileInputStream fis = null;
-        Bitmap bm = null;
-        try {
-            fis = new FileInputStream(file);
-            bm = BitmapFactory.decodeStream(fis);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            if (fis != null)
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
-
-        return bm;
-    }
-
-    private static Object[][] getRGBList(Bitmap bm) {
-
-        if (bm == null) {
-            Log.e("Image Compare", "Bitmap is null!");
-            return null;
-        }
-
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        Object[][] list = new Object[width][height];
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                int color = bm.getPixel(i, j);
-                int rgb[] = new int[3];
-                rgb[0] = (color & 0xff);
-                rgb[1] = (color & 0xff00) >> 8;
-                rgb[2] = (color & 0xff0000) >> 16;
-
-                list[i][j] = rgb;
-            }
-        }
-        return list;
-    }
-
-    /**
-     * return similarity as a integer rate between 0~100
-     * 
-     * @param img1 the image to be compare
-     * @param img2 the image to be compare
-     * @return the similarity rate of the comparison, if it bigger than 80, we
-     *         can say the view show is what we want
-     */
-    public static double compareImage(Bitmap img1, Bitmap img2) {
-        Object[][] list1 = getRGBList(img1);
-        Object[][] list2 = getRGBList(img2);
-
-        if (list1 == null || list2 == null) {
-            return 0;
-        }
-
-        double xiangsi = 0;
-        double busi = 0;
-        double sRate = 0;
-        for (int i = 0; i < list1.length; i++) {
-            for (int j = 0; j < list1[i].length; j++) {
-                try {
-                    int[] value1 = (int[]) list1[i][j];
-                    int[] value2 = (int[]) list2[i][j];
-                    boolean flag = true;
-                    for (int k = 0; k < value1.length && k < value2.length; k++) {
-                        if (Math.abs(value1[k] - value2[k]) > 16) {
-                            flag = false;
-                            busi++;
-                            break;
-                        }
-                    }
-                    if (flag) {
-                        xiangsi++;
-                    }
-                } catch (RuntimeException e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                j++;
-            }
-            i++;
-        }
-        sRate = xiangsi / (xiangsi + busi) * 100;
-        return sRate;
+    
+    private static void notifyEnd() {
+        Log.d(TAG, "notify end!");
+        is_action_end_success = true;
     }
 
     @Then("request popup should open as we expected")
+    public void mock() {
+
+    }
+
     public void verifyRequestPopup() {
         MainActivity activity = MainActivity.getInstance();
         final PopupDialog popupDialog = activity.getPopupDialog();
         if (popupDialog == null)
             Log.e(TAG, "Popup Dialog is null!!!");
         try {
-            final WebView view = getWebViewFromPopup(popupDialog);
+            final WebView view = PopupUtil.getWebViewFromPopup(popupDialog);
 
             // Call main thread to build bitmap of popup
             activity.runOnUiThread(new Runnable() {
@@ -324,10 +137,10 @@ public class PopupStepDefinitions extends BasicStepDefinition {
                 }
             }
 
-            Bitmap expect_image = zoomBitmap(BitmapFactory.decodeResource(GreePlatform.getContext()
-                    .getResources(), R.drawable.expect_request_dialog),
+            Bitmap expect_image = PopupUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                    .getContext().getResources(), R.drawable.expect_request_dialog),
                     MainActivity.dialog_bitmap.getWidth(), MainActivity.dialog_bitmap.getHeight());
-            double sRate = compareImage(MainActivity.dialog_bitmap, expect_image);
+            double sRate = PopupUtil.compareImage(MainActivity.dialog_bitmap, expect_image);
             Log.d(TAG, "Similarity rate: " + sRate);
             assertTrue("popup similarity is bigger than 80%", sRate > 80);
 
@@ -342,7 +155,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         MainActivity activity = MainActivity.getInstance();
         final RequestDialog requestDialog = (RequestDialog) activity.getPopupDialog();
         try {
-            final WebView view = getWebViewFromPopup(requestDialog);
+            final WebView view = PopupUtil.getWebViewFromPopup(requestDialog);
             FileOutputStream fos = new FileOutputStream(img);
             // Call main thread to build bitmap of popup
             activity.runOnUiThread(new Runnable() {
@@ -374,6 +187,9 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     }
 
     @After("I did dismiss popup")
+    public void mock2() {
+    }
+
     public void dismissPopup() {
         MainActivity activity = MainActivity.getInstance();
         final PopupDialog dialog = activity.getPopupDialog();
