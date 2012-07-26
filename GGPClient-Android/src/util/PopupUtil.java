@@ -1,14 +1,14 @@
 
 package util;
 
+import static junit.framework.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
-
-import com.openfeint.qa.core.command.When;
-import com.openfeint.qa.ggp.R;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.core.ui.PopupDialog;
@@ -20,8 +20,72 @@ import android.os.Environment;
 import android.util.Log;
 import android.webkit.WebView;
 
+import com.openfeint.qa.ggp.MainActivity;
+import com.openfeint.qa.ggp.R;
+
 public class PopupUtil {
-    private final String TAG = "Popup_Util"; 
+    private static final String TAG = "Popup_Util";
+
+    public static double getSimilarityOfPopupView(int expectImageId) {
+        // Wait the main thread to refresh view of popup
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
+        MainActivity activity = MainActivity.getInstance();
+        final PopupDialog popupDialog = ActionQueue.getPopupDialog();
+        if (popupDialog == null)
+            fail("Popup Dialog is null!!!");
+        double sRate = 0;
+        try {
+            final WebView view = PopupUtil.getWebViewFromPopup(popupDialog);
+            // Call main thread to build bitmap of popup
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.dialog_bitmap = null;
+                    view.buildDrawingCache();
+                    MainActivity.dialog_bitmap = view.getDrawingCache();
+                }
+            });
+
+            // wait bitmap of popup created
+            int times = 0;
+            while (MainActivity.dialog_bitmap == null && times < 5) {
+                Thread.sleep(2000);
+            }
+
+            Bitmap expect_image = PopupUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                    .getContext().getResources(), expectImageId), MainActivity.dialog_bitmap
+                    .getWidth(), MainActivity.dialog_bitmap.getHeight());
+            sRate = PopupUtil.compareImage(MainActivity.dialog_bitmap, expect_image);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sRate;
+    }
+
+    public static void dismissPopupDialog() {
+        MainActivity activity = MainActivity.getInstance();
+        final PopupDialog dialog = ActionQueue.getPopupDialog();
+        if (dialog == null)
+            return;
+        // call main thread to dismiss the popup
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+            }
+        });
+        // Wait main Thread to dissmiss the popup
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static WebView getWebViewFromPopup(PopupDialog popup) throws Exception {
         Method getWebViewClientMethod = WebViewPopupDialog.class.getDeclaredMethod("getWebView");
@@ -29,9 +93,36 @@ public class PopupUtil {
         return (WebView) getWebViewClientMethod.invoke(popup);
     }
 
+    public static void getValueFromPopup(final String statementToGetElement) {
+        final MainActivity activity = MainActivity.getInstance();
+        final PopupDialog popupDialog = ActionQueue.getPopupDialog();
+        if (popupDialog == null)
+            Log.e(TAG, "Popup Dialog is null!!!");
+        try {
+            final WebView view = PopupUtil.getWebViewFromPopup(popupDialog);
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    view.loadUrl("javascript:(function(){window.popupStep.returnValueFromPopup("
+                            + statementToGetElement + ")}) ()");
+                }
+            });
+
+            // wait main thread to execute the JS
+            int count = 0;
+            while ((ActionQueue.valueToBeVerified == null || ""
+                    .equals(ActionQueue.valueToBeVerified)) && count < 10) {
+                Thread.sleep(1000);
+                count++;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // TODO just for debug ignore this
-    @When("I debug picture comparison")
-    public void screenshotComparison() {
+    public static void screenshotComparison() {
         String sdcard_path = Environment.getExternalStorageDirectory().getAbsolutePath();
         Bitmap image_from_laptop = zoomBitmap(BitmapFactory.decodeResource(GreePlatform
                 .getContext().getResources(), R.drawable.expect_request_dialog), 408, 580);
@@ -40,18 +131,7 @@ public class PopupUtil {
         Log.e(TAG, "sRate: " + sRate);
     }
 
-    public static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
-        int w = bitmap.getWidth();
-        int h = bitmap.getHeight();
-        Matrix matrix = new Matrix();
-        float scaleWidth = ((float) width / w);
-        float scaleHeight = ((float) height / h);
-        matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap newbmp = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
-        return newbmp;
-    }
-
-    private Bitmap getBitmapFromFile(File file) {
+    private static Bitmap getBitmapFromFile(File file) {
         FileInputStream fis = null;
         Bitmap bm = null;
         try {
@@ -69,6 +149,17 @@ public class PopupUtil {
         }
 
         return bm;
+    }
+
+    public static Bitmap zoomBitmap(Bitmap bitmap, int width, int height) {
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+        Matrix matrix = new Matrix();
+        float scaleWidth = ((float) width / w);
+        float scaleHeight = ((float) height / h);
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap newbmp = Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
+        return newbmp;
     }
 
     private static Object[][] getRGBList(Bitmap bm) {
@@ -140,5 +231,47 @@ public class PopupUtil {
         }
         sRate = xiangsi / (xiangsi + busi) * 100;
         return sRate;
+    }
+
+    // TODO need update
+    /**
+     * Save the image as the expect result for your step
+     * 
+     * @param the path to store image
+     * @param the image name such as xxx.png
+     */
+    private void saveImageAsExpectedResult(String path, String img_name) {
+        File img = new File(path, img_name);
+        MainActivity activity = MainActivity.getInstance();
+        final PopupDialog requestDialog = ActionQueue.getPopupDialog();
+        try {
+            final WebView view = PopupUtil.getWebViewFromPopup(requestDialog);
+            FileOutputStream fos = new FileOutputStream(img);
+            // Call main thread to build bitmap of popup
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.dialog_bitmap = null;
+                    view.buildDrawingCache();
+                    MainActivity.dialog_bitmap = view.getDrawingCache();
+                }
+            });
+
+            // wait bitmap of popup created
+            int times = 0;
+            while (MainActivity.dialog_bitmap == null && times < 5) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (MainActivity.dialog_bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)) {
+                Log.d(TAG, "Create expected image for popup success!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

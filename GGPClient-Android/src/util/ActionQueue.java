@@ -1,10 +1,18 @@
 
 package util;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 import net.gree.asdk.api.ui.RequestDialog;
+import net.gree.asdk.api.wallet.Payment;
+import net.gree.asdk.api.wallet.Payment.PaymentListener;
+import net.gree.asdk.api.wallet.PaymentItem;
 import net.gree.asdk.core.ui.PopupDialog;
+
+import org.apache.http.HeaderIterator;
+
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,11 +33,23 @@ public class ActionQueue extends BroadcastReceiver {
 
     public static final int POPUP_PAYMENT = 4;
 
+    public static final int RESULT_UNKNOWN = 0;
+
+    public static final int RESULT_SUCCESS = 1;
+
+    public static final int RESULT_FAILURE = 2;
+
     public static final String ACTION_REQUEST_POPUP = "util.ActionQueue.request_popup";
 
-    public static final String PARAMS = "util.ActionQueue.params";
+    public static final String ACTION_PAYMENT_POPUP = "util.ActionQueue.payment_popup";
+
+    public static final String ACTION_CHECK_PAYMENT_POPUP_LOADED = "util.ActionQueue.check_popup_loaded";
+
+    public static final String POPUP_PARAMS = "util.ActionQueue.params";
 
     public static final String LISTENER = "util.ActionQueue.listener";
+
+    public static boolean is_popup_opened;
 
     private static boolean is_popup_loading_done;
 
@@ -39,24 +59,26 @@ public class ActionQueue extends BroadcastReceiver {
 
     private static PopupDialog popupDialog;
 
-    private ActionQueueListener listener;
-
-    private boolean is_dialog_opened;
-    
     @Override
     public void onReceive(Context context, final Intent intent) {
         Log.d(TAG, "=============== Receive new action: " + intent.getAction() + "===============");
 
-        String[] params = intent.getStringArrayExtra(PARAMS);
-        listener = (ActionQueueListener) intent.getSerializableExtra(LISTENER);
-
+        String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
         if (ACTION_REQUEST_POPUP == intent.getAction()) {
             TreeMap<String, Object> map = new TreeMap<String, Object>();
             map.put("title", params[0]);
             map.put("body", params[1]);
             popupElementId = "btn-msg-choosed";
 
-            handlerSNSPopup(POPUP_REQUEST, map);
+            openSNSPopup(POPUP_REQUEST, map);
+            checkPopupLoaded();
+
+        } else if (ACTION_PAYMENT_POPUP == intent.getAction()) {
+            is_popup_opened = false;
+            openPaymentPopup(params);
+        } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED == intent.getAction()) {
+            popupElementId = "submit_btn";
+            checkPopupLoaded();
         }
     }
 
@@ -64,6 +86,10 @@ public class ActionQueue extends BroadcastReceiver {
     private void checkPopupLoaded() {
         try {
             final WebView view = PopupUtil.getWebViewFromPopup(popupDialog);
+            if (view == null) {
+                Log.e(TAG, "popup is not opened!");
+                return;
+            }
 
             // add javascript interface into webview before it loaded
             Log.d(TAG, "add JS interface...");
@@ -89,33 +115,20 @@ public class ActionQueue extends BroadcastReceiver {
                     + "{window.popupStep.notifyPopupLoadingDone()}} return(waitPageLoading()) }) ()";
             Log.d(TAG, "check if page loaded...");
 
-            Runnable checkPageLoad_thread = new Runnable() {
-                @Override
-                public void run() {
-                    int count = 0;
-                    while (!is_popup_loading_done && count <= 5) {
-                        Log.d(TAG, "waiting popup to load...");
-                        MainActivity.getInstance().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                view.loadUrl("javascript:" + data);
-                            }
-                        });
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        count++;
-                    }
-                    if (is_popup_loading_done) {
-                        listener.onSuccess();
-                    } else {
-                        listener.onFailure();
-                    }
-                }
-            };
-            new Thread(checkPageLoad_thread).start();
+            int count = 0;
+            while (!is_popup_loading_done && count <= 5) {
+                Log.d(TAG, "waiting popup to load...");
+                view.loadUrl("javascript:" + data);
+                Thread.sleep(5000);
+                count++;
+            }
+            if (is_popup_loading_done) {
+                Log.e(TAG, "set result success");
+                setResultCode(RESULT_SUCCESS);
+            } else {
+                Log.e(TAG, "set result failure");
+                setResultCode(RESULT_FAILURE);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -123,20 +136,18 @@ public class ActionQueue extends BroadcastReceiver {
 
     }
 
-    private void handlerSNSPopup(int popupType, TreeMap<String, Object> params) {
+    private void openSNSPopup(int popupType, TreeMap<String, Object> params) {
         switch (popupType) {
             case POPUP_REQUEST:
                 Log.d(TAG, "Trying to open request dialog...");
-                is_dialog_opened = false;
                 Handler handler = new Handler() {
                     public void handleMessage(Message message) {
                         switch (message.what) {
                             case RequestDialog.OPENED:
-                                Log.i(TAG, "Reqest Dialog opened.");
-                                checkPopupLoaded();
+                                Log.i(TAG, "Request dialog opened.");
                                 break;
                             case RequestDialog.CLOSED:
-                                Log.i(TAG, "Request Dialog closed.");
+                                Log.i(TAG, "Request dialog closed.");
                                 break;
                             default:
                         }
@@ -150,61 +161,75 @@ public class ActionQueue extends BroadcastReceiver {
                 break;
             default:
                 break;
-        // case POPUP_PAYMENT:
-        // Log.d(TAG, "Trying to open payment dialog...");
-        // final Payment payment = (Payment) message.obj;
-        // payment.setHandler(new Handler() {
-        // public void handleMessage(Message message) {
-        // switch (message.what) {
-        // case Payment.OPENED:
-        // Log.d("Payment", "PaymentDialog opened.");
-        // try {
-        // Field dialog_field = Payment.class
-        // .getDeclaredField("mPaymentDialog");
-        // dialog_field.setAccessible(true);
-        // int count = 0;
-        // while (dialog_field.get(payment) == null && count < 10) {
-        // Thread.sleep(1000);
-        // count++;
-        // }
-        // popupDialog = (PopupDialog) dialog_field.get(payment);
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // }
-        // break;
-        // case Payment.CANCELLED:
-        // Log.d("Payment", "PaymentDialog canceled.");
-        // case Payment.ABORTED:
-        // Log.d("Payment", "PaymentDialog closed.");
-        // break;
-        // }
-        // }
-        // });
-        // payment.request(MainActivity.getInstance(), new
-        // PaymentListener() {
-        // @Override
-        // public void onSuccess(int responseCode, HeaderIterator
-        // headers,
-        // String paymentId) {
-        // Log.d(TAG, "payment.request() succeeded.");
-        // }
-        //
-        // @Override
-        // public void onFailure(int responseCode, HeaderIterator
-        // headers,
-        // String paymentId, String response) {
-        // Log.d(TAG, "payment.request() failed.");
-        // }
-        //
-        // @Override
-        // public void onCancel(int responseCode, HeaderIterator
-        // headers, String
-        // paymentId) {
-        // Log.d(TAG, "payment.request() canceled.");
-        // }
-        // });
-        //
-        // default:
         }
+    }
+
+    private void openPaymentPopup(String[] params) {
+        // add payment item and init payment class
+        PaymentItem item = new PaymentItem(params[0], params[1], Integer.parseInt(params[2]),
+                Integer.parseInt(params[3]));
+        item.setImageUrl(params[4]);
+        item.setDescription(params[5]);
+        ArrayList<PaymentItem> itemList = new ArrayList<PaymentItem>();
+        itemList.add(item);
+        final Payment payment = new Payment("test item", itemList);
+        payment.setCallbackUrl("");
+
+        payment.setHandler(new Handler() {
+            public void handleMessage(Message message) {
+                switch (message.what) {
+                    case Payment.OPENED:
+                        Log.d("Payment", "PaymentDialog opened.");
+                        try {
+                            Field dialog_field = Payment.class.getDeclaredField("mPaymentDialog");
+                            dialog_field.setAccessible(true);
+                            // int count = 0;
+                            // while (dialog_field.get(payment) == null && count
+                            // < 5) {
+                            // Thread.sleep(2000);
+                            // count++;
+                            // }
+                            if (dialog_field.get(payment) == null) {
+                                Log.e(TAG, "null got!");
+                            }
+                            popupDialog = (PopupDialog) dialog_field.get(payment);
+                            is_popup_opened= true;
+//                            checkPopupLoaded();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case Payment.CANCELLED:
+                        Log.d("Payment", "PaymentDialog canceled.");
+                        break;
+                    case Payment.ABORTED:
+                        Log.d("Payment", "PaymentDialog closed.");
+                        break;
+                }
+            }
+        });
+
+        Log.d(TAG, "Trying to open payment dialog...");
+        payment.request(MainActivity.getInstance(), new PaymentListener() {
+            @Override
+            public void onSuccess(int responseCode, HeaderIterator headers, String paymentId) {
+                Log.d(TAG, "payment.request() succeeded.");
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String paymentId,
+                    String response) {
+                Log.d(TAG, "payment.request() failed.");
+            }
+
+            @Override
+            public void onCancel(int responseCode, HeaderIterator headers, String paymentId) {
+                Log.d(TAG, "payment.request() canceled.");
+            }
+        });
+    }
+
+    public static PopupDialog getPopupDialog() {
+        return popupDialog;
     }
 }

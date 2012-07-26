@@ -39,6 +39,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <receiver android:name="util.ActionQueue">
+        	<intent-filter> 
+                <action android:name="util.ActionQueue.request_popup" /> 
+                <action android:name="util.ActionQueue.payment_popup" /> 
+                <action android:name="util.ActionQueue.check_popup_loaded" /> 
+            </intent-filter>     
+        </receiver>>
 
         <!-- use GGP activities -->
         <activity
