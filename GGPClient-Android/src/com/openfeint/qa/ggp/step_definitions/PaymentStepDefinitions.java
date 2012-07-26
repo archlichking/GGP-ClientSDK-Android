@@ -2,6 +2,9 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
+
+import org.hamcrest.SelfDescribing;
+
 import net.gree.asdk.api.GreePlatform;
 import util.ActionQueue;
 import util.PopupUtil;
