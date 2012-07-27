@@ -21,8 +21,10 @@ import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 import net.gree.asdk.api.IconDownloadListener;
 import net.gree.asdk.core.Core;
+import net.gree.asdk.core.Injector;
 import net.gree.asdk.core.Session;
 import net.gree.asdk.core.auth.AuthorizerCore;
+import net.gree.asdk.core.auth.IAuthorizer;
 import net.gree.asdk.core.auth.OAuthStorage;
 import net.gree.asdk.core.request.OnResponseCallback;
 import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -30,6 +32,7 @@ import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
+import util.ImageUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -102,7 +105,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         String secret = credential.get(CredentialStorage.KEY_SECRET);
         Log.i(TAG, "Try Login Userid: " + user_id + "\nToken: " + token + "\nand secret: " + secret);
 
-        AuthorizerCore core = AuthorizerCore.getInstance();
+        AuthorizerCore core = (AuthorizerCore) Injector.getInstance(IAuthorizer.class);
         try {
             // get mOAuth field of AuthorizerCore
             Field oAuth_field = core.getClass().getDeclaredField("mOAuth");
@@ -556,10 +559,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
 
         Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
-        Bitmap expect_image = PopupStepDefinitions.zoomBitmap(BitmapFactory.decodeResource(
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
                 GreePlatform.getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap
                 .getHeight());
-        double sRate = PopupStepDefinitions.compareImage(bitmap, expect_image);
+        double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
     }

@@ -18,6 +18,8 @@ public class TestCase {
 
         int RETESTED = 4;
 
+        int BLOCKED = 2;
+        
         int PASSED = 1;
 
         int UNTEST = 0;
@@ -98,11 +100,11 @@ public class TestCase {
     public void execute() {
         Log.v(StringUtil.DEBUG_TAG, "executing case [id: " + id + ", title: " + title + "]");
         int res = TestCase.RESULT.PASSED;
-        // no step in this case, failed directly
-        if (steps.length == 0) {
-            res = TestCase.RESULT.RETESTED;
-            this.resultComment = "No Step Found for this case, maybe a parse error, need retested";
+        if (this.isExecuted == true) {
+            // already processed during building this case
+            return;
         } else {
+            // no step in this case, failed directly
             StringBuffer sb = new StringBuffer();
             for (Step s : steps) {
                 if (res != TestCase.RESULT.FAILED || s.getKeyword().toUpperCase().equals("AFTER")) {

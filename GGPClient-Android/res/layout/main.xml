@@ -32,7 +32,7 @@
                 android:id="@+id/text_run_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="451" >
+                android:text="402" >
             </EditText>
         </LinearLayout>
 
@@ -51,7 +51,7 @@
                 android:id="@+id/text_suite_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="185" />
+                android:text="178" />
         </LinearLayout>
     </LinearLayout>
 
@@ -88,7 +88,7 @@
         android:id="@+id/use_failed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20px"
+        android:layout_marginLeft="20dp"
         android:text="select failed"
         android:visibility="gone" />
     

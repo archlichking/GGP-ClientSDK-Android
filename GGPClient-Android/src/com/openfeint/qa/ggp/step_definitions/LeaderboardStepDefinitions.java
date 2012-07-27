@@ -2,8 +2,8 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +23,7 @@ import net.gree.asdk.api.Leaderboard.SuccessListener;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
+import util.ImageUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -215,17 +216,16 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
     @When("I add score to leaderboard (.+) with score (-?\\d+)")
     public void createScoreByName(String boardName, int score) {
         notifyStepWait();
-        ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
-        String board_id = Consts.INVALID_INT_STRING;
+        String boardId = Consts.INVALID_INT_STRING;
+        Leaderboard board = getBoardFromList(boardName);
+
         // Record score updated for the below steps
-        for (Leaderboard board : l) {
-            if (boardName.equals(board.getName())) {
-                board_id = board.getId();
-                break;
-            }
+        if (board != null) {
+            boardId = board.getId();
         }
+
         Log.i(TAG, "Try to create new score for leaderboard...");
-        Leaderboard.createScore(board_id, score, new SuccessListener() {
+        Leaderboard.createScore(boardId, score, new SuccessListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, "Update leaderboard score success!");
@@ -298,7 +298,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             boardId = board.getId();
         }
 
-        Log.d(TAG, "Found the leaderboard " + boardName);
         Leaderboard.deleteScore(boardId, new SuccessListener() {
             @Override
             public void onSuccess() {
@@ -320,6 +319,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         ArrayList<Leaderboard> l = (ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST);
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
+                Log.d(TAG, "Found the leaderboard " + boardName);
                 return board;
             }
         }
@@ -486,16 +486,16 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    //TODO now all leaderboard have the same icon
+    // TODO now all leaderboard have the same icon
     @Then("leaderboard icon of (.+) should be correct")
     public void verifyIcon(String boardName) {
         if (getBlockRepo().get(ICON) == null)
             fail("leaderboard icon is null!");
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
-        Bitmap expect_image = PopupStepDefinitions.zoomBitmap(BitmapFactory.decodeResource(
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
                 GreePlatform.getContext().getResources(), R.drawable.leaderboard_icon), bitmap
                 .getWidth(), bitmap.getHeight());
-        double sRate = PopupStepDefinitions.compareImage(bitmap, expect_image);
+        double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("leaderboard icon similarity is bigger than 80%", sRate > 80);
         // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
