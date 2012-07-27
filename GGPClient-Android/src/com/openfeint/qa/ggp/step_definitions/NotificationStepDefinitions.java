@@ -34,7 +34,7 @@ public class NotificationStepDefinitions extends BasicStepDefinition {
 
     private final String IS_NOTIFICATION_CALLED = "isNotificationCalled";
 
-    @And("I initialize notification with TITLE (.+), BODY (.+), BAR_TITLE (.+), INTERVAL (\\d+), ID (\\d+) and CALLBACK_PARAM (.+)")
+    @And("I initialize local notification with TITLE (.+) and BODY (.+) and BARTITLE (.+) and INTERVAL (\\d+) and ID (\\d+) and CALLBACKPARAM (.+)")
     public void setupNotification(String title, String body, String barTitle, int interval, int id,
             String callbackParam) {
 
@@ -98,7 +98,7 @@ public class NotificationStepDefinitions extends BasicStepDefinition {
                 (notifyTimestamp - addTimestamp) / 1000);
     }
 
-    @And("local notification should called with CALLBACK_PARAM (.+)")
+    @And("local notification should called with CALLBACKPARAM (.+)")
     public void verifyCallbackParam(String expected_callback) {
         if (!(Boolean) getBlockRepo().get(IS_NOTIFICATION_ADDED)) {
             fail("add notification failed!");
