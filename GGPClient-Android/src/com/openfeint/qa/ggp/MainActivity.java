@@ -17,6 +17,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -361,5 +363,22 @@ public class MainActivity extends Activity {
 
     public static MainActivity getInstance() {
         return mainActivity;
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(Menu.NONE, Menu.FIRST + 1, 1, "QUIT");
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case Menu.FIRST + 1:
+                Log.d(TAG, "exiting app...");
+                System.exit(0);
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

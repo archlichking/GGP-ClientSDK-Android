@@ -73,10 +73,9 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
             }
         }, null, ActionQueue.RESULT_UNKNOWN, null, null);
     }
-
-    @Then("payment popup info (\\w+) should be (.+)")
-    @And("payment popup info (\\w+) should be (.+)")
-    public void verifyPaymentPopupInfo(String column, String expectValue) {
+    
+    @When("I check payment request popup info (.+)")
+    public void getPaymentPopupInfo(String column) {
         String statementToGetElement = "";
         if ("NAME".equals(column)) {
             statementToGetElement = "document.getElementsByClassName('title large')[0].textContent";
@@ -91,6 +90,11 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
         }
         ActionQueue.valueToBeVerified = null;
         PopupUtil.getValueFromPopup(statementToGetElement);
+    }
+
+    @Then("payment popup info (\\w+) should be (.+)")
+    @And("payment popup info (\\w+) should be (.+)")
+    public void verifyPaymentPopupInfo(String column, String expectValue) {
         assertTrue("value from payment popup", ActionQueue.valueToBeVerified.contains(expectValue));
     }
 }
