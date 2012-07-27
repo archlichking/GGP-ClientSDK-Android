@@ -2,8 +2,8 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,7 +23,7 @@ import net.gree.asdk.api.Leaderboard.SuccessListener;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-import util.PopupUtil;
+import util.ImageUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -492,10 +492,10 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         if (getBlockRepo().get(ICON) == null)
             fail("leaderboard icon is null!");
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
-        Bitmap expect_image = PopupUtil.zoomBitmap(BitmapFactory.decodeResource(
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
                 GreePlatform.getContext().getResources(), R.drawable.leaderboard_icon), bitmap
                 .getWidth(), bitmap.getHeight());
-        double sRate = PopupUtil.compareImage(bitmap, expect_image);
+        double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("leaderboard icon similarity is bigger than 80%", sRate > 80);
         // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),

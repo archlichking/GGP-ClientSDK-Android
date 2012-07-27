@@ -32,7 +32,7 @@ import net.gree.oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-import util.PopupUtil;
+import util.ImageUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -559,10 +559,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
 
         Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
-        Bitmap expect_image = PopupUtil.zoomBitmap(BitmapFactory.decodeResource(
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
                 GreePlatform.getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap
                 .getHeight());
-        double sRate = PopupUtil.compareImage(bitmap, expect_image);
+        double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
     }

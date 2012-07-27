@@ -24,30 +24,26 @@ import android.webkit.WebView;
 
 import com.openfeint.qa.ggp.MainActivity;
 
-public class ActionQueue extends BroadcastReceiver {
+public class PopupHandler extends BroadcastReceiver {
     private final String TAG = "Action_Queue";
 
-    public static final int POPUP_UNKNOWN = 0;
-
     public static final int POPUP_REQUEST = 1;
-
-    public static final int POPUP_PAYMENT = 4;
-
+    
     public static final int RESULT_UNKNOWN = 0;
 
     public static final int RESULT_SUCCESS = 1;
 
     public static final int RESULT_FAILURE = 2;
 
-    public static final String ACTION_REQUEST_POPUP = "util.ActionQueue.request_popup";
+    public static final String ACTION_REQUEST_POPUP = "util.PopupHandler.request_popup";
 
-    public static final String ACTION_PAYMENT_POPUP = "util.ActionQueue.payment_popup";
+    public static final String ACTION_PAYMENT_POPUP = "util.PopupHandler.payment_popup";
 
-    public static final String ACTION_CHECK_PAYMENT_POPUP_LOADED = "util.ActionQueue.check_popup_loaded";
+    public static final String ACTION_CHECK_PAYMENT_POPUP_LOADED = "util.PopupHandler.check_popup_loaded";
 
-    public static final String POPUP_PARAMS = "util.ActionQueue.params";
+    public static final String ACTION_POPUP_DISMISS = "util.PopupHandler.dismiss";
 
-    public static final String LISTENER = "util.ActionQueue.listener";
+    public static final String POPUP_PARAMS = "util.PopupHandler.params";
 
     public static boolean is_popup_opened;
 
@@ -64,7 +60,7 @@ public class ActionQueue extends BroadcastReceiver {
         Log.d(TAG, "=============== Receive new action: " + intent.getAction() + "===============");
 
         String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
-        if (ACTION_REQUEST_POPUP == intent.getAction()) {
+        if (ACTION_REQUEST_POPUP.equals(intent.getAction())) {
             TreeMap<String, Object> map = new TreeMap<String, Object>();
             map.put("title", params[0]);
             map.put("body", params[1]);
@@ -73,12 +69,13 @@ public class ActionQueue extends BroadcastReceiver {
             openSNSPopup(POPUP_REQUEST, map);
             checkPopupLoaded();
 
-        } else if (ACTION_PAYMENT_POPUP == intent.getAction()) {
-            is_popup_opened = false;
+        } else if (ACTION_PAYMENT_POPUP.equals(intent.getAction())) {
             openPaymentPopup(params);
-        } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED == intent.getAction()) {
+        } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED.equals(intent.getAction())) {
             popupElementId = "submit_btn";
             checkPopupLoaded();
+        } else if (ACTION_POPUP_DISMISS.equals(intent.getAction())) {
+            dismissPopupDialog();
         }
     }
 
@@ -123,10 +120,8 @@ public class ActionQueue extends BroadcastReceiver {
                 count++;
             }
             if (is_popup_loading_done) {
-                Log.e(TAG, "set result success");
                 setResultCode(RESULT_SUCCESS);
             } else {
-                Log.e(TAG, "set result failure");
                 setResultCode(RESULT_FAILURE);
             }
 
@@ -183,18 +178,11 @@ public class ActionQueue extends BroadcastReceiver {
                         try {
                             Field dialog_field = Payment.class.getDeclaredField("mPaymentDialog");
                             dialog_field.setAccessible(true);
-                            // int count = 0;
-                            // while (dialog_field.get(payment) == null && count
-                            // < 5) {
-                            // Thread.sleep(2000);
-                            // count++;
-                            // }
                             if (dialog_field.get(payment) == null) {
                                 Log.e(TAG, "null got!");
                             }
                             popupDialog = (PopupDialog) dialog_field.get(payment);
-                            is_popup_opened= true;
-//                            checkPopupLoaded();
+                            is_popup_opened = true;
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -231,5 +219,11 @@ public class ActionQueue extends BroadcastReceiver {
 
     public static PopupDialog getPopupDialog() {
         return popupDialog;
+    }
+
+    public static void dismissPopupDialog() {
+        if (popupDialog == null)
+            return;
+        popupDialog.dismiss();
     }
 }

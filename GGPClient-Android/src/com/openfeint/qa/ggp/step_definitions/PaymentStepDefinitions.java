@@ -2,11 +2,8 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
-
-import org.hamcrest.SelfDescribing;
-
 import net.gree.asdk.api.GreePlatform;
-import util.ActionQueue;
+import util.PopupHandler;
 import util.PopupUtil;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,18 +33,19 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     @And("I did open the payment request popup")
     public void sendPaymentRequest() {
-        
-        Intent intent_open = new Intent();
-        intent_open.setAction(ActionQueue.ACTION_PAYMENT_POPUP);
-        intent_open.putExtra(ActionQueue.POPUP_PARAMS, (String[]) getBlockRepo().get(PAYMENT_PARAMS));
+
+        Intent intent_open = new Intent(PopupHandler.ACTION_PAYMENT_POPUP);
+        intent_open.putExtra(PopupHandler.POPUP_PARAMS,
+                (String[]) getBlockRepo().get(PAYMENT_PARAMS));
 
         notifyStepWait();
         Step.setTimeout(40000);
         // ask action queue to open popup
+        PopupHandler.is_popup_opened = false;
         GreePlatform.getContext().sendBroadcast(intent_open);
-        
-        //wait payment popup dialog to open
-        while (!ActionQueue.is_popup_opened) {
+
+        // wait payment popup dialog to open
+        while (!PopupHandler.is_popup_opened) {
             Log.d(TAG, "waiting for payment popup open!");
             try {
                 Thread.sleep(1000);
@@ -55,25 +53,26 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 e.printStackTrace();
             }
         }
-        
-        Intent intent_check_loaded = new Intent();
-        intent_check_loaded.setAction(ActionQueue.ACTION_CHECK_PAYMENT_POPUP_LOADED);
-        GreePlatform.getContext().sendOrderedBroadcast(intent_check_loaded, null, new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                //TODO I don't find a way to let result return correct for payment 
-                if (ActionQueue.RESULT_SUCCESS == getResultCode()) {
-                    Log.d(TAG, "load payment popup success!");
-                } else if (ActionQueue.RESULT_FAILURE == getResultCode()) {
-                    Log.e(TAG, "load payment popup failed!");
-                } else if (ActionQueue.RESULT_UNKNOWN == getResultCode()) {
-                    Log.e(TAG, "something wrong, still unknown status!");
-                }
-                notifyStepPass();
-            }
-        }, null, ActionQueue.RESULT_UNKNOWN, null, null);
+
+        Intent intent_check_loaded = new Intent(PopupHandler.ACTION_CHECK_PAYMENT_POPUP_LOADED);
+        GreePlatform.getContext().sendOrderedBroadcast(intent_check_loaded, null,
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        // TODO I don't find a way to let result return correct
+                        // for payment
+                        if (PopupHandler.RESULT_SUCCESS == getResultCode()) {
+                            Log.d(TAG, "load payment popup success!");
+                        } else if (PopupHandler.RESULT_FAILURE == getResultCode()) {
+                            Log.e(TAG, "load payment popup failed!");
+                        } else if (PopupHandler.RESULT_UNKNOWN == getResultCode()) {
+                            Log.e(TAG, "something wrong, still unknown status!");
+                        }
+                        notifyStepPass();
+                    }
+                }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
-    
+
     @When("I check payment request popup info (.+)")
     public void getPaymentPopupInfo(String column) {
         String statementToGetElement = "";
@@ -88,13 +87,13 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
         } else if ("DESCRIPTION".equals(column)) {
             statementToGetElement = "document.getElementsByTagName('li')[2].textContent";
         }
-        ActionQueue.valueToBeVerified = null;
+        PopupHandler.valueToBeVerified = null;
         PopupUtil.getValueFromPopup(statementToGetElement);
     }
 
     @Then("payment popup info (\\w+) should be (.+)")
     @And("payment popup info (\\w+) should be (.+)")
     public void verifyPaymentPopupInfo(String column, String expectValue) {
-        assertTrue("value from payment popup", ActionQueue.valueToBeVerified.contains(expectValue));
+        assertTrue("value from payment popup", PopupHandler.valueToBeVerified.contains(expectValue));
     }
 }

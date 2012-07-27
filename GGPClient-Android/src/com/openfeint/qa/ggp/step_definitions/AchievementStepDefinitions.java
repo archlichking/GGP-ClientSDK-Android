@@ -20,7 +20,7 @@ import net.gree.asdk.api.IconDownloadListener;
 import org.apache.http.HeaderIterator;
 
 import util.Consts;
-import util.PopupUtil;
+import util.ImageUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -225,10 +225,10 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
         }
 
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
-        Bitmap expect_image = PopupUtil.zoomBitmap(
+        Bitmap expect_image = ImageUtil.zoomBitmap(
                 BitmapFactory.decodeResource(GreePlatform.getContext().getResources(), icon_id),
                 bitmap.getWidth(), bitmap.getHeight());
-        double sRate = PopupUtil.compareImage(bitmap, expect_image);
+        double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("achievement icon similarity is bigger than 80%", sRate > 80);
     }

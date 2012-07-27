@@ -39,11 +39,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <receiver android:name="util.ActionQueue">
+        <receiver android:name="util.PopupHandler">
         	<intent-filter> 
-                <action android:name="util.ActionQueue.request_popup" /> 
-                <action android:name="util.ActionQueue.payment_popup" /> 
-                <action android:name="util.ActionQueue.check_popup_loaded" /> 
+                <action android:name="util.PopupHandler.request_popup" />
+                <action android:name="util.PopupHandler.payment_popup" />
+                <action android:name="util.PopupHandler.check_popup_loaded" />
+                <action android:name="util.PopupHandler.dismiss" />
             </intent-filter>     
         </receiver>>
 
