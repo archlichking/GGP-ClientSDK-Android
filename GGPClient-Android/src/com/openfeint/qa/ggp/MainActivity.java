@@ -1,17 +1,13 @@
-
 package com.openfeint.qa.ggp;
 
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.TreeMap;
 
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
-import net.gree.asdk.api.ui.RequestDialog;
 import util.RawFileUtil;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -21,6 +17,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -37,13 +35,11 @@ import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
 import com.openfeint.qa.core.exception.TCMIsnotReachableException;
 import com.openfeint.qa.core.net.PlainHttpCommunicator;
-import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
 import com.openfeint.qa.ggp.adapter.CaseWrapper;
 import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
-import com.openfeint.qa.ggp.step_definitions.PopupStepDefinitions;
 
 public class MainActivity extends Activity {
     private Button start_button;
@@ -74,12 +70,10 @@ public class MainActivity extends Activity {
 
     private static MainActivity mainActivity;
 
-    private static RequestDialog requestDialog;
-
     public static Bitmap dialog_bitmap;
 
     public static boolean is_dialog_opened;
-    
+
     public static boolean is_dialog_closed;
 
     private Handler load_done_handler = new Handler() {
@@ -162,8 +156,10 @@ public class MainActivity extends Activity {
             /* optional */
 
             Log.i(TAG, "---------- Submitting result to TCM ---------");
-            TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-            tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases());
+            // TCMCommunicator tcm = new
+            // TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+            // tcm.setTestCasesResult(run_text.getText().toString(),
+            // adapter.getSelectedCases());
             Log.i(TAG, "---------- result submitted ----");
 
             is_under_progress = false;
@@ -365,44 +361,24 @@ public class MainActivity extends Activity {
         CredentialStorage.initCredentialStorageWithAppId(app_id, data);
     };
 
-    public Handler popup_handler = new Handler() {
-        @Override
-        public void handleMessage(Message message) {
-            switch (message.what) {
-                case PopupStepDefinitions.REQUEST_POPUP:
-                    Log.d(TAG, "Trying to open request dialog...");
-                    is_dialog_opened = false;
-                    is_dialog_closed = false;
-                    Handler handler = new Handler() {
-                        public void handleMessage(Message message) {
-                            switch (message.what) {
-                                case RequestDialog.OPENED:
-                                    Log.i(TAG, "Reqest Dialog opened.");
-                                    is_dialog_opened = true;
-                                    break;
-                                case RequestDialog.CLOSED:
-                                    Log.i(TAG, "Request Dialog closed.");
-                                    is_dialog_closed = true;
-                                    break;
-                                default:
-                            }
-                        }
-                    };
-                    requestDialog = new RequestDialog(MainActivity.this);
-                    requestDialog.setParams((TreeMap<String, Object>) message.obj);
-                    requestDialog.setHandler(handler);
-                    requestDialog.show();
-                    break;
-                default:
-            }
-        }
-    };
-
     public static MainActivity getInstance() {
         return mainActivity;
     }
 
-    public RequestDialog getRequestDialog() {
-        return requestDialog;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(Menu.NONE, Menu.FIRST + 1, 1, "QUIT");
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case Menu.FIRST + 1:
+                Log.d(TAG, "exiting app...");
+                System.exit(0);
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
