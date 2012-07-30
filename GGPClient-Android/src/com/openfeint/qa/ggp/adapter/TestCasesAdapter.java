@@ -58,9 +58,10 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-//                if (wrapper.getTheCase().getResult() == TestCase.RESULT.UNTEST) {
-//                    wrapper.getTheCase().setExecuted(false);
-//                }
+                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED &&  
+                    wrapper.getTheCase().getResult() != TestCase.RESULT.BLOCKED) {
+                  wrapper.getTheCase().setExecuted(false);
+                }
                 list.add(wrapper.getTheCase().getId());
             }
         }
