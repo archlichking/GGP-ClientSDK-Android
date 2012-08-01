@@ -16,6 +16,24 @@ import com.openfeint.qa.ggp.MainActivity;
 public class PopupUtil {
     private final static String TAG = "Popup_Util";
 
+    public static final String BASIC_JS_COMMAND = "var STEP_TIMEOUT=250;"
+            + "var STR_TEMPLATE='{\"id\":\"#id\", \"tag\":\"#tag\", \"class\":\"#class\", \"text\":\"#text\","
+            + " \"src\":\"#src\", \"index\":\"#index\"}';"
+            + "function hl(e){var d=e.style.outline;e.style.outline='#FDFF47 solid';setTimeout(function(){e.style.outline=d},STEP_TIMEOUT)}"
+            + "function fid(id){return document.getElementById(id)}"
+            + "function fclass(clazz){return document.getElementsByClassName(clazz)}"
+            + "function ftag(g){return document.getElementsByTagName(g)}"
+            + "function click(e){var t=document.createEvent('HTMLEvents');t.initEvent('click',false,false);"
+            + "setTimeout(function(){hl(e);setTimeout(function(){e.dispatchEvent(t)},STEP_TIMEOUT)},STEP_TIMEOUT)}"
+            + "function setText(e,t){setTimeout(function(){hl(e);setTimeout(function(){e.value=t},STEP_TIMEOUT)},STEP_TIMEOUT)}"
+            + "function getText(e){var r=e.value;if(r===''||typeof(r)=='undefined'){r=e.innerText}hl(e);return r}"
+            + "function stringify(es){var r='{elements:[';if(es.constructor==NodeList){for(var i=0;i<es.length;i++){"
+            + "var ret='';ret=STR_TEMPLATE.replace('#tag',es[i].tagName).replace('#id',es[i].getAttribute('id'))."
+            + "replace('#class',es[i].getAttribute('class')).replace('#text',getText(es[i])).replace('#src',es[i].getAttribute('src'))."
+            + "replace('#index',i);r=r+ret+','}r=r+']}'}else{r=r+STR_TEMPLATE.replace('#tag',es.tagName)."
+            + "replace('#id',es.getAttribute('id')).replace('#class',es.getAttribute('class'))."
+            + "replace('#text',getText(es)).replace('#src',es.getAttribute('src')).replace('#index',0)+']}'}return r}";
+
     public static double getSimilarityOfPopupView(int expectImageId) {
         // Wait the main thread to refresh view of popup
         try {
@@ -88,14 +106,17 @@ public class PopupUtil {
     public static void getValueFromPopup(final String statementToGetElement) {
         final MainActivity activity = MainActivity.getInstance();
         final PopupDialog popupDialog = PopupHandler.getPopupDialog();
+
         if (popupDialog == null)
             Log.e(TAG, "Popup Dialog is null!!!");
         try {
+            PopupHandler.valueToBeVerified = null;
             final WebView view = PopupUtil.getWebViewFromPopup(popupDialog);
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    view.loadUrl("javascript:(function(){window.popupStep.returnValueFromPopup("
+                    view.loadUrl("javascript:" + BASIC_JS_COMMAND);
+                    view.loadUrl("javascript:(function(){window.popupStep.returnValueFromPopup(stringify("
                             + statementToGetElement + ")}) ()");
                 }
             });

@@ -25,10 +25,10 @@ import android.webkit.WebView;
 import com.openfeint.qa.ggp.MainActivity;
 
 public class PopupHandler extends BroadcastReceiver {
-    private final String TAG = "Action_Queue";
+    private final String TAG = "Popup_Handler";
 
     public static final int POPUP_REQUEST = 1;
-    
+
     public static final int RESULT_UNKNOWN = 0;
 
     public static final int RESULT_SUCCESS = 1;
@@ -59,8 +59,8 @@ public class PopupHandler extends BroadcastReceiver {
     public void onReceive(Context context, final Intent intent) {
         Log.d(TAG, "=============== Receive new action: " + intent.getAction() + "===============");
 
-        String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
         if (ACTION_REQUEST_POPUP.equals(intent.getAction())) {
+            String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
             TreeMap<String, Object> map = new TreeMap<String, Object>();
             map.put("title", params[0]);
             map.put("body", params[1]);
@@ -70,6 +70,9 @@ public class PopupHandler extends BroadcastReceiver {
             checkPopupLoaded();
 
         } else if (ACTION_PAYMENT_POPUP.equals(intent.getAction())) {
+            @SuppressWarnings("unchecked")
+            ArrayList<String[]> params = (ArrayList<String[]>) intent
+                    .getSerializableExtra(POPUP_PARAMS);
             openPaymentPopup(params);
         } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED.equals(intent.getAction())) {
             popupElementId = "submit_btn";
@@ -159,14 +162,17 @@ public class PopupHandler extends BroadcastReceiver {
         }
     }
 
-    private void openPaymentPopup(String[] params) {
+    private void openPaymentPopup(ArrayList<String[]> paramList) {
         // add payment item and init payment class
-        PaymentItem item = new PaymentItem(params[0], params[1], Integer.parseInt(params[2]),
-                Integer.parseInt(params[3]));
-        item.setImageUrl(params[4]);
-        item.setDescription(params[5]);
         ArrayList<PaymentItem> itemList = new ArrayList<PaymentItem>();
-        itemList.add(item);
+        for (String[] params : paramList) {
+            PaymentItem item = new PaymentItem(params[0], params[1], Integer.parseInt(params[2]),
+                    Integer.parseInt(params[3]));
+            item.setImageUrl(params[4]);
+            item.setDescription(params[5]);
+            itemList.add(item);
+        }
+
         final Payment payment = new Payment("test item", itemList);
         payment.setCallbackUrl("");
 
