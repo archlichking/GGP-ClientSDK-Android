@@ -31,6 +31,16 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     public final String HANDLER = "handler";
 
+    @SuppressWarnings("serial")
+    private HashMap<String, String> statementsToGetPopupElement = new HashMap<String, String>() {
+        {
+            put("request-title", "fid('msg-box')");
+            put("request-body", "fid('msg-box')");
+            put("share-text", "fid('ggp_share_mood_message_display')");
+            put("invite-message", "fclass('balloon bottom list-item round shrink')");
+        }
+    };
+
     @And("I initialize request popup with title (.+) and body (.+)")
     public void initRequestPopupDialog(String title, String body) {
         String[] params = {
@@ -113,11 +123,12 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
 
-    @When("I check request popup setting info (\\w+)")
-    @And("I check request popup setting info (\\w+)")
-    public void getRequestPopupInfo(String column) {
-        PopupUtil.getValueFromPopup("fid('msg-box')");
-        getBlockRepo().put("request-" + column, PopupHandler.valueToBeVerified);
+    @When("I check (request|invite|share) popup setting info (\\w+)")
+    @And("I check (request|invite|share) popup setting info (\\w+)")
+    public void getRequestPopupInfo(String popupType, String column) {
+        PopupUtil.getValueFromPopup(statementsToGetPopupElement.get(popupType + "-" + column));
+        getBlockRepo().put(popupType + "-" + column, PopupHandler.valueToBeVerified);
+        // Log.e(TAG, PopupHandler.valueToBeVerified);
     }
 
     @Then("(request|invite|share) popup info (\\w+) should be (.+)")
@@ -125,17 +136,5 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     public void verifySNSPopupInfo(String popupType, String column, String expectValue) {
         String resultValue = (String) getBlockRepo().get(popupType + "-" + column);
         assertTrue("value from sns popup", resultValue.contains(expectValue));
-    }
-
-    @When("I check share popup setting info (\\w+)")
-    public void getSharePopupInfo(String column) {
-        PopupUtil.getValueFromPopup("fid('ggp_share_mood_message_display')");
-        getBlockRepo().put("share-" + column, PopupHandler.valueToBeVerified);
-    }
-
-    @When("I check invite popup setting info (\\w+)")
-    public void getInvitePopupInfo(String column) {
-        PopupUtil.getValueFromPopup("fclass('balloon bottom list-item round shrink')");
-        getBlockRepo().put("invite-" + column, PopupHandler.valueToBeVerified);
     }
 }
