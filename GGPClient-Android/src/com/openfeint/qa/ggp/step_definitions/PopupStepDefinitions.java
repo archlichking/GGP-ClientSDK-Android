@@ -2,6 +2,7 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.util.HashMap;
 
@@ -88,6 +89,8 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
         notifyStepWait();
         Step.setTimeout(40000);
+        PopupHandler.is_popup_opened = false;
+        PopupHandler.is_popup_closed = false;
         GreePlatform.getContext().sendOrderedBroadcast(intent, null, new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -108,6 +111,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         assertTrue("popup similarity is bigger than 80%", sRate > 80);
     }
 
+    @When("I did dismiss popup")
     @After("I did dismiss popup")
     public void dismissPopup() {
         Intent intent = new Intent(PopupHandler.ACTION_POPUP_DISMISS);
@@ -136,5 +140,27 @@ public class PopupStepDefinitions extends BasicStepDefinition {
     public void verifySNSPopupInfo(String popupType, String column, String expectValue) {
         String resultValue = (String) getBlockRepo().get(popupType + "-" + column);
         assertTrue("value from sns popup", resultValue.contains(expectValue));
+    }
+
+    @Then("popup did (\\w+) callback should be fired within seconds (\\d+)")
+    public void verifiyPopupCallback(String callbackType, int seconds) {
+        if ("open".equals(callbackType)) {
+            assertTrue("popup open callback fired", PopupHandler.is_popup_opened);
+        } else if ("dismiss".equals(callbackType)) {
+            int times = 1;
+            while (times <= seconds) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (PopupHandler.is_popup_closed) {
+                    assertTrue(true);
+                    return;
+                }
+                times++;
+            }
+            fail("popup dismiss callback is not fired");
+        }
     }
 }
