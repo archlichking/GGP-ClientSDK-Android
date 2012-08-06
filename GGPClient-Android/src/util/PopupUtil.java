@@ -117,7 +117,7 @@ public class PopupUtil {
                 public void run() {
                     view.loadUrl("javascript:" + BASIC_JS_COMMAND);
                     view.loadUrl("javascript:(function(){window.popupStep.returnValueFromPopup(stringify("
-                            + statementToGetElement + ")}) ()");
+                            + statementToGetElement + "))}) ()");
                 }
             });
 

@@ -87,7 +87,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     @When("I check payment request popup info payment items")
     public void getPaymentPopupInfo() {
-        PopupUtil.getValueFromPopup("fclass('flexible')) + stringify(ftag('img'))");
+        PopupUtil.getValueFromPopup("fclass('flexible')) + stringify(ftag('img')");
     }
 
     @Then("payment popup info (\\w+) should be (.+)")

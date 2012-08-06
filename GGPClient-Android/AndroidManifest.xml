@@ -4,7 +4,7 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="9" />
 
     <!-- add permission for GGP -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -42,6 +42,8 @@
         <receiver android:name="util.PopupHandler">
         	<intent-filter> 
                 <action android:name="util.PopupHandler.request_popup" />
+                <action android:name="util.PopupHandler.invite_popup" />
+                <action android:name="util.PopupHandler.share_popup" />
                 <action android:name="util.PopupHandler.payment_popup" />
                 <action android:name="util.PopupHandler.check_popup_loaded" />
                 <action android:name="util.PopupHandler.dismiss" />
