@@ -2,6 +2,9 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
+
+import java.util.ArrayList;
+
 import net.gree.asdk.api.GreePlatform;
 import util.PopupHandler;
 import util.PopupUtil;
@@ -21,27 +24,38 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     private static final String PAYMENT_PARAMS = "payment_params";
 
-    @When("I add payment item with ID (\\w+), NAME (.+), UNIT_PRICE (\\d+), QUANTITY (\\d+), IMAGE_URL (.+) and DESCRIPTION (.+)")
+    @SuppressWarnings("unchecked")
+    @When("I add payment item with ID (\\w+) and NAME (.+) and UNIT_PRICE (\\d+) and QUANTITY (\\d+) and IMAGE_URL (.+) and DESCRIPTION (.+)")
     public void initPaymentItem(String itemId, String itemName, int unitPrice, int quantity,
             String imgUrl, String desc) {
         String[] params = {
                 itemId, itemName, String.valueOf(unitPrice), String.valueOf(quantity), imgUrl, desc
         };
+        if (getBlockRepo().get(PAYMENT_PARAMS) == null) {
+            ArrayList<String[]> list = new ArrayList<String[]>();
+            list.add(params);
+            getBlockRepo().put(PAYMENT_PARAMS, list);
+        } else {
+            ((ArrayList<String[]>) getBlockRepo().get(PAYMENT_PARAMS)).add(params);
+        }
 
-        getBlockRepo().put(PAYMENT_PARAMS, params);
     }
 
+    @SuppressWarnings("unchecked")
     @And("I did open the payment request popup")
     public void sendPaymentRequest() {
 
         Intent intent_open = new Intent(PopupHandler.ACTION_PAYMENT_POPUP);
         intent_open.putExtra(PopupHandler.POPUP_PARAMS,
-                (String[]) getBlockRepo().get(PAYMENT_PARAMS));
+                (ArrayList<String[]>) getBlockRepo().get(PAYMENT_PARAMS));
 
         notifyStepWait();
         Step.setTimeout(40000);
-        // ask action queue to open popup
+
         PopupHandler.is_popup_opened = false;
+        // destroy payment params
+        getBlockRepo().remove(PAYMENT_PARAMS);
+        // ask action queue to open popup
         GreePlatform.getContext().sendBroadcast(intent_open);
 
         // wait payment popup dialog to open
@@ -59,8 +73,6 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        // TODO I don't find a way to let result return correct
-                        // for payment
                         if (PopupHandler.RESULT_SUCCESS == getResultCode()) {
                             Log.d(TAG, "load payment popup success!");
                         } else if (PopupHandler.RESULT_FAILURE == getResultCode()) {
@@ -73,22 +85,9 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
 
-    @When("I check payment request popup info (.+)")
-    public void getPaymentPopupInfo(String column) {
-        String statementToGetElement = "";
-        if ("NAME".equals(column)) {
-            statementToGetElement = "document.getElementsByClassName('title large')[0].textContent";
-        } else if ("UNIT_PRICE".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[0].textContent";
-        } else if ("QUANTITY".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[1].textContent";
-        } else if ("IMAGE_URL".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('img')[0].src";
-        } else if ("DESCRIPTION".equals(column)) {
-            statementToGetElement = "document.getElementsByTagName('li')[2].textContent";
-        }
-        PopupHandler.valueToBeVerified = null;
-        PopupUtil.getValueFromPopup(statementToGetElement);
+    @When("I check payment request popup info payment items")
+    public void getPaymentPopupInfo() {
+        PopupUtil.getValueFromPopup("fclass('flexible')) + stringify(ftag('img')");
     }
 
     @Then("payment popup info (\\w+) should be (.+)")

@@ -2,6 +2,9 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
+
+import java.util.HashMap;
+
 import net.gree.asdk.api.GreePlatform;
 import util.PopupHandler;
 import util.PopupUtil;
@@ -28,29 +31,60 @@ public class PopupStepDefinitions extends BasicStepDefinition {
 
     public final String HANDLER = "handler";
 
-    @And("I initialize (\\w+) popup with title (.+) and body (.+)")
-    public void initPopupDialog(String type, String title, String body) {
+    @SuppressWarnings("serial")
+    private HashMap<String, String> statementsToGetPopupElement = new HashMap<String, String>() {
+        {
+            put("request-title", "fid('msg-box')");
+            put("request-body", "fid('msg-box')");
+            put("share-text", "fid('ggp_share_mood_message_display')");
+            put("invite-message", "fclass('balloon bottom list-item round shrink')");
+        }
+    };
+
+    @And("I initialize request popup with title (.+) and body (.+)")
+    public void initRequestPopupDialog(String title, String body) {
         String[] params = {
                 title, body
         };
-
         getBlockRepo().put(POPUP_PARAMS, params);
-        if ("request".equals(type)) {
-            getBlockRepo().put(POPUP_ACTION, PopupHandler.ACTION_REQUEST_POPUP);
-        } else {
-            Log.e(TAG, "unknown popup type!");
-            getBlockRepo().put(POPUP_ACTION, "");
-        }
+        getBlockRepo().put(POPUP_ACTION, PopupHandler.ACTION_REQUEST_POPUP);
     }
 
+    @And("I initialize share popup with text (.+)")
+    public void initSharePopupDialog(String text) {
+        String[] params = {
+            text
+        };
+        getBlockRepo().put(POPUP_PARAMS, params);
+        getBlockRepo().put(POPUP_ACTION, PopupHandler.ACTION_SHARE_POPUP);
+    }
+
+    @And("I initialize invite popup with message (.+) and callback url (.+) and users (.+)")
+    public void initInvitePopupDialog(String body, String callbackUrl, String userIds) {
+        String[] userList = userIds.split(",");
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("body", body);
+        map.put("to_user_id", userList);
+        map.put("callbackurl", callbackUrl);
+        getBlockRepo().put(POPUP_PARAMS, map);
+        getBlockRepo().put(POPUP_ACTION, PopupHandler.ACTION_INVITE_POPUP);
+    }
+
+    @SuppressWarnings("unchecked")
     @When("I did open popup")
+    @And("I did open popup")
     public void openPopupByType() {
         if ("".equals((String) getBlockRepo().get(POPUP_ACTION))) {
             return;
         }
         // Sent out broadcast to action queue
         Intent intent = new Intent((String) getBlockRepo().get(POPUP_ACTION));
-        intent.putExtra(PopupHandler.POPUP_PARAMS, (String[]) getBlockRepo().get(POPUP_PARAMS));
+        if (PopupHandler.ACTION_INVITE_POPUP.equals((String) getBlockRepo().get(POPUP_ACTION))) {
+            intent.putExtra(PopupHandler.POPUP_PARAMS, (HashMap<String, Object>) getBlockRepo()
+                    .get(POPUP_PARAMS));
+        } else {
+            intent.putExtra(PopupHandler.POPUP_PARAMS, (String[]) getBlockRepo().get(POPUP_PARAMS));
+        }
 
         notifyStepWait();
         Step.setTimeout(40000);
@@ -89,4 +123,18 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
 
+    @When("I check (request|invite|share) popup setting info (\\w+)")
+    @And("I check (request|invite|share) popup setting info (\\w+)")
+    public void getRequestPopupInfo(String popupType, String column) {
+        PopupUtil.getValueFromPopup(statementsToGetPopupElement.get(popupType + "-" + column));
+        getBlockRepo().put(popupType + "-" + column, PopupHandler.valueToBeVerified);
+        // Log.e(TAG, PopupHandler.valueToBeVerified);
+    }
+
+    @Then("(request|invite|share) popup info (\\w+) should be (.+)")
+    @And("(request|invite|share) popup info (\\w+) should be (.+)")
+    public void verifySNSPopupInfo(String popupType, String column, String expectValue) {
+        String resultValue = (String) getBlockRepo().get(popupType + "-" + column);
+        assertTrue("value from sns popup", resultValue.contains(expectValue));
+    }
 }
