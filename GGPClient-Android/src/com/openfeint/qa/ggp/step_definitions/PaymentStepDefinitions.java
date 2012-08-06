@@ -4,6 +4,7 @@ package com.openfeint.qa.ggp.step_definitions;
 import static junit.framework.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.gree.asdk.api.GreePlatform;
 import util.PopupHandler;
@@ -24,8 +25,21 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     private static final String PAYMENT_PARAMS = "payment_params";
 
+    private static final String PAYMENT_MSG = "payment_message";
+
+    @SuppressWarnings("serial")
+    private HashMap<String, String> statementsToGetPopupElement = new HashMap<String, String>() {
+        {
+            put("payment-paymentItems", "fclass('flexible')) + stringify(ftag('img')");
+            put("payment-popupTitle", "ftag('title')");
+            put("payment-totalAmount", "fclass('solid min')");
+            put("payment-message", "fclass('sentence medium minor')");
+        }
+    };
+
     @SuppressWarnings("unchecked")
-    @When("I add payment item with ID (\\w+) and NAME (.+) and UNIT_PRICE (\\d+) and QUANTITY (\\d+) and IMAGE_URL (.+) and DESCRIPTION (.+)")
+    @When("I add payment item with ID (\\w+) and NAME (.+) and UNITPRICE (\\d+) and QUANTITY (\\d+) and IMAGEURL (.+) and DESCRIPTION (.+)")
+    @And("I add payment item with ID (\\w+) and NAME (.+) and UNITPRICE (\\d+) and QUANTITY (\\d+) and IMAGEURL (.+) and DESCRIPTION (.+)")
     public void initPaymentItem(String itemId, String itemName, int unitPrice, int quantity,
             String imgUrl, String desc) {
         String[] params = {
@@ -41,13 +55,23 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     }
 
+    @And("I set payment popup message (.+)")
+    public void initPaymentMessage(String message) {
+        getBlockRepo().put(PAYMENT_MSG, message);
+    }
+
     @SuppressWarnings("unchecked")
-    @And("I did open the payment request popup")
+    @And("I did open payment request popup")
     public void sendPaymentRequest() {
 
         Intent intent_open = new Intent(PopupHandler.ACTION_PAYMENT_POPUP);
         intent_open.putExtra(PopupHandler.POPUP_PARAMS,
                 (ArrayList<String[]>) getBlockRepo().get(PAYMENT_PARAMS));
+        String payment_message = "";
+        if (getBlockRepo().get(PAYMENT_MSG) != null) {
+            payment_message = (String) getBlockRepo().get(PAYMENT_MSG);
+        }
+        intent_open.putExtra(PopupHandler.PAYMENT_MESSAGE, payment_message);
 
         notifyStepWait();
         Step.setTimeout(40000);
@@ -85,14 +109,24 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
 
-    @When("I check payment request popup info payment items")
-    public void getPaymentPopupInfo() {
-        PopupUtil.getValueFromPopup("fclass('flexible')) + stringify(ftag('img')");
+    @When("I check payment request popup info (\\w+)")
+    @And("I check payment request popup info (\\w+)")
+    public void getPaymentPopupInfo(String column) {
+        PopupUtil.getValueFromPopup(statementsToGetPopupElement.get("payment-" + column));
+        getBlockRepo().put("payment-" + column, PopupHandler.valueToBeVerified);
     }
 
-    @Then("payment popup info (\\w+) should be (.+)")
-    @And("payment popup info (\\w+) should be (.+)")
+    @Then("payment request item (\\w+) info (\\w+) should be (.+)")
+    @And("payment request item (\\w+) info (\\w+) should be (.+)")
+    public void verifyPaymentItemInfo(String itemName, String column, String expectValue) {
+        String resultValue = (String) getBlockRepo().get("payment-paymentItems");
+        assertTrue("value from payment popup", resultValue.contains(expectValue));
+    }
+
+    @Then("payment request popup info (\\w+) should be (.+)")
+    @And("payment request popup info (\\w+) should be (.+)")
     public void verifyPaymentPopupInfo(String column, String expectValue) {
-        assertTrue("value from payment popup", PopupHandler.valueToBeVerified.contains(expectValue));
+        String resultValue = (String) getBlockRepo().get("payment-" + column);
+        assertTrue("value from payment popup", resultValue.contains(expectValue));
     }
 }

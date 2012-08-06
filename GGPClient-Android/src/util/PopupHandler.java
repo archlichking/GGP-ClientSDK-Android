@@ -56,7 +56,11 @@ public class PopupHandler extends BroadcastReceiver {
 
     public static final String POPUP_PARAMS = "util.PopupHandler.params";
 
+    public static final String PAYMENT_MESSAGE = "util.PopupHandler.paymentMessage";
+
     public static boolean is_popup_opened;
+
+    public static boolean is_popup_closed;
 
     private static boolean is_popup_loading_done;
 
@@ -103,7 +107,8 @@ public class PopupHandler extends BroadcastReceiver {
         } else if (ACTION_PAYMENT_POPUP.equals(intent.getAction())) {
             ArrayList<String[]> params = (ArrayList<String[]>) intent
                     .getSerializableExtra(POPUP_PARAMS);
-            openPaymentPopup(params);
+            String message = intent.getStringExtra(PAYMENT_MESSAGE);
+            openPaymentPopup(params, message);
         } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED.equals(intent.getAction())) {
             popupElementId = "submit_btn";
             checkPopupLoaded();
@@ -172,9 +177,11 @@ public class PopupHandler extends BroadcastReceiver {
                     public void handleMessage(Message message) {
                         switch (message.what) {
                             case RequestDialog.OPENED:
+                                is_popup_opened = true;
                                 Log.i(TAG, "Request dialog opened.");
                                 break;
                             case RequestDialog.CLOSED:
+                                is_popup_closed = true;
                                 Log.i(TAG, "Request dialog closed.");
                                 break;
                             default:
@@ -231,7 +238,7 @@ public class PopupHandler extends BroadcastReceiver {
         }
     }
 
-    private void openPaymentPopup(ArrayList<String[]> paramList) {
+    private void openPaymentPopup(ArrayList<String[]> paramList, String message) {
         // add payment item and init payment class
         ArrayList<PaymentItem> itemList = new ArrayList<PaymentItem>();
         for (String[] params : paramList) {
@@ -242,7 +249,7 @@ public class PopupHandler extends BroadcastReceiver {
             itemList.add(item);
         }
 
-        final Payment payment = new Payment("test item", itemList);
+        final Payment payment = new Payment(message, itemList);
         payment.setCallbackUrl("");
 
         payment.setHandler(new Handler() {
