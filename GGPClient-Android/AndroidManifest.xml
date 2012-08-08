@@ -139,7 +139,7 @@
             android:name="net.gree.asdk.core.dashboard.PostingMultipleActivity"
             android:configChanges="orientation" />
 
-        <service android:name=".C2DMReceiver" />
+        <service android:name="net.gree.asdk.api.notifications.c2dm.C2DMReceiver" />
 
         <receiver
             android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
