@@ -32,7 +32,9 @@ public class PopupUtil {
             + "replace('#class',es[i].getAttribute('class')).replace('#text',getText(es[i])).replace('#src',es[i].getAttribute('src'))."
             + "replace('#index',i);r=r+ret+','}r=r+']}'}else{r=r+STR_TEMPLATE.replace('#tag',es.tagName)."
             + "replace('#id',es.getAttribute('id')).replace('#class',es.getAttribute('class'))."
-            + "replace('#text',getText(es)).replace('#src',es.getAttribute('src')).replace('#index',0)+']}'}return r}";
+            + "replace('#text',getText(es)).replace('#src',es.getAttribute('src')).replace('#index',0)+']}'}return r}"
+            + "function ftext(es,t){if(es.constructor==NodeList){for(var i=0;i<es.length;i++){"
+            + "if(es[i].innerText==t){return es[i]}}}else if(es.innerText==t){return es}}";
 
     public static double getSimilarityOfPopupView(int expectImageId) {
         // Wait the main thread to refresh view of popup

@@ -1,8 +1,6 @@
 Scenario: first test
 
 Given I logged in with email auto3@136.com and password 123456
-When I check my friend list
-Then friend list should be size of 13
-And I switch to user auto4@136.com with password 123456
-When I check my friend list
-Then friend list should be size of 1
+And I open JSkit popup
+When use JSkit to set configuration notificationEnabled to true
+Then configuration notificationEnabled should be true
