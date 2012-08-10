@@ -14,7 +14,8 @@ public class GreeWebViewActivity extends Activity {
         setContentView(R.layout.greewebview);
         GreeWebView webview = (GreeWebView) findViewById(R.id.greewebview);
         webview.setUp();
-        webview.loadUrl("file:///android_asset/jslib/demo.html");
+//        webview.loadUrl("file:///android_asset/jslib/demo.html");
+        webview.loadUrl("file:///android_asset/jslib/test.html");
 
         activity = GreeWebViewActivity.this;
     }

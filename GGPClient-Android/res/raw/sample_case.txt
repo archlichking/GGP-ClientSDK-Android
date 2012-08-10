@@ -1,6 +1,11 @@
 Scenario: first test
 
 Given I logged in with email auto3@136.com and password 123456
-And I open JSkit popup
-When use JSkit to set configuration notificationEnabled to true
-Then configuration notificationEnabled should be true
+And I open JSKit popup
+When I click invoke all button
+Then all JSKit methods on popup should be tested
+
+##When I use JSKit to open dashboard 
+##Then dashboard should be opened
+##When use JSKit to set configuration notificationEnabled to true
+##Then configuration notificationEnabled should be true
