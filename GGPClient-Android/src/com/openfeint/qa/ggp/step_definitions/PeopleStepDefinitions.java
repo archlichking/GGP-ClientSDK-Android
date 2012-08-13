@@ -502,7 +502,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I load my image with size (\\w+)")
-    public void loadStandardThumbnail(String type) {
+    public void loadUserThumbnail(String type) {
         int size = -100;
         if ("standard".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_STANDARD;
@@ -513,7 +513,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-        getBlockRepo().put(THUMBNAIL_SIZE, type);
+//        getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 
