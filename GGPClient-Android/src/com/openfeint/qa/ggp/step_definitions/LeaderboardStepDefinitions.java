@@ -112,9 +112,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             public void onSuccess(int index, int totalListSize, Leaderboard[] leaderboards) {
                 Log.d(TAG, "Get Leaderboards success!");
                 getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                for (int i = 0; i < leaderboards.length; i++) {
-                    Log.d(TAG, "Leaderboard " + i + ": " + leaderboards[i].getName());
-                }
+                Leaderboard.logLeaders(leaderboards);
                 ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST)).addAll(Arrays
                         .asList(leaderboards));
                 notifyStepPass();
@@ -269,7 +267,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                         Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
-
                                 Log.d(TAG, "Get leaderboard score success!");
                                 ((ArrayList<Score>) getBlockRepo().get(ALL_SCORE)).addAll(Arrays
                                         .asList(entry));
@@ -322,6 +319,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.d(TAG, "Found the leaderboard " + boardName);
+                Leaderboard.logLeader(board);
                 return board;
             }
         }
@@ -388,6 +386,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                     @Override
                     public void onSuccess(Score[] entry) {
                         Log.d(TAG, "Get leaderboard score success!");
+                        Leaderboard.logScore(entry);
                         // SDK updates and return empty entry instead of
                         // return failed when score is deleted
                         if (entry == null || entry.length == 0) {
