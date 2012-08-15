@@ -2,13 +2,11 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
-import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import net.gree.asdk.api.ModeratedText;
 import net.gree.asdk.api.ModeratedText.ModeratedTextListener;
@@ -110,19 +108,19 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
         });
     }
 
-    private ModeratedText getTextFromList(String text_id) {
+    private ModeratedText getTextFromList(String textData) {
         ArrayList<ModeratedText> list = (ArrayList<ModeratedText>) getBlockRepo().get(
                 MODERATION_LIST);
         for (ModeratedText text : list) {
-            if (text_id.equals(text.getTextId()))
+            if (textData.equals(text.getContent()))
                 return text;
         }
-        fail("Can not find text with id: " + text_id + " in the list!");
+        fail("Can not find text with data: " + textData + " in the list!");
         return null;
     }
 
     @When("I load from NATIVE_CACHE with moderation text (.+)")
-    public void loadModerationText(String text) {
+    public void loadModerationTextFromCache(String textData) {
         getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
         ModeratedText.loadFromLocalCache(false, new ModeratedTextListener() {
 
@@ -142,10 +140,9 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
             }
         });
         waitForAsyncInStep();
-        ModeratedText old_text = getTextIfExist();
         // Get text from native cache will return a list, so find text we want
         // and store for verifing
-        getBlockRepo().put(MODERATION_TEXT, getTextFromList(old_text.getTextId()));
+        getBlockRepo().put(MODERATION_TEXT, getTextFromList(textData));
     }
 
     @After("I make sure moderation server NOTINCLUDE text (.+)")
@@ -166,13 +163,14 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
             }
         });
     }
+
     @When("I delete from moderation server with text (.+)")
     public void deleteText(String text) {
-    	final ModeratedText t = getTextIfExist();
-    	if (!text.equals(t.getContent())) {
-    		fail(text + " is not previously created");
-    	}
-    	notifyStepWait();
+        final ModeratedText t = getTextIfExist();
+        if (!text.equals(t.getContent())) {
+            fail(text + " is not previously created");
+        }
+        notifyStepWait();
         t.delete(new SuccessListener() {
             @Override
             public void onSuccess() {
@@ -185,7 +183,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
                 Log.e(TAG, "Delete moderation failed! " + response);
                 notifyStepPass();
             }
-        });	
+        });
     }
 
     @When("I update text (.+) with new text (.+)")
@@ -213,5 +211,34 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     public void verifyTextUpdated(String newText) {
         ModeratedText t = getTextIfExist();
         assertEquals("Updated text", newText, t.getContent());
+    }
+
+    @And("I refresh from server with text (.+)")
+    public void refreshTextStatus(String textData) {
+        ModeratedText t = getTextIfExist();
+        // Change create time to make refresh take effect
+        try {
+            Field time = ModeratedText.class.getDeclaredField("time");
+            time.setAccessible(true);
+            // modify lastRefreshTime earlier
+            time.setLong(t, time.getLong(t) - 3 * 60 * 1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        notifyStepWait();
+        t.refresh(new SuccessListener() {
+            @Override
+            public void onSuccess() {
+                Log.i(TAG, "Refresh moderation text success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "Update moderation text failed!");
+                notifyStepPass();
+            }
+        });
     }
 }
