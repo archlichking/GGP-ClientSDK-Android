@@ -35,6 +35,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
 
     @When("I send to moderation server with text (.+)")
     @Given("I make sure moderation server INCLUDES text (.+)")
+    @And("I make sure moderation server INCLUDES text (.+)")
     public void sendModeration(String text) {
         getBlockRepo().remove(MODERATION_TEXT);
         notifyStepWait();
@@ -120,6 +121,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I load from NATIVE_CACHE with moderation text (.+)")
+    @And("I load from NATIVE_CACHE with moderation text (.+)")
     public void loadModerationTextFromCache(String textData) {
         getBlockRepo().put(MODERATION_LIST, new ArrayList<ModeratedText>());
         ModeratedText.loadFromLocalCache(false, new ModeratedTextListener() {
@@ -213,7 +215,7 @@ public class ModerationStepDefinitions extends BasicStepDefinition {
         assertEquals("Updated text", newText, t.getContent());
     }
 
-    @And("I refresh from server with text (.+)")
+    @When("I refresh from server with text (.+)")
     public void refreshTextStatus(String textData) {
         ModeratedText t = getTextIfExist();
         // Change create time to make refresh take effect
