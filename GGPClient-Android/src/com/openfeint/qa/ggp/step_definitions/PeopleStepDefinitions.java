@@ -194,8 +194,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
-        if ("displayName".equals(column)) {
-            assertEquals("userName", value, me.getNickname());
+        if ("nickName".equals(column)) {
+            assertEquals("nickName", value, me.getNickname());
+        } else if ("displayName".equals(column)) {
+            assertEquals("displayName", value, me.getDisplayName());
         } else if ("id".equals(column)) {
             assertEquals("userId", value, me.getId());
         } else if ("userGrade".equals(column)) {
@@ -216,8 +218,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             assertEquals("age", value, me.getAge());
         } else if ("timezone".equals(column)) {
             assertEquals("timezone", value, me.getTimezone());
-        } else if ("has the application".equals(column)) {
-            assertEquals("has the application", value, String.valueOf(me.getHasApp()));
+        } else if ("hasApp".equals(column)) {
+            assertEquals("has the application", Boolean.parseBoolean(value), me.getHasApp());
+        } else if ("gender".equals(column)) {
+            assertEquals("gender", value, me.getGender());
         } else {
             fail("Unknown column of user info!");
         }
@@ -258,6 +262,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
                 getBlockRepo().put(PEOPLE_LIST, new ArrayList<GreeUser>());
                 if (people != null) {
                     Log.i(TAG, "Get " + people.length + " people");
+                    GreeUser.logGreeUser(Consts.STARTINDEX_1, people.length, people);
                     Log.i(TAG, "Adding people datas");
                     ((ArrayList<GreeUser>) getBlockRepo().get(PEOPLE_LIST)).addAll(Arrays
                             .asList(people));
@@ -497,7 +502,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I load my image with size (\\w+)")
-    public void loadStandardThumbnail(String type) {
+    public void loadUserThumbnail(String type) {
         int size = -100;
         if ("standard".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_STANDARD;
@@ -508,7 +513,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-        getBlockRepo().put(THUMBNAIL_SIZE, type);
+//        getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 
@@ -559,9 +564,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
 
         Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
-        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
-                GreePlatform.getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap
-                .getHeight());
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                .getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap.getHeight());
         double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
