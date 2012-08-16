@@ -9,7 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.wallet.Payment;
+import net.gree.asdk.api.wallet.Payment.VerifyListener;
 import net.gree.asdk.api.wallet.PaymentItem;
+
+import org.apache.http.HeaderIterator;
+
+import util.Consts;
 import util.PopupHandler;
 import util.PopupUtil;
 import android.app.Instrumentation;
@@ -34,10 +40,12 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     private static final String PAYMENT_ITEM = "payment_item";
 
+    private static final String PAYMENT_STATUS = "payment_status";
+
     @SuppressWarnings("serial")
     private HashMap<String, String> statementsToGetPopupElement = new HashMap<String, String>() {
         {
-            put("payment-paymentItems", "fclass('flexible')) + stringify(ftag('img')");
+            put("payment-payment items", "fclass('flexible')) + stringify(ftag('img')");
             put("payment-popupTitle", "ftag('title')");
             put("payment-totalAmount", "fclass('solid min')");
             put("payment-message", "fclass('sentence medium minor')");
@@ -116,8 +124,8 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
                 }, null, PopupHandler.RESULT_UNKNOWN, null, null);
     }
 
-    @When("I check payment request popup info (\\w+)")
-    @And("I check payment request popup info (\\w+)")
+    @When("I check payment request popup info (.+)")
+    @And("I check payment request popup info (.+)")
     public void getPaymentPopupInfo(String column) {
         PopupUtil.getValueFromPopup(statementsToGetPopupElement.get("payment-" + column));
         getBlockRepo().put("payment-" + column, PopupHandler.valueToBeVerified);
@@ -126,7 +134,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     @Then("payment request item (\\w+) info (\\w+) should be (.+)")
     @And("payment request item (\\w+) info (\\w+) should be (.+)")
     public void verifyPaymentItemInfoFromPopup(String itemName, String column, String expectValue) {
-        String resultValue = (String) getBlockRepo().get("payment-paymentItems");
+        String resultValue = (String) getBlockRepo().get("payment-payment items");
         assertTrue("value from payment popup", resultValue.contains(expectValue));
     }
 
@@ -199,5 +207,47 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
             actualValue = item.getDescription();
         }
         assertEquals("payment item info", expectValue, actualValue);
+    }
+
+    @When("I verify payment order (.+)")
+    public void verifyPaymentOrder(String paymentId) {
+        getBlockRepo().remove(PAYMENT_STATUS);
+        notifyStepWait();
+        Payment.verify(paymentId, new VerifyListener() {
+            @Override
+            public void onSuccess(int responseCode, HeaderIterator headers, String paymentId) {
+                Log.d(TAG, "payment order status is success!");
+                getBlockRepo().put(PAYMENT_STATUS, Consts.SUCCESS);
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String paymentId,
+                    String response) {
+                if (response.contains("status:1")) {
+                    Log.d(TAG, "payment order status is failed!");
+                    getBlockRepo().put(PAYMENT_STATUS, Consts.FAILED);
+                } else {
+                    Log.e(TAG, "verify payment order failed!");
+                }
+                notifyStepPass();
+            }
+
+            @Override
+            public void onCancel(int responseCode, HeaderIterator headers, String paymentId) {
+                Log.d(TAG, "payment order status is cancel!");
+                getBlockRepo().put(PAYMENT_STATUS, Consts.CANCEL);
+                notifyStepPass();
+            }
+        });
+    }
+
+    @Then("payment order verify result should be (\\w+)")
+    public void verifyPaymentOrderResult(String expectResult) {
+        String actualResult = (String) getBlockRepo().get(PAYMENT_STATUS);
+        if (actualResult == null)
+            fail("Don't get result from payment verify!");
+
+        assertEquals(expectResult, actualResult);
     }
 }
