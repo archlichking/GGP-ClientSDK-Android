@@ -61,6 +61,8 @@ public class PopupHandler extends BroadcastReceiver {
     public static boolean is_popup_opened;
 
     public static boolean is_popup_closed;
+    
+    public static boolean is_popup_canceled;
 
     private static boolean is_popup_loading_done;
 
@@ -295,6 +297,7 @@ public class PopupHandler extends BroadcastReceiver {
             @Override
             public void onCancel(int responseCode, HeaderIterator headers, String paymentId) {
                 Log.d(TAG, "payment.request() canceled.");
+                is_popup_canceled = true;
             }
         });
     }
