@@ -2,6 +2,7 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,10 +10,12 @@ import java.util.HashMap;
 import net.gree.asdk.api.GreePlatform;
 import util.PopupHandler;
 import util.PopupUtil;
+import android.app.Instrumentation;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import com.openfeint.qa.core.caze.step.Step;
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -128,5 +131,36 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     public void verifyPaymentPopupInfo(String column, String expectValue) {
         String resultValue = (String) getBlockRepo().get("payment-" + column);
         assertTrue("value from payment popup", resultValue.contains(expectValue));
+    }
+
+    @When("I click back button on device")
+    public void clickBackButton() {
+        // wait UI thread to show out popup
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        PopupHandler.is_popup_canceled = false;
+        Instrumentation inst = new Instrumentation();
+        inst.sendCharacterSync(KeyEvent.KEYCODE_BACK);
+    }
+
+    @Then("the payment popup should be closed")
+    public void verifyPaymentDialogClosed() {
+        int times = 1;
+        while (times <= 5) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (PopupHandler.is_popup_canceled) {
+                assertTrue(true);
+                return;
+            }
+            times++;
+        }
+        fail("payment popup is not closed");
     }
 }
