@@ -1,6 +1,7 @@
 
 package com.openfeint.qa.ggp.step_definitions;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.wallet.PaymentItem;
 import util.PopupHandler;
 import util.PopupUtil;
 import android.app.Instrumentation;
@@ -30,6 +32,8 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     private static final String PAYMENT_MSG = "payment_message";
 
+    private static final String PAYMENT_ITEM = "payment_item";
+
     @SuppressWarnings("serial")
     private HashMap<String, String> statementsToGetPopupElement = new HashMap<String, String>() {
         {
@@ -43,7 +47,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     @SuppressWarnings("unchecked")
     @When("I add payment item with ID (\\w+) and NAME (.+) and UNITPRICE (\\d+) and QUANTITY (\\d+) and IMAGEURL (.+) and DESCRIPTION (.+)")
     @And("I add payment item with ID (\\w+) and NAME (.+) and UNITPRICE (\\d+) and QUANTITY (\\d+) and IMAGEURL (.+) and DESCRIPTION (.+)")
-    public void initPaymentItem(String itemId, String itemName, int unitPrice, int quantity,
+    public void addPaymentItem(String itemId, String itemName, int unitPrice, int quantity,
             String imgUrl, String desc) {
         String[] params = {
                 itemId, itemName, String.valueOf(unitPrice), String.valueOf(quantity), imgUrl, desc
@@ -121,7 +125,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
 
     @Then("payment request item (\\w+) info (\\w+) should be (.+)")
     @And("payment request item (\\w+) info (\\w+) should be (.+)")
-    public void verifyPaymentItemInfo(String itemName, String column, String expectValue) {
+    public void verifyPaymentItemInfoFromPopup(String itemName, String column, String expectValue) {
         String resultValue = (String) getBlockRepo().get("payment-paymentItems");
         assertTrue("value from payment popup", resultValue.contains(expectValue));
     }
@@ -162,5 +166,38 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
             times++;
         }
         fail("payment popup is not closed");
+    }
+
+    @When("I init payment item with ID (\\w+) and NAME (.+) and UNITPRICE (\\d+) and QUANTITY (\\d+) and IMAGEURL (.+) and DESCRIPTION (.+)")
+    public void initPaymentItem(String itemId, String itemName, int unitPrice, int quantity,
+            String imgUrl, String desc) {
+        PaymentItem item = new PaymentItem(itemId, itemName, unitPrice, quantity);
+        item.setImageUrl(imgUrl);
+        item.setDescription(desc);
+        getBlockRepo().put(PAYMENT_ITEM, item);
+    }
+
+    @Then("(\\w+) of payment item should be (.+)")
+    @And("(\\w+) of payment item should be (.+)")
+    public void verifyPaymentItemInfo(String column, String expectValue) {
+        PaymentItem item = (PaymentItem) getBlockRepo().get(PAYMENT_ITEM);
+        if (item == null)
+            fail("payment item is not initialized!");
+
+        String actualValue = "";
+        if ("ID".equals(column)) {
+            actualValue = item.getItemId();
+        } else if ("NAME".equals(column)) {
+            actualValue = item.getItemName();
+        } else if ("UNITPRICE".equals(column)) {
+            actualValue = String.valueOf(Double.valueOf(item.getUnitPrice()).intValue());
+        } else if ("QUANTITY".equals(column)) {
+            actualValue = String.valueOf(item.getQuantity());
+        } else if ("IMAGEURL".equals(column)) {
+            actualValue = item.getImageUrl();
+        } else if ("DESCRIPTION".equals(column)) {
+            actualValue = item.getDescription();
+        }
+        assertEquals("payment item info", expectValue, actualValue);
     }
 }
