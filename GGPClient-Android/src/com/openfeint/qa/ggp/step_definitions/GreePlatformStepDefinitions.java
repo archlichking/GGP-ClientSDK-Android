@@ -2,6 +2,11 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
+
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.TreeMap;
+
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreePlatform.BadgeListener;
 import util.Consts;
@@ -15,6 +20,8 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     private final String TAG = "GreePlatform_steps";
 
     private final String UPDATE_RESULT = "update_result";
+    private final String SDK_BUILD = "sdk_build";
+    private final String SDK_VERSION = "sdk_version";
 
     @When("I update badge value to latest one")
     public void updateBadgeCount() {
@@ -28,6 +35,12 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
                 notifyStepPass();
             }
         });
+    }
+    
+    @When("I check basic platform info")
+    public void checkPlatformInfo() {
+        getBlockRepo().put(SDK_BUILD, GreePlatform.getSdkBuild());
+        getBlockRepo().put(SDK_VERSION, GreePlatform.getSdkVersion());
     }
 
     // TODO update social badge value is not supported in android SDK now
@@ -57,5 +70,15 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     @Then("get resource name of id (\\d+) should be (.+)")
     public void verifyResourceName(int resource_id, String expect_name) {
         assertEquals("name of resource", expect_name, GreePlatform.getRString(resource_id));
+    }
+    
+    @Then("my sdk build should be (.+)")
+    public void verifySdkBuild(String sdk_build) {
+        assertEquals(sdk_build, getBlockRepo().get(SDK_BUILD));
+    }
+    
+    @Then("my sdk version should be (.+)")
+    public void verifySdkVersion(String sdk_version) {
+        assertEquals(sdk_version, getBlockRepo().get(SDK_VERSION));
     }
 }
