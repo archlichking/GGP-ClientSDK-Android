@@ -9,6 +9,7 @@ import android.util.Log;
 import android.webkit.WebView;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
@@ -21,7 +22,9 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
 
     private static final String JSKIT_RESULT = "fid('content').textContent";
 
-    @And("I open JSKit popup")
+    private static final String BUTTON_INVOKE_ALL = "fid('invokeAllNoPOP')";
+
+    @And("I launch jskit popup")
     public void openJSkitPopup() {
         final MainActivity activity = MainActivity.getInstance();
         Intent intent = new Intent(GreePlatform.getContext(), GreeWebViewActivity.class);
@@ -33,26 +36,12 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @When("I click invoke all button")
-    public void invokeAll() {
-        doActionByJSKit("fid('invokeAll').click()");
+    @When("I click invoke button invokeAllNoPOP")
+    public void invokeNoPopupMethods() {
+        doActionInJSKitPopup("click(" + BUTTON_INVOKE_ALL + ")");
     }
-
-    @Then("all JSKit methods on popup should be tested")
-    public void verifyResult() {
-        int count = 0;
-        while (count < 10 && CoreData.get("jskitTestDone") == null) {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            count++;
-        }
-        Log.e(TAG, "result is: " + CoreData.get("jskitTestDone"));
-    }
-
-    private void doActionByJSKit(final String command) {
+    
+    private void doActionInJSKitPopup(final String command) {
         final GreeWebViewActivity activity = GreeWebViewActivity.getInstance();
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -64,9 +53,37 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
         });
     }
 
+    @Then("I need to wait for test done (\\w+)")
+    public void verifyResult(String param) {
+        int count = 0;
+        while (count < 10 && CoreData.get("jskitTestDone") == null) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count++;
+        }
+        // wait another seconds to let callbacks return
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "result is: " + CoreData.get("jskitTestDone"));
+    }
+
+    @After("I dismiss jskit base popup")
+    public void closeJSKitView() {
+        GreeWebViewActivity activity = GreeWebViewActivity.getInstance();
+        activity.finish();
+    }
+    
+
+    //Below method is for investigate
     @When("use JSKit to set configuration (\\w+) to (\\w+)")
     public void setConfigByJSkit(final String config, final String value) {
-        doActionByJSKit("fid('configuration-key').value=" + config + ";"
+        doActionInJSKitPopup("fid('configuration-key').value=" + config + ";"
                 + "fid('configuration-value').value='" + value + "';"
                 + "ftext(ftag('button'),'setConfig').click()");
     }
@@ -78,11 +95,11 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
 
     @When("I use JSKit to open dashboard")
     public void openDashboardByJSKit() {
-        doActionByJSKit("ftext(ftag('button'),'showDashboardTest').click()");
+        doActionInJSKitPopup("ftext(ftag('button'),'showDashboardTest').click()");
     }
 
     @Then("dashboard should be opened")
     public void verifyDashboardOpened() {
-        doActionByJSKit("console.log('" + JSKIT_RESULT + "')");
+        doActionInJSKitPopup("console.log('" + JSKIT_RESULT + "')");
     }
 }
