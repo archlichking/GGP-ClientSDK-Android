@@ -1,0 +1,778 @@
+<html>
+<head>
+<script type="text/javascript" src='./command_interface.js'></script>
+<script type="text/javascript" src='./ggp_command.js'></script>
+<script type="text/javascript">
+window.addEventListener('load', function() {
+  var ret = proton.app.init();
+  proton.app.setPullToRefresh();
+  proton.app.setSubNavigation([
+    {"id": "test1", "label":"test1","callback":function(){alert('test1')},"iconNormal":"icon_01_default.png","iconHighlighted":"icon_01_selected.png", "selected":true},
+    {"id": "test2", "label":"test2", "callback":function(){alert('test2')},"iconNormal":"icon_02_default.png","iconHighlighted":"icon_02_selected.png", "selected":false}
+  ]);
+  proton.app.pageLoaded();
+});
+
+function result(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+
+function getContact() {
+  proton.app.getContactList(result);
+}
+
+function setValueTest() {
+  var key = document.getElementById("set-value-key-input").value;
+  var value = document.getElementById("set-value-value-input").value;
+
+  proton.app.setValue({'key' : key, 'value' : value});
+}
+
+function getValueCallback(ret) {
+  alert(ret.value);
+}
+
+function getValueTest() {
+  var key = document.getElementById("get-value-key-input").value;
+  proton.app.getValue({'key' : key}, getValueCallback);
+}
+
+function pushViewWithURLTest(url) {
+  proton.app.pushViewWithURL(url);
+}
+
+function openExternalViewTest(url) {
+  proton.app.openExternalView(url);
+}
+
+function launchMailerCallback(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+function launchMailer() {
+  var ret = proton.app.init();
+  proton.app.launchMailer({'to' : ['hoge@gmail.com', 'huga@hotmail.com'], 
+                           'cc' : ['cc@gmail.com', 'huga@hotmail.com'],
+                           'bcc' : ['bcc@gmail.com', 'huga@hotmail.com'],
+                           'subject' : 'this is title',
+                           'body' : 'this is body'
+                           }, launchMailerCallback);
+}
+
+function launchSMSCallback(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+
+function launchSMSComposer() {
+  var ret = proton.app.init();
+  proton.app.launchSMSComposer({
+                                'to' : ['4150001111', '09072271111'],
+                                'body' : 'body--'
+                                }, launchSMSCallback);
+}
+
+function launchNativeBrowserCallback(ret) {
+  if (ret.result === 0) {
+    document.getElementById("content").innerHTML = "success";
+  } else {
+    document.getElementById("content").innerHTML = "fail, " + ret.reason;
+  }
+}
+
+function launchNativeBrowser() {
+  var ret = proton.app.init();
+  proton.app.launchNativeBrowser({
+                                  'URL' : 'http://gree.jp/'
+                                 } , launchNativeBrowserCallback);
+}
+
+function showDialogCallback(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+
+function launchOK_CANCELDialog() {
+  var ret = proton.app.init();
+  proton.app.showMessageDialog({
+                                'buttons' : [ 'OK', 'Cancel'],
+                                'title' : 'ok cancel dialog',
+                                'message' : 'this is message',
+                                'cancel_index' : 1
+                               }, showDialogCallback);
+}
+
+function showShareCallback(ret) {
+  if (ret.result === 'close') {
+    document.getElementById("content").innerHTML = "result="+ret.result+", param="+JSON.stringify(ret.param);
+  }
+}
+
+function launchShareDialog() {
+  var ret = proton.app.init();
+  proton.app.showShareDialog({
+                             'type' : 'normal',
+                             'message' : 'normal dialog'
+                            }, showShareCallback);
+}
+
+function launchShareDialogWithImageUrls() {
+  var ret = proton.app.init();
+  proton.app.showShareDialog({
+                             'type' : 'normal',
+                             'message' : 'post image urls is possible dialog',
+                             'image_urls' : {'640':'http://www.gree.co.jp/img/common/logo.gif',
+                                             '240':'http://www.gree.co.jp/img/common/logo.gif',
+                                             '75':'http://www.gree.co.jp/img/common/logo.gif',
+                                             },
+                            }, showShareCallback);
+}
+
+function launchShareNoCloseDialog() {
+  var ret = proton.app.init();
+  proton.app.showShareDialog({
+                             'type' : 'noclose',
+                             'message' : 'no close dialog'
+                            }, showShareCallback);
+}
+
+function launchShareSizeSpecifiyDialog() {
+  var ret = proton.app.init();
+  proton.app.showShareDialog({
+                             'type' : 'normal',
+                             'message' : 'size change is possible dialog',
+                             'size' : [50, 50]
+                            }, showShareCallback);
+}
+
+function launchNativeAppCallback(ret) {
+  if (ret.result === false) {
+    document.getElementById("content").innerHTML = ret.result+", "+ret.reason;
+  }
+}
+
+function launchNativeApp() {
+  var appId = document.getElementById("launch-application-appId").value
+  proton.app.launchNativeApp({
+                              'URL' : 'greeapp'+appId+'://start/request?.id=20120320161544-679688-000000320&.type=message&param1=value1&param2=value2&param3=value3',
+                              'ios_src' : 'http://itunes.apple.com/jp/app/id403482780?mt=8',
+                              'android_src':'jp.gree.android.app'
+                             }, launchNativeAppCallback);
+}
+
+function launchNativeApp2() {
+  var appId = document.getElementById("launch-application-appId2").value;
+  var ret = encodeURI("http://gree.co.jp/test&url/main.html");
+  proton.app.launchNativeApp({
+                              'URL' : 'greeapp'+appId+'://start/request?.id=20120320161544-679688-000000320&.type=message&param1=value1&param2=value2&param3=value3' + '&url=' + ret,
+                              'ios_src' : 'http://itunes.apple.com/jp/app/id403482780?mt=8',
+                              'android_src':'jp.gree.android.app'
+                             }, launchNativeAppCallback);
+}
+
+function showWebViewDialogCallback(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+
+function showWebViewDialog() {
+  var ret = proton.app.init();
+  proton.app.showWebViewDialog({
+                                  'URL' : 'http://news.google.com',
+                                  'size' : [50, 50]
+                                 } , showWebViewDialogCallback);
+}
+
+
+function showRequestCallback(ret) {
+  if (ret.result === 'close') {
+    document.getElementById("content").innerHTML = "result="+ret.result+", param="+JSON.stringify(ret.param);
+  }
+}
+
+function showRequestDialog() {
+  var ret = proton.app.init();
+  proton.app.showRequestDialog({
+                                'request' : {
+                                             'title' : 'this is js',
+                                             'body' : 'THIS IS JS',
+                                             'mobile_url' : 'http://example.com/mobile?a=1&b=2',
+                                             'touch_url' : 'http://example.com/touch?a=1&b=2',
+                                             'custom_ios_url' : 'http://example.com/ios',
+                                             'custom_android_url' : 'http://example.com/android',
+                                             'mobile_image' : 'http://example.com/mobile.png',
+                                             'touch_image' : 'http://example.com/touch.png',
+                                             'list_type' : 'specified',
+                                             'to_user_id' : [34,30,320,321,323,324,521498,8,9,10,11,12,13,14,15],
+                                             'expire_time' : '1316477968'
+                                            }
+                               }, showRequestCallback);
+}
+
+function showInviteDialogCallback(ret) {
+  if (ret.result === 'close') {
+    document.getElementById("content").innerHTML = "result="+ret.result+", param="+JSON.stringify(ret.param);
+  }
+}
+
+function showInviteDialog() {
+  proton.app.showInviteDialog({
+                                'invite' : {
+                                            'callbackurl' : 'http://news.google.com',
+                                            'body' : 'this is js invite',
+                                            'to_user_id' : [34,30,320,321,323,324,521498,8,9,10,11,12,13,14,15]
+                                           }
+                               }, showInviteDialogCallback);
+}
+
+function recordAnayticsDataCallback(ret) {
+  document.getElementById("content").innerHTML = ret.result;
+}
+function recordAnalyticsDataTest () {
+  proton.app.recordAnayticsData({
+                                 'tp' : 'pg',
+                                 'nm' : 'universalmenu',
+                                 'pr' : {
+                                         'key_1' : 'val_1',
+                                         'key_2' : 'val_2'
+                                         },
+                                 'fr' : 'yyy'
+                                }, recordAnayticsDataCallback);
+}
+
+function flushAnalyticsDataTest () {
+  proton.app.flushAnalyticsData();
+}
+
+function analytics1000test() {
+  var i;
+  for (i = 0; i < 1000; i++) {
+    proton.app.recordAnayticsData({
+                                 'tp' : 'pg',
+                                 'nm' : 'universalmenu',
+                                 'pr' : {
+                                         'key_1' : i,
+                                         'key_2' : 'val_2'
+                                         },
+                                 'fr' : 'yyy'
+                                }, recordAnayticsDataCallback);
+  }
+}
+
+function addAnalyticsEventTest() {
+  proton.app.addAnalyticsEvent({'tp' : 'xxx',
+                               'nm' : 'yyy',
+                               'fr' : 'zzz',
+                               'tm' : 'abs'});
+}
+
+function flushAnalyticsQueueTest() {
+  proton.app.flushAnalyticsQueue(result);
+}
+
+function showAlertViewTest() {
+  proton.app.showAlertView({ 'title' : 'Alert',
+                             'message' : 'This is a message',
+                             'buttons': ['OK', 'Do Nothing', 'Cancel'],
+                             'cancel_index' : 0}, result);
+}
+
+function showActionSheetTest() {
+  proton.app.showActionSheet({ 'title' : 'Alert',
+                               'buttons': ['OK', 'Do Nothing', 'Destroy All Buttons!', 'Cancel'],
+                               'cancel_index' : 2,
+                               'destructive_index' : 3}, result);
+}
+
+function closeRequestServicePopupTest() {
+  proton.app.closePopup({
+    "request_id": "20120131145115-867188-000521036",
+    "result": "st_1=517249,521037"
+  });
+}
+
+function takePhotoResetCallback() {
+  document.getElementById("content").innerHTML = "Remove image!";
+}
+
+function takePhotoCallback(params) {
+  document.getElementById("content").innerHTML = "params.base64_image=" + params.base64_image;
+}
+
+function takePhoto() {
+  proton.app.takePhoto(takePhotoCallback, takePhotoResetCallback);
+}
+
+function showDashboardCallback(ret) {
+  if (ret.result === false) {
+    document.getElementById("content").innerHTML = "result="+ret.result+ ", error="+ret.error;
+  } else {
+    document.getElementById("content").innerHTML = "result="+ret.result;
+  }
+}
+
+function showDashboardTestAndroidDemoHtml() {
+  proton.app.showDashboard({
+                           'URL' : 'file:///android_asset/jslib/demo.html'
+                           }, showDashboardCallback);
+}
+
+function showDashboardTest() {
+  proton.app.showDashboard({
+                           'URL' : 'http://www.google.com'
+                           }, showDashboardCallback);
+}
+
+function showDepositProductDialog() {
+  proton.app.showDepositProductDialog();
+}
+
+function closeAndLaunchIAPHistoryDialog() {
+  proton.app.closeAndLaunchIAPHistoryDialog();
+}
+
+function collateForDeposit() {
+  proton.app.collateForDeposit();
+}
+
+function contactForDeposit(params) {
+  proton.app.contactForDeposit(params);
+}
+
+function noticeLaunchDeposit() {
+  proton.app.noticeLaunchDeposit();
+}
+
+function showDepositHistoryDialog() {
+  proton.app.showDepositHistoryDialog();
+}
+
+function needUpgradeCallback(ret) {
+  alert(JSON.stringify(ret.callback));
+}
+
+function needUpgrade() {
+  var str = '{"target_grade":2}';
+  var obj = JSON.parse(str);
+  var val = document.getElementsByName("needUpgradeName");
+  
+  for (var i=0; i<val.length ; i++) {
+    if (val[i].checked && val[i].value == 'with_callback') {
+      proton.app.needUpgrade(obj, needUpgradeCallback);
+      break;
+    } else if (val[i].checked && val[i].value == 'without_callback') {
+      proton.app.needUpgrade(obj);
+      break;
+    } else {
+    }
+  }
+}
+
+function logout() {
+  proton.app.logout();
+}
+
+function inviteExternalUser() {
+    proton.app.inviteExternalUser({
+        'URL':'http://www.facebook.com/'
+    });
+}
+
+
+function registerLocalNotificationTimerCallback(ret) {
+    document.getElementById("content").innerHTML = "result="+ret.result;
+}
+
+function registerLocalNotificationTimer() {
+  var notifyid = document.getElementById("local-notification-reg-notifyid").value;
+  proton.app.registerLocalNotificationTimer({
+                                            'callbackParam' : 'PARAMS',
+                                            'notifyId' : notifyid,
+                                            'barMessage' : 'this is bar message',
+                                            'interval' : '5',
+                                            'message' : 'Local Notification Timer fired!!',
+                                            'title' : 'this is title'
+                               }, registerLocalNotificationTimerCallback);
+}
+
+function cancelLocalNotificationTimerCallback(ret) {
+    document.getElementById("content").innerHTML = "result="+ret.result;
+}
+ 
+function cancelLocalNotificationTimer() {
+  var notifyid = document.getElementById("local-notification-cancel-notifyid").value;
+  proton.app.cancelLocalNotificationTimer({
+                                            'notifyId' : notifyid
+                               }, cancelLocalNotificationTimerCallback);
+}
+
+var visible = true;
+function getLocalNotificationEnabledCallback(ret) {
+  if (ret.enabled === 'true') {
+    document.getElementById("local-notification-visibility").innerHTML = "enable";
+    visible = false;
+  } else {
+    document.getElementById("local-notification-visibility").innerHTML = "disable";
+    visible = true;
+  }
+}
+
+function setLocalNotificationEnabled() {
+  var enabled;
+  if (visible == true) {
+    enabled = "true";
+  } else {
+    enabled = "false";
+  }
+  proton.app.setLocalNotificationEnabled({'enabled' : enabled});
+  
+  proton.app.getLocalNotificationEnabled(getLocalNotificationEnabledCallback);
+}
+
+function launchServiceTest() {
+    var from              = document.getElementById("launch-service-from-input").value;
+    var action            = document.getElementById("launch-service-action-input").value;
+    var target            = document.getElementById("launch-service-target-input").value;
+    var params_url        = document.getElementById("launch-service-params-url-input").value;
+    var params_user_input = document.getElementById("launch-service-params-user-input-input").value;
+
+    proton.app.launchService({
+        'from'   : from,
+	'action' : action,
+	'target' : target,
+	'params' : {
+	    'URL' : params_url,
+	    'user_input' : params_user_input
+	}
+    });
+}
+
+function closeTest() {
+    var parameters = document.getElementById("close-parameters-input").value;
+    proton.app.close({
+	'data' : JSON.parse(parameters)
+    }, function (ret) {
+	alert(ret.result);
+    });
+}
+
+function setConfig() {
+    var key = document.getElementById("configuration-key").value;
+    var value = document.getElementById("configuration-value").value;
+    proton.app.setConfig({ 'key' : key, 'value' : value}, function(ret) {
+                                                                          window.alert(JSON.stringify(ret.result));
+                                                                         }
+                        );
+}
+
+function getConfig() {
+    var key = document.getElementById("configuration-key").value;
+    proton.app.getConfig({ 'key' : key},  function(ret) {
+                                                         window.alert(JSON.stringify(ret.result));
+                                                        }
+                        );
+}
+
+function getConfigList() {
+    proton.app.getConfigList(null,  function(ret) {
+                                                  window.alert(JSON.stringify(ret.result));
+                                                 }
+                            );
+}
+function getAppList() {
+  
+  var array = new Array(2);
+  array[0] = "greeapp14187";
+  array[1] = "greeapp52760";
+  
+  proton.app.getAppList({ 'schemes' : array }, function(ret) {
+    window.alert(JSON.stringify(ret.result));
+  });
+}
+
+function getViewInfo() {
+  proton.app.getViewInfo(null, function(ret) {
+    window.alert(JSON.stringify(ret.result));
+  });
+}
+
+function deleteCookie() {
+    var aKey = document.getElementById("delete-cookie-parameters-input").value;
+    proton.app.deleteCookie({
+	"key" : aKey
+    }, function (ret) {
+	alert(ret.result + " with result:" + JSON.stringify(ret));
+    });
+}
+
+function updateUser() {
+	proton.app.updateUser(null, function(ret){
+		window.alert(JSON.stringify(ret.result));
+	});
+}
+
+function startLogAdditionalFile() {
+  var loglevel = 0;
+  var val = document.getElementsByName("logleval");
+  for (var i=0; i<val.length ; i++) {
+    if (val[i].checked) {
+      loglevel = val[i].value;
+      break;
+    }
+  }
+  proton.app.startLogAdditionalFile({'loglevel' : loglevel}, function(ret) {
+                                     window.alert(JSON.stringify(ret.result));
+                                     });
+}
+
+function stopLogWritingFile() {
+  var logfile_id = document.getElementById("logfile-id").value;
+  proton.app.stopLogWritingFile({'logfile_id' : logfile_id}, function(ret) {
+                                window.alert(JSON.stringify(ret.result));
+                                });
+}
+
+</script>
+</head>
+
+<body>
+
+    <h3>Start / Stop Log File</h3>
+    <form>
+    <input id="logleval_id0" type="radio" name="logleval" value="0">Default Level (0)<br />
+    <input id="logleval_id1" type="radio" name="logleval" value="50">Warm Level (50)<br />
+    <input id="logleval_id2" type="radio" name="logleval" value="100" checked>Debug Level (100)<br />
+    </form>
+    <button onclick="startLogAdditionalFile()">Start Log Additional File</button>
+    <br />
+    <br />
+    <label for="logfile-id">logfile_id:</label>
+    <input name="logfile-id" id="logfile-id" type="text" value="logfile_id+1">
+    <br />
+    <br />
+    <button onclick="stopLogWritingFile()">Stop Log Writing File</button>
+    <br />
+    <hr />
+    <h3>Configuration</h3>
+    <label for="configuration-key">Key:</label>
+    <input name="configuration-key" id="configuration-key" type="text" value="notificationEnabled">
+    <br />
+    <label for="configuration-value">Value:</label>
+    <input name="configuration-value" id="configuration-value" type="text" value="true">
+    <br />
+    <button onclick="setConfig()">setConfig</button>
+    <br/>
+    <button onclick="getConfig()">getConfig</button>
+    <br/>
+    <button onclick="getConfigList()">getConfigList</button>
+    <br/>
+
+    <h3>Get view information, where am I.</h3>
+    <button onclick="getViewInfo()">getViewInfo</button>
+    <br/>
+    
+    <h3>Gree Installed applications</h3>
+    <button onclick="getAppList()">getAppList</button>
+    <br/>
+    
+    <h3>Key-Value Store - Set</h3>
+    <label for="set-value-key-input">Key:</label>
+    <input name="set-value-key-input" id="set-value-key-input" type="text" value="foo">
+    <br />
+    <label for="set-value-value-input">Value:</label>
+    <input name="set-value-value-input" id="set-value-value-input" type="text" value="bar">
+    <br />
+    <button onclick="setValueTest()">setValueTest</button>
+    <br />
+    
+    <h3>Key-Value Store - Get</h3>
+    <label for="get-value-key-input">Key:</label>
+    <input name="get-value-key-input" id="get-value-key-input" type="text" value="foo">
+    <br />
+    <button onclick="getValueTest()">getValueTest</button><br />
+    <hr />
+
+    <h3>Open URLs</h3>
+    <h5>Internal</h5>
+    <button onclick="getContact()">getContactList</button><br />
+    <button onclick="pushViewWithURLTest('http://t.gree.jp')">pushViewWithURLTest@t.gree.jp</button><br />
+    <h5>External</h5>
+    <button onclick="openExternalViewTest('http://www.arstechnica.com')">openExternalViewTest@ars</button><br />
+    <button onclick="openExternalViewTest('http://www.google.com')">openExternalViewTest@google</button><br />
+    
+    <hr />
+    <h3>- Analytics -</h3>
+    <button onclick="recordAnalyticsDataTest()">recordAnalyticsDataTest</button><br />
+    <button onclick="flushAnalyticsDataTest()">flushAnalyticsDataTest</button><br />
+    <br />
+    <button onclick="analytics1000test()">analytics1000test</button><br />
+    
+    <hr />
+    <h3>-Launch Mail Sending Composer-</h3>
+    <button onclick="launchMailer()">launchMailerTest</button>
+    <br />
+    
+    <hr />
+    <h3>-Launch SMS Sending Composer-</h3>
+    <button onclick="launchSMSComposer()">launchSMSTest</button>
+    <br />
+    
+    <hr />
+    <h3>-Launch Native Browser-</h3>
+    <button onclick="launchNativeBrowser()">launchNativeBrowserTest</button>
+    <br />
+    
+    <hr />
+    <h3>-Show Message Dialog-</h3>
+    <button onclick="launchOK_CANCELDialog()">launchOK_CANCELDialogTest</button><br />
+    
+    <hr />
+    <h3>-Show Share Dialog-</h3>
+    <button onclick="launchShareDialog()">launchShareDialogTest</button><br />
+    <button onclick="launchShareDialogWithImageUrls()">launchShareDialogWithImageUrlsTest</button><br />
+    <button onclick="launchShareNoCloseDialog()">launchShareNoCloseDialogTest</button><br />
+    <button onclick="launchShareSizeSpecifiyDialog()">launchShareSizeSpecifiyDialogTest</button><br />
+    <br />
+    <hr />
+
+    <h3>-Input application ID-</h3>
+    <input type="text" name="launch-application-appId" id="launch-application-appId" value="14187">
+    <h3>-Launch Native Application-</h3>
+    <button onclick="launchNativeApp()">launchNativeAppTest</button><br />
+    <br />
+    <hr />
+
+    <h3>-Input application ID-</h3>
+    <input type="text" name="launch-application-appId2" id="launch-application-appId2" value="14187">
+    <h3>-Launch Native Application2-</h3>
+    <button onclick="launchNativeApp2()">launchNativeAppTest2</button><br />
+    <br />
+
+    <hr />
+    <h3>-Show WebView Dialog-</h3>
+    <button onclick="showWebViewDialog()">showWebViewDialogTest</button><br />
+    <br />
+    
+    <hr />
+    <h3>-Show Request Dialog-</h3>
+    <button onclick="showRequestDialog()">showRequestDialogTest</button><br />
+
+    <hr />
+    <h3>-Show Invite Dialog-</h3>
+    <button onclick="showInviteDialog()">showInviteDialogTest</button><br />
+
+    <hr />
+    <h3>-Photo-</h3>
+    <button onclick="takePhoto()">takePhotoTest</button><br />
+    <br />
+
+    <hr />
+    <h3>-Show Dashboard-</h3>
+    <button onclick="showDashboardTest()">showDashboardTest</button><br />
+
+    <h3>-Show Dashboard(Android demo html)-</h3>
+    <button onclick="showDashboardTestAndroidDemoHtml()">showDashboardTestAndroidDemoHtml</button><br />
+
+    <hr />
+    <h3>-Local Notification-</h3>
+    <label for="local-notification-reg-notifyid">Reg NotifyId:</label>
+    <input name="local-notification-reg-notifyid" id="local-notification-reg-notifyid" type="text" value="1">
+    <button onclick="registerLocalNotificationTimer()">registerLocalNotificationTimer</button><br />
+    <label for="local-notification-cancel-notifyid">Cancel NotifyId:</label>
+    <input name="local-notification-cancel-notifyid" id="local-notification-cancel-notifyid" type="text" value="1">
+    <button onclick="cancelLocalNotificationTimer()">cancelLocalNotificationTimer</button><br />
+    
+    <label>visibility:</label>
+    <div id="local-notification-visibility" style="border:1px dotted black"><br /></div>
+    <button onclick="setLocalNotificationEnabled()">setLocalNotificationEnabled</button><br />
+    
+    
+    <hr />
+    <h3>-Show Deposit Product Dialog-</h3>
+    <button onclick="showDepositProductDialog()">showWalletDepositDialogTest</button><br />
+
+    <hr />
+    <h3>-Close and Launch IAP History Dialog-</h3>
+    <button onclick="closeAndLaunchIAPHistoryDialog()">closeAndLaunchIAPHistoryDialogTest</button><br />
+
+    <hr />
+    <h3>-Collate For Deposits-</h3>
+    <button onclick="collateForDeposit()">collateForDepositTest</button><br />
+
+    <hr />
+    <h3>-Contact For A Deposit-</h3>
+    <button onclick="contactForDeposit({'id':'101'})">contactForDepositTest</button><br />
+
+    <hr />
+    <h3>-Notice Launch Deposit For Payment-</h3>
+    <button onclick="noticeLaunchDeposit()">noticeLaunchDepositTest</button><br />
+
+    <hr />
+    <h3>-Show Deposit History Dialog-</h3>
+    <button onclick="showDepositHistoryDialog()">showDepositHistoryDialog</button><br />
+
+    <hr />
+    <h3>-Need Upgrade to Greade 2-</h3>
+    <form>
+    <input id="needUpgradeId0" type="radio" name="needUpgradeName" value="with_callback" checked>with callback<br />
+    <input id="needUpgradeId1" type="radio" name="needUpgradeName" value="without_callback">without callback<br />    
+    </form>
+    <button onclick="needUpgrade()">needUpgradeTest</button><br />
+    
+    <hr />
+    <h3>-Logout-</h3>
+    <button onclick="logout()">logout</button><br />
+
+    <hr />
+    <h3>-External User Invitation-</h3>
+    <button onclick="inviteExternalUser()">external user invitation test</button><br />
+
+    <hr />
+    <h3>-Launch Service-</h3>
+    <label for="launch-service-from-input">From:</label>
+    <input name="launch-service-from-input" id="launch-service-from-input" type="text" value="share">
+    <br />
+    <label for="launch-service-action-input">Action:</label>
+    <input name="launch-service-action-input" id="launch-service-action-input" type="text" value="connectfacebook">
+    <br />
+    <label for="launch-service-target-input">Target:</label>
+    <input name="launch-service-target-input" id="launch-service-target-input" type="text" value="self">
+    <br />
+    <label for="launch-service-params-url-input">Params/URL:</label>
+    <input name="launch-service-params-url-input" id="launch-service-params-url-input" type="text" value="http://facebookconnect/?callback_url=hogehoge">
+    <br />
+    <label for="launch-service-params-user-input-input">Params/user_input:</label>
+    <input name="launch-service-params-user-input-input" id="launch-service-params-user-input-input" type="text" value="user inputed message">
+    <br />
+    <button onclick="launchServiceTest()">launch service test</button>
+
+    <hr />
+    <h3>- Close -</h3>
+    <label for="close-parameters-input">Some Parameters:</label>
+    <input name="close-parameters-input" id="close-parameters-input" type="text" value='{ "status" : "success" }'>
+    <br />
+    <button onclick="closeTest()">close test</button>
+
+    <hr />
+    <h3>- Delete Cookie -</h3>
+    <label for="delete-cookie-parameters-input">Deleting Key:</label>
+    <input name="delete-cookie-parameters-input" id="delete-cookie-parameters-input" type="text" value="gmail">
+    <br />
+    <button onclick="deleteCookie()">delete cookie test</button>
+
+    <hr />
+    <h3>- Update User -</h3>
+    <button onclick="updateUser()">Update User</button><br />
+
+    <hr />
+    <h3>Imported from ggpsdk/ios</h3>
+    <p><button onclick="showDashboardTest()">showDashboardTest</button></p>
+    <p><button onclick="addAnalyticsEventTest()">addAnalyticsEvent</button></p>
+    <p><button onclick="flushAnalyticsQueueTest()">flushAnalyticsQueueTest</button></p>
+    <p><button onclick="showAlertViewTest()">showAlertViewTest</button></p>
+    <p>Should return the index of the button pressed</p>
+    <p><button onclick="showActionSheetTest()">showActionSheetTest</button></p>
+    <p><button onclick="closeRequestServicePopupTest()">closeRequestServicePopupTest</button></p>
+    
+    <h3>Return Value</h3>
+    <div id="content" style="border:1px dotted black">
+    <br />
+    </div>
+</body>
+</html>

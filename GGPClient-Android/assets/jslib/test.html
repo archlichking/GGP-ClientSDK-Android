@@ -1,0 +1,266 @@
+<html>
+    <head>
+        <script type="text/javascript" src='./command_interface.js'></script>
+        <script type="text/javascript" src='./ggp_command.js'></script>
+        <script type="text/javascript">
+            window.addEventListener('load', function() {
+                                    var ret = proton.app.init();
+                                    proton.app.setPullToRefresh();
+                                    proton.app.pageLoaded();
+            });
+            
+            function stepCallback(fname){
+                console.log(fname + ' done');
+            }
+            
+            function jskitDoneCallback(callback){
+                proton.app.setConfig({'key' : 'jskitTestDone', 'value':'true'}, callback);
+            }
+            
+            function appendTextNode(text){
+                var e = document.createTextNode(text);
+                document.getElementById('resultText').appendChild(e);
+                document.getElementById('resultText').appendChild(document.createElement('hr'))
+            }
+
+            function invokeAllNoPOPTest(){
+                setConfigTest(getConfigTest(function (ret) {
+                    appendTextNode('* set/get config test done');
+                }));
+
+                getConfigListTest(function (ret) {
+                    appendTextNode('* get config list test done');
+                });
+
+                getAppListTest(function (ret){
+                    appendTextNode('* get app list test done');
+                });
+
+                // launchOK_CANCELDialogTest(function (ret){
+                //     appendTextNode('* get ok cancel dialog test done');
+                // });
+
+                getViewInfoTest(function (ret){
+                    appendTextNode('* get view info test done' + ret.result.view);
+                });
+
+                getContactListTest(function (ret){
+                    appendTextNode('* get contact list test done' + ret.result.view);
+                });
+
+                startLogTest(function (ret){
+                    appendTextNode('* start log test done' + ret.result.view);
+                });
+
+                stopLogTest(function (ret){
+                    appendTextNode('* stop log test done' + ret.result.view);
+                });
+
+                deleteCookieTest(function (ret){
+                    appendTextNode('* delete cookie test done' + ret.result.view);
+                });
+
+                setLocalNotificationEnabledTest(function (ret){
+                    appendTextNode('* set local notification test done' + ret.result.view);
+                });
+
+                getLocalNotificationEnabledTest(function (ret){
+                    appendTextNode('* get local notification test done' + ret.result.view);
+                });
+
+                recordAnalyticsDataTest(function (ret){
+                    appendTextNode('* record analytics data test done' + ret.result.view);
+                });
+
+                flushAnalyticsDataTest(function (ret){
+                    appendTextNode('* flush analytics data test done' + ret.result.view);
+                });
+                // inviteExternalUserTest(function (ret) {
+                //     appendTextNode('* invite external user test done');
+                // });
+
+
+                setValueTest(getValueTest(function (ret) {
+                    appendTextNode('* set/get value test done');
+                    jskitDoneCallback(stepCallback('callback done'));
+                }));
+
+            }
+            // ---- begin ------ non ui 
+            function setConfigTest(callback){
+                proton.app.setConfig({'key':'jsKitTest', 'value':'lay.zhu'},  callback);
+            }
+
+            function getConfigTest(callback){
+                proton.app.getConfig({'key':'jsKitTest'}, callback);
+            }
+
+            function setValueTest(callback){
+                proton.app.setValue({'key':'jsKitTest', 'value':'lay.zhu'},  callback);
+            }
+
+            function getValueTest(callback){
+                proton.app.getValue({'key':'jsKitTest'},  callback);
+            }
+
+            function getConfigListTest(callback){
+                proton.app.getConfigList(null, callback);
+            }
+
+            function getAppListTest(callback){
+                proton.app.getAppList({'schemes': ['greeapp12345', 'greeapp54321']}, callback);
+            }
+
+            function getContactListTest(callback){
+                proton.app.getContactList(callback);
+            }
+
+            function getViewInfoTest(callback){
+                proton.app.getViewInfo(null, callback);
+            }
+
+            function startLogTest(callback){
+                proton.app.startLog({'loglevel':'50'}, callback);
+            }
+
+            function stopLogTest(callback){
+                proton.app.stopLog({'loglevel':'50'}, callback);
+            }
+
+            function deleteCookieTest(callback){
+                proton.app.deleteCookie({'key':'baidu'}, callback);
+            }
+
+            function contentReadyTest(callback){
+                proton.app.contentReady();
+                callback;
+            }
+
+            function setLocalNotificationEnabledTest(callback){
+                proton.app.setLocalNotificationEnabled({'enabled':'true'});
+            }
+
+            function getLocalNotificationEnabledTest(callback){
+                proton.app.getLocalNotificationEnabled(callback);
+            }
+
+            function recordAnalyticsDataTest(callback) {
+                proton.app.recordAnayticsData({
+                                 'tp' : 'pg',
+                                 'nm' : 'universalmenu',
+                                 'pr' : {
+                                         'key_1' : 'val_1',
+                                         'key_2' : 'val_2'
+                                         },
+                                 'fr' : 'yyy'
+                                }, callback);
+            }  
+
+            function flushAnalyticsQueueTest(callback) {
+                proton.app.flushAnalyticsQueue(callback);
+            }
+
+            function flushAnalyticsDataTest (callback) {
+                proton.app.flushAnalyticsData();
+            }
+
+            // --- end ----------non ui
+            // --- begin -------- popup
+            function invokeRequestPopup(){
+                var ret = proton.app.init();
+                proton.app.showRequestDialog(
+                    {
+                        'request' : {
+                            'title':'request test',
+                            'body':'request body'}
+                    }, 
+                    function (ret){
+                        appendTextNode('* show request popup test done');
+                        jskitDoneCallback(stepCallback('callback done'));
+                });
+            }
+            
+            function invokeSharePopup(){
+                var ret = proton.app.init();
+                proton.app.showShareDialog(
+                    {
+                        'type' : 'normal',
+                        'message' : 'normal dialog'
+                    },
+                    function (ret){
+                        appendTextNode('* show share popup test done');
+                        jskitDoneCallback(stepCallback('callback done'));
+                });
+            }
+
+            function invokeInvitePopup(){
+                var ret = proton.app.init();
+                proton.app.showInviteDialog(
+                    {
+                        'invite' : {
+                            'callbackurl' : 'http://news.google.com',
+                            'body' : 'this is js invite'}
+                    },
+                    function (ret){
+                        appendTextNode('* show invite popup test done');
+                        jskitDoneCallback(stepCallback('callback done'));
+                });
+            }
+
+            function invokeWebviewDialog(){
+                var ret = proton.app.init();
+                proton.app.showWebViewDialog(
+                    {
+                        'URL' : 'http://www.baidu.com',
+                        'size' : [50, 50]
+                    },
+                    function (ret){
+                        appendTextNode('* show webview dialog test done');
+                        jskitDoneCallback(stepCallback('callback done'));
+                });
+            }
+
+            function invokeDepositProductDialog() {
+                proton.app.showDepositProductDialog();
+            }
+
+            function invokeDepositHistoryDialog(){
+                proton.app.showDepositHistoryDialog();
+            }
+
+            
+
+            // --- end ----------- popup
+
+            function inviteExternalUser(){
+                proton.app.inviteExternalUser({
+                    'URL':'http://www.baidu.com/'
+                });
+            }
+
+            function launchNativeBrowserTest(callback){
+                proton.app.launchNativeBrowser({'URL':'http://www.baidu.com/'}, callback);
+            }
+
+            function launchOK_CANCELDialogTest(callback){
+                proton.app.showMessageDialog({
+                                'buttons' : [ 'OK', 'Cancel'],
+                                'title' : 'ok cancel dialog test',
+                                'message' : 'this is test purpose',
+                                'cancel_index' : 1
+                               }, callback);
+            }
+        </script>
+    <head>
+    <body>
+        <div id='resultText'></div>
+        <div id='invokeAllNoPOP' onclick='invokeAllNoPOPTest()'>invokeAllNoPOPTest</div>
+        <div id='invokeRequestPopup' onclick='invokeRequestPopup()'>invokeRequestPopup</div>
+        <div id='invokeSharePopup' onclick='invokeSharePopup()'>invokeSharePopup</div>
+        <div id='invokeInvitePopup' onclick='invokeInvitePopup()'>invokeInvitePopup</div>
+        <div id='invokeWebviewDialog' onclick='invokeWebviewDialog()'>invokeWebviewDialog</div>
+        <div id='invokeDepositProductDialog' onclick='invokeDepositProductDialog()'>invokeDepositProductDialog</div>
+        <div id='invokeDepositHistoryDialog' onclick='invokeDepositHistoryDialog()'>invokeDepositHistoryDialog</div>
+        <div id='inviteExternalUser' onclick='inviteExternalUser()'>inviteExternalUser</div>
+    </body>
+</html>
