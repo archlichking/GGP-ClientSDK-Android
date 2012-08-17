@@ -39,6 +39,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity android:name=".GreeWebViewActivity" />
         <receiver android:name="util.PopupHandler">
         	<intent-filter> 
                 <action android:name="util.PopupHandler.request_popup" />
