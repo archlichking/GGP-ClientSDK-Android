@@ -10,6 +10,8 @@ public class Consts {
 
     public static final String SUCCESS = "SUCCESS";
     
+    public static final String CANCEL = "CANCEL";
+    
     public static final int STARTINDEX_0 = 0;
     
     public static final int STARTINDEX_1 = 1;
