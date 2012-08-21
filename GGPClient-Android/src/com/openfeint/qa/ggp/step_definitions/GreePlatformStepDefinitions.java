@@ -2,7 +2,6 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 import java.security.Key;
 import java.util.Map;
@@ -108,6 +107,19 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     @After("I initialize with test app settings")
     public void initWithTestAppSettings() {
         GreePlatform.initialize(GreePlatform.getContext(), R.xml.gree_platform_configuration, null);
+        getAllSettings();
+    }
+    
+    @When("I initialize settings with customized json file (.+)")
+    public void initCustomizedSettings(String path) {
+        GreePlatform.initialize(GreePlatform.getContext(), R.xml.gree_platform_configuration, path);
+        getAllSettings();
+    }
+    
+    @After("I remove customized setting by key (\\w+)")
+    public void clearCustomizedSettingByKey(String key) {
+        GreePlatform.setOption(key, "");
+        getAllSettings();
     }
 
     // TODO For debug
