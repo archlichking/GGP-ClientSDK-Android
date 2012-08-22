@@ -2,18 +2,11 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 
 import net.gree.asdk.core.GLog;
+import util.FileUtil;
 import android.os.Environment;
 import android.util.Log;
 
@@ -56,24 +49,9 @@ public class CorePackageStepDefinitions extends BasicStepDefinition {
 
     @Then("log file (.+) should have log (.+)")
     public void verifyLogText(String fileName, String expectText) {
-        try {
-            assertTrue("debug file contains the expect log", fromFile(SDCARD_PATH + "/" + fileName)
-                    .toString().contains(expectText));
-        } catch (FileNotFoundException e) {
-            fail("failed to open the debug file");
-        } catch (IOException e) {
-            fail("failed to read the debug file");
-        }
-    }
 
-    private CharSequence fromFile(String filename) throws IOException {
-        FileInputStream fis = new FileInputStream(filename);
-        FileChannel fc = fis.getChannel();
-
-        // Create a read-only CharBuffer on the file
-        ByteBuffer bbuf = fc.map(FileChannel.MapMode.READ_ONLY, 0, (int) fc.size());
-        CharBuffer cbuf = Charset.forName("8859_1").newDecoder().decode(bbuf);
-        return cbuf;
+        assertTrue("debug file contains the expect log",
+                FileUtil.getTextFromFile(SDCARD_PATH + "/" + fileName).contains(expectText));
     }
 
     @After("I close file debug mode and remove file (.+)")
