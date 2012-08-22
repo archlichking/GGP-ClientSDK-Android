@@ -104,22 +104,19 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
         GreePlatform.initialize(GreePlatform.getContext(), appId, key, secret, null, true);
     }
 
-    @After("I initialize with test app settings")
+    @After("I recover settings from default setting configuration file")
     public void initWithTestAppSettings() {
         GreePlatform.initialize(GreePlatform.getContext(), R.xml.gree_platform_configuration, null);
-        getAllSettings();
     }
     
     @When("I initialize settings with customized json file (.+)")
     public void initCustomizedSettings(String path) {
         GreePlatform.initialize(GreePlatform.getContext(), R.xml.gree_platform_configuration, path);
-        getAllSettings();
     }
     
     @After("I remove customized setting by key (\\w+)")
     public void clearCustomizedSettingByKey(String key) {
         GreePlatform.setOption(key, "");
-        getAllSettings();
     }
 
     // TODO For debug
