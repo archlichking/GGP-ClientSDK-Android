@@ -194,7 +194,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
-        if ("nickName".equals(column)) {
+        if ("nickname".equals(column)) {
             assertEquals("nickName", value, me.getNickname());
         } else if ("displayName".equals(column)) {
             assertEquals("displayName", value, me.getDisplayName());
