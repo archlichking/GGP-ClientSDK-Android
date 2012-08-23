@@ -149,7 +149,7 @@ public class PaymentStepDefinitions extends BasicStepDefinition {
     public void clickBackButton() {
         // wait UI thread to show out popup
         try {
-            Thread.sleep(2000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
