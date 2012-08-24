@@ -2,9 +2,11 @@
 package com.openfeint.qa.ggp.step_definitions;
 
 import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.core.ui.GreeWebViewUtil;
 import net.gree.asdk.core.util.CoreData;
 import util.PopupUtil;
 import android.content.Intent;
+import android.util.Log;
 import android.webkit.WebView;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -19,9 +21,9 @@ import com.openfeint.qa.ggp.R;
 public class JSKitStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "JSKit_Steps";
 
-    private static final String BUTTON_INVOKE_ALL = "fid('invokeAllNoPOP')";
-
     private static final String KEY_TEST_DONE = "jskitTestDone";
+
+    private static final String KEY_POPUP_LOADED = "popupLoaded";
 
     @And("I launch jskit popup")
     public void openJSkitPopup() {
@@ -35,9 +37,9 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @When("I click invoke button invokeAllNoPOP")
-    public void invokeNonPopupMethods() {
-        doActionInJSKitPopup("click(" + BUTTON_INVOKE_ALL + ")");
+    @When("I click invoke button (\\w+)")
+    public void invokeNonPopupMethods(String buttonId) {
+        doActionInJSKitPopup("click(fid('" + buttonId + "'))");
     }
 
     private void doActionInJSKitPopup(final String command) {
@@ -76,5 +78,34 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
     public void closeJSKitView() {
         GreeWebViewActivity activity = GreeWebViewActivity.getInstance();
         activity.finish();
+    }
+
+    @And("I dismiss last opened popup")
+    public void closePopup() {
+        int count = 0;
+        while (count < 10 && !"true".equals(CoreData.get(KEY_POPUP_LOADED))) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count++;
+        }
+        Log.e(TAG, KEY_POPUP_LOADED + ": " + CoreData.get(KEY_POPUP_LOADED));
+        CoreData.put(KEY_POPUP_LOADED, "");
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        GreeWebViewActivity.getInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (GreeWebViewUtil.getDialog() != null) {
+                    GreeWebViewUtil.getDialog().dismiss();
+                    GreeWebViewUtil.releaseDialog();
+                }
+            }
+        });
     }
 }
