@@ -35,6 +35,7 @@ import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
 import com.openfeint.qa.core.exception.TCMIsnotReachableException;
 import com.openfeint.qa.core.net.PlainHttpCommunicator;
+import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
@@ -156,10 +157,10 @@ public class MainActivity extends Activity {
             /* optional */
 
             Log.i(TAG, "---------- Submitting result to TCM ---------");
-            // TCMCommunicator tcm = new
-            // TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-            // tcm.setTestCasesResult(run_text.getText().toString(),
-            // adapter.getSelectedCases());
+	        TCMCommunicator tcm = new
+	        TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+	        tcm.setTestCasesResult(run_text.getText().toString(),
+	        adapter.getSelectedCases());
             Log.i(TAG, "---------- result submitted ----");
 
             is_under_progress = false;
