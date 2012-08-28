@@ -1,18 +1,18 @@
 package com.openfeint.qa.ggp.step_definitions;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+
+import net.gree.asdk.api.ui.CloseMessage;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Assert;
 
-import net.gree.asdk.api.ui.CloseMessage;
-import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
+import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
-import com.openfeint.qa.ggp.GreeWebViewActivity;
 
 public class CloseMessageStepDefinitions extends BasicStepDefinition {
 	public static final String TAG = CloseMessageStepDefinitions.class.getSimpleName();
@@ -26,12 +26,6 @@ public class CloseMessageStepDefinitions extends BasicStepDefinition {
 	@When("I set the CloseMessage data with callbackurl (.+) service (.+) and recipient_user_ids (\\d+) and (\\d+)")
 	public void initCloseMessageData(String callbackurl, String service, int recipient_user_id_1, int recipient_user_id_2) {
 		
-		// Store test data for later comparison
-		getBlockRepo().put(CALLBACKURL, callbackurl);
-		getBlockRepo().put(SERVICE, service);
-		getBlockRepo().put(RECIPIENT_USER_ID_1, recipient_user_id_1);
-		getBlockRepo().put(RECIPIENT_USER_ID_2, recipient_user_id_2);
-		
 		// Make CloseMessage
 		String data = "{\"callback\":\"close\",\"data\":{\"callbackurl\":\"" + callbackurl + "\",\"service\":\""+ service + "\",\"recipient_user_ids\":[" + String.valueOf(recipient_user_id_1) + "," + String.valueOf(recipient_user_id_2) + "]}}";
 		CloseMessage closeMessage = new CloseMessage();
@@ -41,21 +35,35 @@ public class CloseMessageStepDefinitions extends BasicStepDefinition {
 		getBlockRepo().put(CLOSE_MESSAGE, closeMessage);
 	}
 	
-	@Then("I verify the CloseMessage data")
-	public void verifyCloseMessageData() throws NumberFormatException, JSONException {
-		// Retrieve CloseMessage from Repo
+	@Then("callbackurl of closemessage should be (.+)")
+	@And("callbackurl of closemessage should be (.+)")
+	public void verifyCallbackurl(String expected_callbackurl) throws NumberFormatException, JSONException {
 		CloseMessage closeMessage = (CloseMessage) getBlockRepo().get(CLOSE_MESSAGE);
 		String message = closeMessage.getData();
-		String callbackurl = closeMessage.getCallbackUrl(message);
-		String service = closeMessage.getService(message);
-		JSONArray recipient_user_ids = closeMessage.getRecipientUserIds(message);
-		int recipient_user_id_1 = recipient_user_ids.getInt(0);
-		int recipient_user_id_2 = recipient_user_ids.getInt(1);
+		String callbackurl = CloseMessage.getCallbackUrl(message);
+		Assert.assertTrue("expected " + expected_callbackurl + " but received" + callbackurl, expected_callbackurl.equals(callbackurl));	
+	}
 		
-		// Assertion
-		Assert.assertTrue("expected getBlockRepo().get(CALLBACKURL) but received" + callbackurl, getBlockRepo().get(CALLBACKURL).equals(callbackurl));
-		Assert.assertTrue("expected getBlockRepo().get(SERVICE) but received" + callbackurl, getBlockRepo().get(SERVICE).equals(service));
-		Assert.assertTrue("expected getBlockRepo().get(RECIPIENT_USER_ID_1) but received" + callbackurl, getBlockRepo().get(RECIPIENT_USER_ID_1).equals(recipient_user_id_1));
-		Assert.assertTrue("expected getBlockRepo().get(RECIPIENT_USER_ID_2) but received" + callbackurl, getBlockRepo().get(RECIPIENT_USER_ID_2).equals(recipient_user_id_2));
+	@Then("service of CloseMessage should be (.+)")
+	@And("service of CloseMessage should be (.+)")
+	public void verifyService(String expected_service) throws NumberFormatException, JSONException {
+		CloseMessage closeMessage = (CloseMessage) getBlockRepo().get(CLOSE_MESSAGE);
+		String message = closeMessage.getData();
+		String service = CloseMessage.getService(message);
+		Assert.assertTrue("expected " + expected_service + " but received" + service, service.equals(expected_service));	
+	}
+	
+	@Then("recipient_user_ids of CloseMessage should contain (.+)")
+	@And("recipient_user_ids of CloseMessage should contain (.+)")
+	public void verifyRecipientUserId(int recipient_user_id) throws NumberFormatException, JSONException {
+		CloseMessage closeMessage = (CloseMessage) getBlockRepo().get(CLOSE_MESSAGE);
+		String message = closeMessage.getData();
+		JSONArray recipient_user_ids = CloseMessage.getRecipientUserIds(message);
+		ArrayList<Integer> recipient_user_ids_array = new ArrayList<Integer>();
+		for (int i=0; i<recipient_user_ids.length(); i++) {
+			int current_recipient_user_id = recipient_user_ids.getInt(i);
+			recipient_user_ids_array.add(current_recipient_user_id);
+		}
+		Assert.assertTrue("expected " + recipient_user_id + " there", recipient_user_ids_array.contains(Integer.valueOf(recipient_user_id)));	
 	}
 }
