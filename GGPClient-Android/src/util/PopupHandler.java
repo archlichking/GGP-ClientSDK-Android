@@ -306,7 +306,7 @@ public class PopupHandler extends BroadcastReceiver {
         return popupDialog;
     }
 
-    public static void dismissPopupDialog() {
+    private void dismissPopupDialog() {
         if (popupDialog == null)
             return;
         popupDialog.dismiss();
