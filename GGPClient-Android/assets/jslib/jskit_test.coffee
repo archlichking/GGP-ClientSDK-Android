@@ -13,18 +13,30 @@ class JskitTest
 
 	executePopupSuite: (suite) ->
 		for func, params of suite
-      str = "{'key':'popupLoaded', 'value':'true'}"
-      callback = "this.appendTextNode('"+func+" test done')"
+      		str = "{'key':'popupLoaded', 'value':'true'}"
+      		callback = "this.appendTextNode('"+func+" test done')"
 			@functionCall func, params, "this.protonApp.setConfig("+str+", "+callback+")"
 
 	functionCall: (name, params, callback) ->
+		console.log 'calling: ' + name
 		str = "this.protonApp.name(params, callback)"
 		str = str.replace 'name', name
-		if params is ""
-			str = str.replace 'params,', ''
-		else
+		if params is "{}"
+		# args: params
+			params.callback = callback
+			str = str.replace 'params, callback', params
+		else if name is "pushViewWithURL" or name is "openExternalView"
+		# args: url, params
 			str = str.replace 'params,', params + ','
-		str = str.replace 'callback', callback
+			str = str.replace 'callback', null
+		else
+			if params is ""
+			# args: callback
+				str = str.replace 'params,', ''
+			else
+			# args: params, callback
+				str = str.replace 'params,', params + ','
+			str = str.replace 'callback', callback
 		eval(str)
 
 	invokeAllNonUITest: () ->
@@ -44,13 +56,14 @@ class JskitTest
 			'getLocalNotificationEnabled': "",
 			'flushAnalyticsQueue': "",
 			'flushAnalyticsData': "",
-			'collateForDeposit':"",
+			'collateForDeposit':"{}",
 			'contactForDeposit':"{'id':'101'}",
-			'noticeLaunchDeposit':"",
+			'noticeLaunchDeposit':"{}",
 			'pushViewWithURL':"'http://www.baidu.com'",
 			'openExternalView':"'http://www.baidu.com'",
 			'showMessageDialog':"{'buttons':['OK','Cancel'],'title':'ok cancel dialog','message':'this is message','cancel_index':1}",
-			'needUpdate':"",
+			'needUpdate':"{}",
+			'updateUser':"null",
 			'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
 
 		console.log JSON.stringify(nonUISuite)
@@ -132,9 +145,8 @@ class JskitTest
 	inviteExternalUser: ()->
 		viewSuite = 
 			'inviteExternalUser':"{'URL':'http://www.baidu.com/'}",
-			'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
 		console.log JSON.stringify(viewSuite)
-		@executeSuite viewSuite
+		@executePopupSuite viewSuite
 
 	showActionSheet: ()->
 		viewSuite = 
@@ -152,7 +164,6 @@ class JskitTest
                              'message' : 'This is a message',
                              'buttons': ['OK', 'Do Nothing', 'Cancel'],
                              'cancel_index' : 0}",
-			'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
 		console.log JSON.stringify(viewSuite)
 		@executeSuite viewSuite
 
@@ -161,9 +172,8 @@ class JskitTest
 			'showDashboard':"{
                            'URL':'http://www.google.com'
                            }",
-			'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
 		console.log JSON.stringify(viewSuite)
-		@executeSuite viewSuite
+		@executePopupSuite viewSuite
 
 jskit = new JskitTest(proton.app, window.document)
 window.jskit ? window.jskit = jskit

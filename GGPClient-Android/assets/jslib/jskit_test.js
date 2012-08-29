@@ -39,14 +39,23 @@
 
     JskitTest.prototype.functionCall = function(name, params, callback) {
       var str;
+      console.log('calling: ' + name);
       str = "this.protonApp.name(params, callback)";
       str = str.replace('name', name);
-      if (params === "") {
-        str = str.replace('params,', '');
-      } else {
+      if (params === "{}") {
+        params.callback = callback;
+        str = str.replace('params, callback', params);
+      } else if (name === "pushViewWithURL" || name === "openExternalView") {
         str = str.replace('params,', params + ',');
+        str = str.replace('callback', null);
+      } else {
+        if (params === "") {
+          str = str.replace('params,', '');
+        } else {
+          str = str.replace('params,', params + ',');
+        }
+        str = str.replace('callback', callback);
       }
-      str = str.replace('callback', callback);
       return eval(str);
     };
 
@@ -68,13 +77,14 @@
         'getLocalNotificationEnabled': "",
         'flushAnalyticsQueue': "",
         'flushAnalyticsData': "",
-        'collateForDeposit': "",
+        'collateForDeposit': "{}",
         'contactForDeposit': "{'id':'101'}",
-        'noticeLaunchDeposit': "",
+        'noticeLaunchDeposit': "{}",
         'pushViewWithURL': "'http://www.baidu.com'",
         'openExternalView': "'http://www.baidu.com'",
         'showMessageDialog': "{'buttons':['OK','Cancel'],'title':'ok cancel dialog','message':'this is message','cancel_index':1}",
-        'needUpdate': "",
+        'needUpdate': "{}",
+        'updateUser': "null",
         'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
       };
       console.log(JSON.stringify(nonUISuite));
@@ -177,11 +187,10 @@
     JskitTest.prototype.inviteExternalUser = function() {
       var viewSuite;
       viewSuite = {
-        'inviteExternalUser': "{'URL':'http://www.baidu.com/'}",
-        'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
+        'inviteExternalUser': "{'URL':'http://www.baidu.com/'}"
       };
       console.log(JSON.stringify(viewSuite));
-      return this.executeSuite(viewSuite);
+      return this.executePopupSuite(viewSuite);
     };
 
     JskitTest.prototype.showActionSheet = function() {
@@ -197,8 +206,7 @@
     JskitTest.prototype.showAlertView = function() {
       var viewSuite;
       viewSuite = {
-        'showAlertView': "{ 'title' : 'Alert',                             'message' : 'This is a message',                             'buttons': ['OK', 'Do Nothing', 'Cancel'],                             'cancel_index' : 0}",
-        'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
+        'showAlertView': "{ 'title' : 'Alert',                             'message' : 'This is a message',                             'buttons': ['OK', 'Do Nothing', 'Cancel'],                             'cancel_index' : 0}"
       };
       console.log(JSON.stringify(viewSuite));
       return this.executeSuite(viewSuite);
@@ -207,11 +215,10 @@
     JskitTest.prototype.showDashboard = function() {
       var viewSuite;
       viewSuite = {
-        'showDashboard': "{                           'URL':'http://www.google.com'                           }",
-        'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
+        'showDashboard': "{                           'URL':'http://www.google.com'                           }"
       };
       console.log(JSON.stringify(viewSuite));
-      return this.executeSuite(viewSuite);
+      return this.executePopupSuite(viewSuite);
     };
 
     return JskitTest;
