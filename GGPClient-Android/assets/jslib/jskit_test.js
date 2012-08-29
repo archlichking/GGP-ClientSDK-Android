@@ -39,23 +39,24 @@
 
     JskitTest.prototype.functionCall = function(name, params, callback) {
       var str;
-      console.log('calling: ' + name);
-      str = "this.protonApp.name(params, callback)";
+      str = "this.protonApp.name(mParams, mCallback)";
       str = str.replace('name', name);
       if (params === "{}") {
         params.callback = callback;
-        str = str.replace('params, callback', params);
+        str = str.replace('mParams, mCallback', params);
       } else if (name === "pushViewWithURL" || name === "openExternalView") {
-        str = str.replace('params,', params + ',');
-        str = str.replace('callback', null);
+        str = str.replace('mParams,', params + ',');
+        str = str.replace('mCallback', null);
       } else {
         if (params === "") {
-          str = str.replace('params,', '');
+          str = str.replace('mParams,', '');
         } else {
-          str = str.replace('params,', params + ',');
+          console.log('enter here');
+          str = str.replace('mParams,', params + ',');
         }
-        str = str.replace('callback', callback);
+        str = str.replace('mCallback', callback);
       }
+      console.log('calling: ' + str);
       return eval(str);
     };
 
@@ -85,6 +86,8 @@
         'showMessageDialog': "{'buttons':['OK','Cancel'],'title':'ok cancel dialog','message':'this is message','cancel_index':1}",
         'needUpdate': "{}",
         'updateUser': "null",
+        'registerLocalNotificationTimer': "{'callbackParam':'PARAMS','notifyId':'1','barMessage':'this is bar message','interval':'600','message':'Local Notification Timer fired!!','title':'jskit test title'}",
+        'cancelLocalNotificationTimer': "{'notifyId':'1'}",
         'setConfig': "{'key':'jskitTestDone', 'value':'true'}"
       };
       console.log(JSON.stringify(nonUISuite));
