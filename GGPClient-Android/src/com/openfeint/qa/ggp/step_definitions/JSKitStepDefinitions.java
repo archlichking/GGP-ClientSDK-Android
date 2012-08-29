@@ -5,8 +5,9 @@ import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.core.ui.GreeWebViewUtil;
 import net.gree.asdk.core.util.CoreData;
 import util.PopupUtil;
+import android.app.Instrumentation;
 import android.content.Intent;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.WebView;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -28,8 +29,9 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
     @And("I launch jskit popup")
     public void openJSkitPopup() {
         final MainActivity activity = MainActivity.getInstance();
-        Intent intent = new Intent(GreePlatform.getContext(), GreeWebViewActivity.class);
+        final Intent intent = new Intent(GreePlatform.getContext(), GreeWebViewActivity.class);
         activity.startActivity(intent);
+        // wait main thread to open activity
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -39,6 +41,12 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
 
     @When("I click invoke button (\\w+)")
     public void invokeNonPopupMethods(String buttonId) {
+        // default waiting for the last UI action
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         doActionInJSKitPopup("click(fid('" + buttonId + "'))");
     }
 
@@ -80,8 +88,7 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
         activity.finish();
     }
 
-    @And("I dismiss last opened popup")
-    public void closePopup() {
+    private void waitPopupToLoad() {
         int count = 0;
         while (count < 10 && !"true".equals(CoreData.get(KEY_POPUP_LOADED))) {
             try {
@@ -91,13 +98,18 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
             }
             count++;
         }
-        Log.e(TAG, KEY_POPUP_LOADED + ": " + CoreData.get(KEY_POPUP_LOADED));
         CoreData.put(KEY_POPUP_LOADED, "");
+        // need another seconds for UI thread to popup window
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @And("I dismiss last opened popup")
+    public void closePopup() {
+        waitPopupToLoad();
         GreeWebViewActivity.getInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -107,5 +119,21 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
                 }
             }
         });
+    }
+
+    @Then("I dismiss last opened viewControl")
+    public void closeViewControl() {
+        waitPopupToLoad();
+        Instrumentation inst = new Instrumentation();
+        // click back button to stop view loading
+        inst.sendCharacterSync(KeyEvent.KEYCODE_BACK);
+        // wait view to stop loading
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // click back button to close view
+        inst.sendCharacterSync(KeyEvent.KEYCODE_BACK);
     }
 }
