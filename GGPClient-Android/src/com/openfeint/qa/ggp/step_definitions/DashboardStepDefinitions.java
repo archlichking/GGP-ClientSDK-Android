@@ -30,7 +30,6 @@ public class DashboardStepDefinitions extends BasicStepDefinition {
 	public void luanchDashboard() {
 		Activity activity = MainActivity.getInstance();
 		Dashboard.launch(activity);
-		captureAndSave();
 	}
 	@And("I take the screenshot")
 	public void captureAndSave() {
@@ -48,7 +47,8 @@ public class DashboardStepDefinitions extends BasicStepDefinition {
 		if (null != view) {
 			Log.d(TAG, "found it");
 		}
-		View view2 = activity.getWindow().getCurrentFocus(); //This does not work
+		//This does not work, it only take the screenshot of automation app, not dashboard
+		View view2 = activity.getWindow().getCurrentFocus(); 
 		Bitmap bitmap = ScreenShot.capture(view2);
 		saveScreenshoAtPath(Environment.getExternalStorageDirectory().getAbsolutePath(), "bitmap1.png", bitmap);
 	}
