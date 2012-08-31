@@ -10,6 +10,7 @@ import util.PopupUtil;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
+import android.os.Looper;
 import android.view.KeyEvent;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -41,12 +42,18 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
         Intent intent = new Intent(GreePlatform.getContext(), JSKitTestActivity.class);
         activity.startActivity(intent);
         getBlockRepo().put(POPUP_TYPE, TYPE_VIEW_CONTROL);
+
         // wait main thread to open activity
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // inject JS basic command
+        JSKitTestActivity jsActivity = JSKitTestActivity.getInstance();
+        loadCommand(jsActivity, (GreeWebView) jsActivity.findViewById(R.id.greewebview),
+                PopupUtil.BASIC_JS_COMMAND);
     }
 
     @And("I launch jskit dialog")
@@ -61,12 +68,17 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
             }
         });
         getBlockRepo().put(POPUP_TYPE, TYPE_DIALOG);
+
         // wait main thread to open dialog
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // inject JS basic command
+        loadCommand(activity, JSKitTestDialog.getInstance().getWebView(),
+                PopupUtil.BASIC_JS_COMMAND);
     }
 
     @When("I click invoke button (\\w+)")
@@ -78,6 +90,12 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
             e.printStackTrace();
         }
         doActionInJSKitPopup("click(fid('" + buttonId + "'))");
+        // waiting for native sdk to take action
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void doActionInJSKitPopup(final String command) {
@@ -99,14 +117,17 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
 
     private void loadCommand(final Activity activity, final GreeWebView webview,
             final String command) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // TODO should only load basic command once
-                webview.loadUrl("javascript:" + PopupUtil.BASIC_JS_COMMAND);
-                webview.loadUrl("javascript:" + command);
-            }
-        });
+        if (Looper.myLooper() == null
+                || Looper.myLooper().getThread() != Looper.getMainLooper().getThread()) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    webview.loadUrl("javascript:" + command);
+                }
+            });
+        } else {
+            webview.loadUrl("javascript:" + command);
+        }
     }
 
     @Then("I need to wait for test done (\\w+)")
@@ -197,7 +218,7 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
     @And("I go back to jskit test page")
     public void goBackToBasePage() {
         waitPopupToLoad();
-        MainActivity activity = MainActivity.getInstance();
+        final MainActivity activity = MainActivity.getInstance();
         final GreeWebView webView = JSKitTestDialog.getInstance().getWebView();
         activity.runOnUiThread(new Runnable() {
 
@@ -208,6 +229,15 @@ public class JSKitStepDefinitions extends BasicStepDefinition {
                 } else {
                     webView.loadUrl(JSKitTestActivity.JSKIT_BASE_PAGE);
                 }
+                // wait page to go back
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                // inject JS basic command
+                loadCommand(activity, JSKitTestDialog.getInstance().getWebView(),
+                        PopupUtil.BASIC_JS_COMMAND);
             }
         });
     }

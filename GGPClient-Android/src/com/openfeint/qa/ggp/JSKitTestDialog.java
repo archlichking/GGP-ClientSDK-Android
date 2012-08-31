@@ -44,7 +44,7 @@ public class JSKitTestDialog extends WebViewPopupDialog {
         super.show();
         dialog = JSKitTestDialog.this;
         GreeWebView webview = super.getWebView();
-        webview.setUp();
+//        webview.setUp();
         webview.loadUrl(JSKitTestActivity.JSKIT_BASE_PAGE);
     }
 
