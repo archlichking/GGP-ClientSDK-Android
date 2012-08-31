@@ -42,7 +42,10 @@
       str = "this.protonApp.name(mParams, mCallback)";
       str = str.replace('name', name);
       if (params === "{}") {
-        params.callback = callback;
+        params = "{'callback':\"" + callback + "\"}";
+        str = str.replace('mParams, mCallback', params);
+      } else if (name === "launchService" || name === "notifyServiceResult") {
+        params = params.replace(/('callback':)/, "$1" + callback);
         str = str.replace('mParams, mCallback', params);
       } else if (name === "pushViewWithURL" || name === "openExternalView") {
         str = str.replace('mParams,', params + ',');
@@ -219,6 +222,24 @@
       var viewSuite;
       viewSuite = {
         'showDashboard': "{                           'URL':'http://www.google.com'                           }"
+      };
+      console.log(JSON.stringify(viewSuite));
+      return this.executePopupSuite(viewSuite);
+    };
+
+    JskitTest.prototype.launchService = function() {
+      var viewSuite;
+      viewSuite = {
+        'launchService': "{'from':'popup','action':'connectfacebook','target':'self','params':{'URL':'http://www.baidu.com','user_input':'jskit testing'},'callback':}"
+      };
+      console.log(JSON.stringify(viewSuite));
+      return this.executePopupSuite(viewSuite);
+    };
+
+    JskitTest.prototype.notifyServiceResult = function() {
+      var viewSuite;
+      viewSuite = {
+        'notifyServiceResult': "{'from':'popup','action':'reload','params':{},'callback':}"
       };
       console.log(JSON.stringify(viewSuite));
       return this.executePopupSuite(viewSuite);
