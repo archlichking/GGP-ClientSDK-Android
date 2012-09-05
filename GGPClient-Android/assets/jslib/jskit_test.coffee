@@ -20,9 +20,12 @@ class JskitTest
 	functionCall: (name, params, callback) ->
 		str = "this.protonApp.name(mParams, mCallback)"
 		str = str.replace 'name', name
-		if params is "{}"
 		# args: params
-			params.callback = callback
+		if params is "{}"
+			params = "{'callback':\"" + callback + "\"}"
+			str = str.replace 'mParams, mCallback', params
+		else if name is "launchService" or name is "notifyServiceResult"
+			params = params.replace /('callback':)/, "$1" + callback
 			str = str.replace 'mParams, mCallback', params
 		else if name is "pushViewWithURL" or name is "openExternalView"
 		# args: url, params
@@ -175,6 +178,18 @@ class JskitTest
 			'showDashboard':"{
                            'URL':'http://www.google.com'
                            }",
+		console.log JSON.stringify(viewSuite)
+		@executePopupSuite viewSuite
+		
+	launchService: ()->
+		viewSuite = 
+			'launchService':"{'from':'popup','action':'connectfacebook','target':'self','params':{'URL':'http://www.baidu.com','user_input':'jskit testing'},'callback':}",
+		console.log JSON.stringify(viewSuite)
+		@executePopupSuite viewSuite
+
+	notifyServiceResult: ()->
+		viewSuite = 
+			'notifyServiceResult':"{'from':'popup','action':'reload','params':{},'callback':}",
 		console.log JSON.stringify(viewSuite)
 		@executePopupSuite viewSuite
 
