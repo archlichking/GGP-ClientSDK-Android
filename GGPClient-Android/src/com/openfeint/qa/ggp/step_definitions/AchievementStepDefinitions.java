@@ -215,6 +215,43 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             }
         }
     }
+    
+    @When("I get icon of achievement (.+)")
+    public void getIcon(String achiName) {
+        ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);    
+        
+        if (a == null)
+            fail("No achievement in the list!");
+        
+        for (final Achievement achi : a) {
+            if (achiName.equals(achi.getName())) {
+                notifyStepWait();
+                getBlockRepo().remove(ICON);
+                achi.loadIcon(new IconDownloadListener() {
+                    @Override
+                    public void onSuccess(Bitmap image) {
+                        Log.d(TAG, "load icon success!");
+                        if (achi.getIcon() == null){
+                        	fail("get icon failed!");
+                        }
+                        // Loads achi.getIcon() to ICON
+                        getBlockRepo().put(ICON, achi.getIcon());
+                        Log.d(TAG, "get icon success!");
+                        notifyStepPass(); 
+                    }
+
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.e(TAG, "load icon failed!");
+                        notifyStepPass();
+                    }
+                });           
+                return;
+            }
+        }
+        // If loop for achiName does not match achi.getName() list, fail case
+        fail("Achievement list not matching!");
+    }   
 
     @Then("achievement icon of (.+) should be (.+)")
     public void verifyIcon(String achiName, String type) {
