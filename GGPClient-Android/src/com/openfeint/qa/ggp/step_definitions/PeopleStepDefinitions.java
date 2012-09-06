@@ -73,6 +73,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         if (GreePlatform.getLocalUser() == null
                 || !GreePlatform.getLocalUser().getId().equals(user_id)) {
+            if (GreePlatform.getLocalUser() != null)
+                Log.e(TAG, "current userId: " + GreePlatform.getLocalUser().getId());
             hackLogin(credential);
         } else {
             Log.i(TAG, "Already login with email " + email);
@@ -126,6 +128,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             oAuth_storage.setUserId(user_id);
             oAuth_storage.setToken(token);
             oAuth_storage.setSecret(secret);
+
+            // Set mIsAuthorized to true
+            Field mIsAuthorized_field = core.getClass().getDeclaredField("mIsAuthorized");
+            mIsAuthorized_field.setAccessible(true);
+            mIsAuthorized_field.set(core, true);
 
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -513,7 +520,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-//        getBlockRepo().put(THUMBNAIL_SIZE, type);
+        // getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 
