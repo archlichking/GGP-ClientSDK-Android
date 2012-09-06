@@ -1,6 +1,8 @@
 
 package com.openfeint.qa.core.net;
 
+import android.util.Log;
+
 import com.openfeint.qa.core.net.ssl.QASSLSocketFactory;
 import com.openfeint.qa.core.util.StringUtil;
 
@@ -18,6 +20,7 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
@@ -42,6 +45,8 @@ public abstract class NetCommunicator {
             HttpParams params = new BasicHttpParams();
             HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
             HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+            params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 1000 * 30);
+            params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 1000 * 30);
 
             SchemeRegistry registry = new SchemeRegistry();
             registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
@@ -51,6 +56,8 @@ public abstract class NetCommunicator {
 
             return new DefaultHttpClient(ccm, params);
         } catch (Exception e) {
+            Log.e("NetCommunicator",
+                    "create http client with params failed and create with default params!");
             return new DefaultHttpClient();
         }
     }
