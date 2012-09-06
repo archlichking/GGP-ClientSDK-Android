@@ -20,6 +20,7 @@ import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 import net.gree.asdk.api.IconDownloadListener;
+import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.core.Core;
 import net.gree.asdk.core.Injector;
 import net.gree.asdk.core.Session;
@@ -72,9 +73,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         HashMap<String, String> credential = getCredential(email, password);
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         if (GreePlatform.getLocalUser() == null
-                || !GreePlatform.getLocalUser().getId().equals(user_id)) {
-            if (GreePlatform.getLocalUser() != null)
-                Log.e(TAG, "current userId: " + GreePlatform.getLocalUser().getId());
+                || !GreePlatform.getLocalUser().getId().equals(user_id)
+                || !Authorizer.isAuthorized()) {
             hackLogin(credential);
         } else {
             Log.i(TAG, "Already login with email " + email);
