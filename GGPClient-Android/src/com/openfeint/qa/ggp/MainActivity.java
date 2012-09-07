@@ -1,3 +1,4 @@
+
 package com.openfeint.qa.ggp;
 
 import java.io.BufferedReader;
@@ -6,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
 import util.RawFileUtil;
@@ -61,13 +63,9 @@ public class MainActivity extends Activity {
 
     private static final int TOAST_DISPLAY = 1;
 
-    private static final int TIME_OUT = 2;
-
     private static final String TAG = "MainActivity";
 
     private TestCasesAdapter adapter;
-
-    private static final int TIME_OUT_LIMITATION = 30000;
 
     private static MainActivity mainActivity;
 
@@ -76,7 +74,7 @@ public class MainActivity extends Activity {
     public static boolean is_dialog_opened;
 
     public static boolean is_dialog_closed;
-
+    
     private Handler load_done_handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -87,11 +85,6 @@ public class MainActivity extends Activity {
                 case TOAST_DISPLAY:
                     Toast.makeText(getBaseContext(), (String) msg.obj, Toast.LENGTH_SHORT).show();
                     break;
-                // case TIME_OUT_LIMITATION:
-                // Toast.makeText(getBaseContext(), "Loading time out!",
-                // Toast.LENGTH_SHORT)
-                // .show();
-                // break;
                 default:
                     break;
             }
@@ -105,12 +98,7 @@ public class MainActivity extends Activity {
     private Runnable progressbar_thread = new Runnable() {
         public void run() {
             Looper.prepare();
-            int lastTime = 0;
             while (is_under_progress) {
-                if (lastTime++ > TIME_OUT_LIMITATION) {
-                    Log.w(TAG, "Loading time out!");
-                    load_done_handler.sendMessage(load_done_handler.obtainMessage(TIME_OUT));
-                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -157,10 +145,8 @@ public class MainActivity extends Activity {
             /* optional */
 
             Log.i(TAG, "---------- Submitting result to TCM ---------");
-	        TCMCommunicator tcm = new
-	        TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-	        tcm.setTestCasesResult(run_text.getText().toString(),
-	        adapter.getSelectedCases());
+            TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+            tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases());
             Log.i(TAG, "---------- result submitted ----");
 
             is_under_progress = false;
@@ -281,6 +267,7 @@ public class MainActivity extends Activity {
         initResultList();
         loadCredentialJson();
         mainActivity = MainActivity.this;
+        GreePlatform.activityOnCreate(this, false);
 
         // testScreenshot();
         // LoginGGP();
@@ -319,7 +306,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Test coffe api
+    // Test coffee api
     private void testJsonConfig() {
 
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
@@ -358,7 +345,6 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         String data = rfu.getTextFromRawResource(resource_id);
-        // Log.e(TAG, "Json content: \n" + data);
         CredentialStorage.initCredentialStorageWithAppId(app_id, data);
     };
 
@@ -366,6 +352,7 @@ public class MainActivity extends Activity {
         return mainActivity;
     }
 
+    // Add menu button
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE, Menu.FIRST + 1, 1, "QUIT");
         return super.onCreateOptionsMenu(menu);
