@@ -20,6 +20,7 @@ import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 import net.gree.asdk.api.IconDownloadListener;
+import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.core.Core;
 import net.gree.asdk.core.Injector;
 import net.gree.asdk.core.Session;
@@ -72,7 +73,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         HashMap<String, String> credential = getCredential(email, password);
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         if (GreePlatform.getLocalUser() == null
-                || !GreePlatform.getLocalUser().getId().equals(user_id)) {
+                || !GreePlatform.getLocalUser().getId().equals(user_id)
+                || !Authorizer.isAuthorized()) {
             hackLogin(credential);
         } else {
             Log.i(TAG, "Already login with email " + email);
@@ -126,6 +128,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             oAuth_storage.setUserId(user_id);
             oAuth_storage.setToken(token);
             oAuth_storage.setSecret(secret);
+
+            // Set mIsAuthorized to true
+            Field mIsAuthorized_field = core.getClass().getDeclaredField("mIsAuthorized");
+            mIsAuthorized_field.setAccessible(true);
+            mIsAuthorized_field.set(core, true);
 
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -513,7 +520,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-//        getBlockRepo().put(THUMBNAIL_SIZE, type);
+        // getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 

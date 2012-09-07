@@ -37,7 +37,7 @@ public class PopupStepDefinitions extends BasicStepDefinition {
         {
             put("request-title", "fid('msg-box')");
             put("request-body", "fid('msg-box')");
-            put("share-text", "fid('ggp_share_mood_message_display')");
+            put("share-text", "fid('ggp_share_body')");
             put("invite-message", "fclass('balloon bottom list-item round shrink')");
         }
     };
