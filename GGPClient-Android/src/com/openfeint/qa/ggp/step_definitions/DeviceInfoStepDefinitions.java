@@ -27,6 +27,8 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     private static final String MAC_ADDRESS = "mac_address";
     private static final String UUID = "uuid";
     private static final String IS_ROOTED = "is_rooted";
+    private static final String IS_SENDABLEANDROIDID = "is_sendableandroidid";
+    private static final String IS_SENDABLEMACADDRESS = "is_sendablemacaddress";
     
     @When("I get the device udid")
     @And("I get the device udid")
@@ -107,6 +109,22 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     	getBlockRepo().put(IS_ROOTED, isRooted);
     }
     
+    @When("I check the device is SendableAndroidId")
+    @And("I check the device is SendableAndroidId")
+    public void getIsSendableAndroidId() {
+    	boolean isSendableAndroidId = DeviceInfo.isSendableAndroidId();
+    	Log.d(TAG, String.valueOf(isSendableAndroidId));
+    	getBlockRepo().put(IS_SENDABLEANDROIDID, isSendableAndroidId);
+    }
+    
+    @When("I check the device is SendableMacAddress")
+    @And("I check the device is SendableMacAddress")
+    public void getIsSendableMacAddress() {
+    	boolean isSendableMacAddress = DeviceInfo.isSendableMacAddress();
+    	Log.d(TAG, String.valueOf(isSendableMacAddress));
+    	getBlockRepo().put(IS_SENDABLEMACADDRESS, isSendableMacAddress);
+    }
+    
     @Then("the device is rooted should be (\\w+)")
     @And("the device is rooted should be (\\w+)")
     public void VerifyIsRooted(String shouldBeRooted) {
@@ -117,6 +135,32 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     	}
     	else {
     		assertTrue("isRooted should be " + shouldBeRooted, true == isRooted);
+    	}
+    }
+    
+    @Then("the device isSendableAndroidId should be (\\w+)")
+    @And("the device isSendableAndroidId should be (\\w+)")
+    public void VerifyIsSendableAndroidId(String shouldBeSendableAndroidId) {
+    	boolean isSendableAndroidId = (Boolean) getBlockRepo().get(IS_SENDABLEANDROIDID);
+    	Log.d(TAG, String.valueOf(isSendableAndroidId));
+    	if ("false".equals(shouldBeSendableAndroidId)) {
+    		assertTrue("isSendableAndroidId should be " + shouldBeSendableAndroidId, false == isSendableAndroidId);
+    	}
+    	else {
+    		assertTrue("isSendableAndroidId should be " + shouldBeSendableAndroidId, true == isSendableAndroidId);
+    	}
+    }
+    
+    @Then("the device isSendableMacAddress should be (\\w+)")
+    @And("the device isSendableMacAddress should be (\\w+)")
+    public void VerifyIsSendableMacAddress(String shouldBeSendableMacAddress) {
+    	boolean isSendableMacAddress = (Boolean) getBlockRepo().get(IS_SENDABLEMACADDRESS);
+    	Log.d(TAG, String.valueOf(isSendableMacAddress));
+    	if ("false".equals(shouldBeSendableMacAddress)) {
+    		assertTrue("isSendableAndroidId should be " + shouldBeSendableMacAddress, false == isSendableMacAddress);
+    	}
+    	else {
+    		assertTrue("isSendableAndroidId should be " + shouldBeSendableMacAddress, true == isSendableMacAddress);
     	}
     }
 }
