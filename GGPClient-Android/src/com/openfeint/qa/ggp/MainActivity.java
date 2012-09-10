@@ -8,8 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.gree.asdk.api.GreePlatform;
-import net.gree.asdk.api.auth.Authorizer;
-import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
+import net.gree.asdk.api.ui.StatusBar;
 import util.RawFileUtil;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -23,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -74,7 +74,9 @@ public class MainActivity extends Activity {
     public static boolean is_dialog_opened;
 
     public static boolean is_dialog_closed;
-    
+
+    private String originalId;
+
     private Handler load_done_handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -160,14 +162,12 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // --- start do some check here
-                suite_text = (EditText) findViewById(R.id.text_suite_id);
                 if ("".equals(suite_text.getText().toString())) {
                     Toast.makeText(getBaseContext(),
                             getResources().getString(R.string.no_suiteid_load), Toast.LENGTH_SHORT)
                             .show();
                     return;
                 }
-                run_text = (EditText) findViewById(R.id.text_run_id);
                 if ("".equals(run_text.getText().toString())) {
                     Toast.makeText(getBaseContext(),
                             getResources().getString(R.string.no_runid_load), Toast.LENGTH_SHORT)
@@ -216,7 +216,20 @@ public class MainActivity extends Activity {
 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                adapter.ToggleSelectFailed(isChecked);
+                if (isChecked) {
+                    ArrayList<String> failedIds = adapter.ToggleSelectFailed(isChecked);
+                    StringBuffer ids = new StringBuffer();
+                    for (String id : failedIds) {
+                        ids.append(id);
+                        if (failedIds.indexOf(id) != failedIds.size() - 1) {
+                            ids.append(", ");
+                        }
+                    }
+                    Toast.makeText(getBaseContext(), failedIds.size() + " failed cases: " + ids,
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    adapter.ToggleSelectFailed(isChecked);
+                }
             }
         });
     }
@@ -255,6 +268,42 @@ public class MainActivity extends Activity {
         result_list = (ListView) findViewById(R.id.result_list);
     }
 
+    private void initTextFileds() {
+        run_text = (EditText) findViewById(R.id.text_run_id);
+        run_text.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    originalId = run_text.getText().toString();
+                    run_text.setText("");
+                } else {
+                    if (run_text.getText().length() == 0) {
+                        run_text.setText(originalId);
+                        originalId = "";
+                    }
+                }
+            }
+        });
+
+        suite_text = (EditText) findViewById(R.id.text_suite_id);
+        suite_text.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    originalId = suite_text.getText().toString();
+                    suite_text.setText("");
+                } else {
+                    if (suite_text.getText().length() == 0) {
+                        suite_text.setText(originalId);
+                        originalId = "";
+                    }
+                }
+            }
+        });
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -262,15 +311,15 @@ public class MainActivity extends Activity {
         runner = TestRunner.getInstance(MainActivity.this);
         rfu = RawFileUtil.getInstance(MainActivity.this);
 
+        initTextFileds();
         initLoadCaseButton();
         initRunCaseButton();
         initResultList();
         loadCredentialJson();
         mainActivity = MainActivity.this;
         GreePlatform.activityOnCreate(this, false);
+        hiddenStatusBar();
 
-        // testScreenshot();
-        // LoginGGP();
         // For debug
         // testJsonConfig();
     }
@@ -283,27 +332,6 @@ public class MainActivity extends Activity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.d(TAG, "Saving state!");
-    }
-
-    AuthorizeListener listener = new AuthorizeListener() {
-        public void onAuthorized() {
-            Log.i(TAG, "Login Success!");
-        }
-
-        public void onCancel() {
-            Log.i(TAG, "Login cancel!");
-        }
-
-        public void onError() {
-            Log.e(TAG, "Login failed!");
-        }
-    };
-
-    // Login for ggp
-    private void LoginGGP() {
-        if (!Authorizer.isAuthorized()) {
-            Authorizer.authorize(this, listener);
-        }
     }
 
     // Test coffee api
@@ -368,5 +396,10 @@ public class MainActivity extends Activity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void hiddenStatusBar() {
+        StatusBar bar = (StatusBar) findViewById(R.id.statusBarBottom);
+        bar.setVisibility(View.GONE);
     }
 }
