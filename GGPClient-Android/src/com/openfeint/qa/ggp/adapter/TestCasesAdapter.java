@@ -86,13 +86,16 @@ public class TestCasesAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void ToggleSelectFailed(boolean isSelected) {
+    public ArrayList<String> ToggleSelectFailed(boolean isSelected) {
+        ArrayList<String> failedIds = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.getTheCase().getResult() == TestCase.RESULT.FAILED) {
+                failedIds.add(wrapper.getTheCase().getId());
                 wrapper.setSelected(isSelected);
                 this.notifyDataSetChanged();
             }
         }
+        return failedIds;
     }
 
     @Override
