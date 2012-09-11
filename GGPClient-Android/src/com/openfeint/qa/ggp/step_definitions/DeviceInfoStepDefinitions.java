@@ -44,7 +44,7 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     	String udid;
     	udid = (String) getBlockRepo().get(UDID);
     	Log.d(TAG, udid);
-    	assertTrue("expected udid starts with android-id- but got " + udid, udid.startsWith("android-id-"));
+    	assertTrue("expected udid starts with android-id- but got " + udid, udid.startsWith("android-id-") || udid.startsWith("android-emu-"));
     }
     
     @When("I get the device mac address")
@@ -79,6 +79,7 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
 			@Override
 			public void onFailure(int responseCode, HeaderIterator headers,
 					String response) {
+				fail("update uuid failed");
 				notifyStepPass();
 			}
 		});
@@ -88,7 +89,7 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     @And("I get the device uuid")
     public void getUuid() {
     	String uuid = DeviceInfo.getUuid();
-    	Log.d(TAG, (null == uuid) ? "null" : uuid);
+    	Log.d("uuid", (null == uuid) ? "null" : uuid);
     	getBlockRepo().put(UUID, uuid);
     }
     
@@ -97,7 +98,7 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     public void verifyUuid() {
     	String uuid;
     	uuid = (String) getBlockRepo().get(UUID);
-    	Log.d(TAG, (null == uuid) ? "null" : uuid);
+    	Log.d("uuid", (null == uuid) ? "null" : uuid);
     	assertTrue("expected uuid starts with uuid- but got " + uuid, uuid.startsWith("uuid-"));
     }
     
@@ -128,39 +129,27 @@ public class DeviceInfoStepDefinitions extends BasicStepDefinition {
     @Then("the device is rooted should be (\\w+)")
     @And("the device is rooted should be (\\w+)")
     public void VerifyIsRooted(String shouldBeRooted) {
+    	boolean shouldBeRootedFlag = Boolean.valueOf(shouldBeRooted);
     	boolean isRooted = (Boolean) getBlockRepo().get(IS_ROOTED);
     	Log.d(TAG, String.valueOf(isRooted));
-    	if ("false".equals(shouldBeRooted)) {
-    		assertTrue("isRooted should be " + shouldBeRooted, false == isRooted);
-    	}
-    	else {
-    		assertTrue("isRooted should be " + shouldBeRooted, true == isRooted);
-    	}
+    	assertTrue("isRooted should be " + shouldBeRooted, shouldBeRootedFlag == isRooted);
     }
     
     @Then("the device isSendableAndroidId should be (\\w+)")
     @And("the device isSendableAndroidId should be (\\w+)")
     public void VerifyIsSendableAndroidId(String shouldBeSendableAndroidId) {
+    	boolean shouldBeSendableAndroidIdFlag = Boolean.valueOf(shouldBeSendableAndroidId);
     	boolean isSendableAndroidId = (Boolean) getBlockRepo().get(IS_SENDABLEANDROIDID);
     	Log.d(TAG, String.valueOf(isSendableAndroidId));
-    	if ("false".equals(shouldBeSendableAndroidId)) {
-    		assertTrue("isSendableAndroidId should be " + shouldBeSendableAndroidId, false == isSendableAndroidId);
-    	}
-    	else {
-    		assertTrue("isSendableAndroidId should be " + shouldBeSendableAndroidId, true == isSendableAndroidId);
-    	}
+    	assertTrue("isSendableAndroidId should be " + shouldBeSendableAndroidId, shouldBeSendableAndroidIdFlag == isSendableAndroidId);
     }
     
     @Then("the device isSendableMacAddress should be (\\w+)")
     @And("the device isSendableMacAddress should be (\\w+)")
     public void VerifyIsSendableMacAddress(String shouldBeSendableMacAddress) {
+    	boolean shouldBeSendableMacAddressFlag = Boolean.valueOf(shouldBeSendableMacAddress);
     	boolean isSendableMacAddress = (Boolean) getBlockRepo().get(IS_SENDABLEMACADDRESS);
     	Log.d(TAG, String.valueOf(isSendableMacAddress));
-    	if ("false".equals(shouldBeSendableMacAddress)) {
-    		assertTrue("isSendableAndroidId should be " + shouldBeSendableMacAddress, false == isSendableMacAddress);
-    	}
-    	else {
-    		assertTrue("isSendableAndroidId should be " + shouldBeSendableMacAddress, true == isSendableMacAddress);
-    	}
+    	assertTrue("isSendableAndroidId should be " + shouldBeSendableMacAddress, shouldBeSendableMacAddressFlag == isSendableMacAddress);
     }
 }
