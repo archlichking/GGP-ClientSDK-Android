@@ -399,7 +399,9 @@ public class MainActivity extends Activity {
     }
 
     public void hiddenStatusBar() {
-        StatusBar bar = (StatusBar) findViewById(R.id.statusBarBottom);
-        bar.setVisibility(View.GONE);
+        StatusBar expandableBar = (StatusBar) findViewById(R.id.statusBarExpandable);
+        expandableBar.setVisibility(View.GONE);
+        StatusBar normalBar = (StatusBar) findViewById(R.id.statusBarNormal);
+        normalBar.setVisibility(View.GONE);
     }
 }
