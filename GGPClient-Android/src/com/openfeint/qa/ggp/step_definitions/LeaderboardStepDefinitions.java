@@ -567,6 +567,70 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         // "score_thumbnail_" + type + ".png");
     }
 
+    @When("I load (\\w+) thumbnail in leaderboard (.+)")
+    public void AnotherMethodToLoadThumbnail(String type, String boardName) {
+        getMyScore(boardName);
+        waitForAsyncInStep(); // waiting for get score method
+
+        getBlockRepo().remove(SCORE_THUMBNAIL);
+        notifyStepWait(); // waiting for loadThumbnail
+        IconDownloadListener listener = new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load score thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load score thumbnail failed!");
+                notifyStepPass();
+            }
+        };
+
+        if ("standard".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_STANDARD, listener);
+        } else if ("small".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_SMALL, listener);
+        } else if ("huge".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_HUGE, listener);
+        }
+    }
+
+    @And("I get (\\w+) thumbnail from native cache")
+    public void getThumbnailFromCache(String type) {
+        Score score = ((Score) getBlockRepo().get(SCORE));
+        if (score == null)
+            Log.e(TAG, "Leaderboard score in native cache is null!");
+        if ("small".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getSmallThumbnail());
+        } else if ("standard".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getThumbnail());
+        } else if ("huge".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getHugeThumbnail());
+        }
+    }
+
+    @And("I get thumbnail from native cache with size (\\w+)")
+    public void AnotherMethodToGetThumbnailFromCache(String type) {
+        Score score = ((Score) getBlockRepo().get(SCORE));
+        if (score == null)
+            fail("Leaderboard score in native cache is null!");
+        if ("small".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_SMALL));
+        } else if ("standard".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_STANDARD));
+        } else if ("huge".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_HUGE));
+        }
+    }
+
     // TODO for data preparation
     private void saveIconAsExpectedResult(String path, String icon_name) {
         try {
