@@ -49,6 +49,10 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     private static final String SCORE_THUMBNAIL = "score_thumbnail";
 
+    private static final String LEADERBOARD_THUMBNAIL = "leaderboard_thumbnail";
+
+    private static final String CURRENT_LEADERBOARD = "current_leaderboard";
+
     private int defaultScore = 3000;
 
     private int transLeaderboardOrderStatus(String mark) {
@@ -629,6 +633,44 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             getBlockRepo().put(SCORE_THUMBNAIL,
                     score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_HUGE));
         }
+    }
+
+    @When("I load thumbnail of leaderboard (.+)")
+    public void loadLeaderboardThumbnail(String boardName) {
+        notifyStepWait();
+        Leaderboard board = getBoardFromList(boardName);
+        if (board == null)
+            fail("No leaderboard to load thumbnail!");
+        // store current board for next step to get native cache
+        getBlockRepo().put(CURRENT_LEADERBOARD, board);
+        board.loadThumbnail(new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load leaderboard thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load leaderboard thumbnail failed!");
+                notifyStepPass();
+            }
+        });
+    }
+
+    @And("I get thumbnail of leaderboard from native cache")
+    public void getLeaderboardThumbnail() {
+        Bitmap thumbnail = ((Leaderboard) getBlockRepo().get(CURRENT_LEADERBOARD)).getThumbnail();
+        getBlockRepo().put(LEADERBOARD_THUMBNAIL, thumbnail);
+    }
+
+    @Then("leaderboard thumbnail should be height (\\d+) and width (\\d+)")
+    public void verifyLeaderboardThumbnailSize(int height, int width) {
+        Bitmap thumbnail = (Bitmap) getBlockRepo().get(LEADERBOARD_THUMBNAIL);
+        if (thumbnail == null)
+            fail("score thumbnail is null!");
+        assertEquals("thumbnail height", height, thumbnail.getHeight());
+        assertEquals("thumbnail width", width, thumbnail.getWidth());
     }
 
     // TODO for data preparation
