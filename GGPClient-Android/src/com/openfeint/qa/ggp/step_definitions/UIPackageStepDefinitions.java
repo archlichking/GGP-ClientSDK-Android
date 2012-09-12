@@ -67,7 +67,7 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
         return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarNormal);
     }
 
-    @When("I set SNS notification to (\\d+) and App notification to (\\d+)")
+    @When("I set SNS notification to (\\d+) and GAME notification to (\\d+)")
     public void setNotificationBarForTest(int snsCount, int appCount) {
         try {
             NotificationCounts mCounts = Injector.getInstance(NotificationCounts.class);
@@ -83,8 +83,8 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @And("I update the (\\w+) notification count")
-    public void updateNotificationCount(String type) {
+    @And("I update the (\\w+) notification count badge")
+    public void updateNotificationCountbadge(String type) {
         StatusBar bar = (StatusBar) getBlockRepo().get(CURRENT_BAR);
         if ("all".equals(type)) {
             updateAllNotificationCount(bar);
