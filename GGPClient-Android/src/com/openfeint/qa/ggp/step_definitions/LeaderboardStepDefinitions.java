@@ -571,7 +571,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         // "score_thumbnail_" + type + ".png");
     }
 
-    @When("I load (\\w+) thumbnail in leaderboard (.+)")
+    @When("I load (\\w+) score thumbnail in leaderboard (.+)")
     public void AnotherMethodToLoadThumbnail(String type, String boardName) {
         getMyScore(boardName);
         waitForAsyncInStep(); // waiting for get score method
@@ -604,7 +604,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @And("I get (\\w+) thumbnail from native cache")
+    @And("I get (\\w+) score thumbnail from native cache")
     public void getThumbnailFromCache(String type) {
         Score score = ((Score) getBlockRepo().get(SCORE));
         if (score == null)
@@ -618,7 +618,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         }
     }
 
-    @And("I get thumbnail from native cache with size (\\w+)")
+    @And("I get score thumbnail from native cache with size (\\w+)")
     public void AnotherMethodToGetThumbnailFromCache(String type) {
         Score score = ((Score) getBlockRepo().get(SCORE));
         if (score == null)
