@@ -47,7 +47,7 @@ import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.ggp.R;
 
-public class PeopleStepDefinitions extends BasicStepDefinition {
+public class GreeUserStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
 
     private final static String PEOPLE_LIST = "friendList";
@@ -576,6 +576,49 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
+    }
+
+    @When("I load my image into native cache with size (\\w+)")
+    public void AnotherMethodToloadUserThumbnail(String type) {
+        notifyStepWait();
+        IconDownloadListener listener = new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load thumbnail failed!");
+                notifyStepPass();
+            }
+        };
+        if ("standard".equals(type)) {
+            GreePlatform.getLocalUser().loadThumbnail(listener);
+        } else if ("small".equals(type)) {
+            GreePlatform.getLocalUser().loadSmallThumbnail(listener);
+        } else if ("large".equals(type)) {
+            GreePlatform.getLocalUser().loadLargeThumbnail(listener);
+        } else if ("huge".equals(type)) {
+            GreePlatform.getLocalUser().loadHugeThumbnail(listener);
+        }
+    }
+
+    @And("I get my image from native cache with size (\\w+)")
+    public void getThumbnailFromCache(String type) {
+        Bitmap thumbnail = null;
+        if ("standard".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getThumbnail();
+        } else if ("small".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getSmallThumbnail();
+        } else if ("large".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getLargeThumbnail();
+        } else if ("huge".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getHugeThumbnail();
+        }
+        getBlockRepo().remove(THUMBNAIL);
+        getBlockRepo().put(THUMBNAIL, thumbnail);
     }
 
     // TODO for data preparation
