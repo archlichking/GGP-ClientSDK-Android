@@ -47,7 +47,7 @@ import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.ggp.R;
 
-public class PeopleStepDefinitions extends BasicStepDefinition {
+public class GreeUserStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
 
     private final static String PEOPLE_LIST = "friendList";
