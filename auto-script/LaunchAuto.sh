@@ -6,7 +6,8 @@
 
 avd_name="my_avd"
 apk_path="/Users/vincentxie/OpenFeint/ggpautomation/android/GGPClient-Android/bin/GGPClient-Automation.apk"
-activity="com.openfeint.qa.ggp/.DailyRunActivity"
+Main_activity="com.openfeint.qa.ggp/.MainActivity"
+dailyRun_activity="com.openfeint.qa.ggp/.DailyRunActivity"
 
 # ========== Init Parameter ==========
 # params:
@@ -30,7 +31,7 @@ fi
 
 # ========== Action Begin ==========
 
-#Got last emulator
+# Got last emulator
 last_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
 if [ -z $last_emulator ]
 then
@@ -38,18 +39,18 @@ then
 fi
 echo "Last emulator before launch is "$last_emulator
 
-#Launch avd
+# Launch avd
 echo "Starting emulator...."
 emulator -avd $avd_name &
 
-#Wait until a new emulator launch completed
+# Wait until a new emulator launch completed
 sleep 20s
 new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
 echo "New emulator launched is "$new_emulator
 
 if [ $last_emulator != $new_emulator ]
 then
-  #wait launch complete
+  # wait launch complete
   emulator_status=`adb devices | grep emulator | tail -1 | awk '{print $2}'`
   while [ $emulator_status != "device" ]
   do
@@ -63,7 +64,7 @@ else
   exit
 fi
 
-#Install automation app
+# Install automation app
 sleep 5s
 echo Install automation app....
 adb -s $new_emulator install -r $apk_path 
@@ -74,8 +75,12 @@ do
   adb -s $new_emulator install -r $apk_path
 done
 
-#Start MainActivity to begin test run
+# Start MainActivity for some Global context
+sleep 3s
+echo "Starting MainActivity for global context"
+adb -s $new_emulator shell am start -n $MainActivity
+# Start DailyRunActivity to begin test
 sleep 3s
 echo "Let start to run..."
-adb -s $new_emulator shell am start -n $activity
+adb -s $new_emulator shell am start -n $DailyRunActivity
 

@@ -95,8 +95,6 @@ public class DailyRunActivity extends Activity {
         // setContentView(R.layout.main);
         runner = TestRunner.getInstance(DailyRunActivity.this);
         rfu = RawFileUtil.getInstance(DailyRunActivity.this);
-
-        LoginGGP();
     }
 
     @Override
@@ -115,27 +113,6 @@ public class DailyRunActivity extends Activity {
         runAndSubmitCase(); // Run test cases loaded and submit result
     }
 
-    AuthorizeListener listener = new AuthorizeListener() {
-        public void onAuthorized() {
-            Log.i(TAG, "Login Success!");
-        }
-
-        public void onCancel() {
-            Log.i(TAG, "Login cancel!");
-        }
-
-        public void onError() {
-            Log.e(TAG, "Login failed!");
-        }
-    };
-
-    // Login for ggp
-    private void LoginGGP() {
-        if (!Authorizer.isAuthorized()) {
-            Authorizer.authorize(this, listener);
-        }
-    }
-
     private void initDebugButton() {
         start_button = (Button) findViewById(R.id.start_selected);
         start_button.setOnClickListener(new OnClickListener() {
@@ -152,7 +129,7 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
+            BufferedReader br = http.getJsonResponse("http://10.64.17.51:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
 
                 String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
