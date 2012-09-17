@@ -6,6 +6,7 @@
 
 project_root="GGPClient-Android/"
 sdk_root="../../ClientSDK-Android/workspace/"
+script_root="auto-script/"
 sdk_path="sdk/"
 gson_path="vendor/gson/"
 PTR_path="vendor/Android-PullToRefresh/library/"
@@ -22,7 +23,7 @@ apk_path="bin/GGPClient-Automation-release.apk"
 if [ ! -f $local_pro ] || [ ! -f $build_xml ]
 then
   echo "$local_pro or $build_xml is not exists, generate a new one"
-  sh GenConfigFiles.sh
+  sh $script_root"GenConfigFiles.sh"
 fi
 
 #Copy local.properties
