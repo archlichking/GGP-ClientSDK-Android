@@ -20,8 +20,7 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content" >
 
             <TextView
                 android:id="@+id/run_id"
@@ -40,8 +39,7 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content" >
 
             <TextView
                 android:id="@+id/suite_id"
@@ -58,8 +56,7 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content" >
 
             <Button
                 android:id="@+id/load_button"
@@ -102,8 +99,15 @@
         android:layout_weight="1" />
 
     <net.gree.asdk.api.ui.StatusBar
-        android:id="@+id/statusBarBottom"
+        android:id="@+id/statusBarExpandable"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        direction="left" />
+    
+    <net.gree.asdk.api.ui.StatusBar
+        android:id="@+id/statusBarNormal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        direction="normal" />
 
 </LinearLayout>
