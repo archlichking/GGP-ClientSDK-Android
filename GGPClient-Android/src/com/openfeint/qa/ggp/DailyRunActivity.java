@@ -145,9 +145,6 @@ public class DailyRunActivity extends Activity {
                 run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
                 Log.d(TAG, "run_id: " + run_id);
 
-                run_desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
-                Log.d(TAG, "description: " + run_desc);
-
                 need_reload = false;
             }
         } catch (TCMIsnotReachableException e) {
