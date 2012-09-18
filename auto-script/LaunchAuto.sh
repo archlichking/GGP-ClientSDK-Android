@@ -46,10 +46,17 @@ emulator -avd $avd_name &
 # Wait until a new emulator is launched
 sleep 20s
 new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
+times=0
 while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ]
 do
+  if [ $times -ge 3 ]
+  then
+    echo "Launch failed, need retry"
+    exit
+  fi
   echo "emulator still launching..."
   sleep 5s
+  let times=$times+1
   new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
 done
 echo "New emulator launched is "$new_emulator
@@ -86,11 +93,10 @@ do
 done
 
 # Start MainActivity for some Global context
-#sleep 3s
-#echo "Starting MainActivity for global context"
-#adb -s $new_emulator shell am start -n $main_activity
-# Start DailyRunActivity to begin test
 sleep 3s
+echo "Starting MainActivity for global context"
+adb -s $new_emulator shell am start -n $main_activity
+# Start DailyRunActivity to begin test
+sleep 5s
 echo "Let start to run..."
 adb -s $new_emulator shell am start -n $dailyRun_activity
-
