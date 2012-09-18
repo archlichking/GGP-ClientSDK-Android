@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.GreePlatform.BadgeListener;
+import net.gree.asdk.core.Core;
 import net.gree.asdk.core.codec.Base64;
 import net.gree.asdk.core.util.Util;
 import util.Consts;
@@ -34,6 +35,7 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     private final String SDK_VERSION = "sdk_version";
 
     @When("I update badge value to latest one")
+    @And("I update badge value to latest one")
     public void updateBadgeCount() {
         notifyStepWait();
         getBlockRepo().put(UPDATE_RESULT, Consts.UNKNOWN);
@@ -48,6 +50,7 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I check basic platform info")
+    @And("I check basic platform info")
     public void checkPlatformInfo() {
         getBlockRepo().put(SDK_BUILD, GreePlatform.getSdkBuild());
         getBlockRepo().put(SDK_VERSION, GreePlatform.getSdkVersion());
@@ -55,6 +58,7 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
 
     // TODO update social badge value is not supported in android SDK now
     @Then("my social badge value should be (\\d+)")
+    @And("my social badge value should be (\\d+)")
     public void verifySocialBadgeCount(int count) {
     }
 
@@ -73,24 +77,30 @@ public class GreePlatformStepDefinitions extends BasicStepDefinition {
     }
 
     @Then("get resource id of (.+) should be (\\d+)")
+    @And("get resource id of (.+) should be (\\d+)")
     public void verifyResourceId(String resource_name, int expect_id) {
         assertEquals("id of resource", expect_id,
                 GreePlatform.getResource(GreePlatform.getContext(), resource_name));
     }
 
     @Then("get resource name of id (\\d+) should be (.+)")
+    @And("get resource name of id (\\d+) should be (.+)")
     public void verifyResourceName(int resource_id, String expect_name) {
         assertEquals("name of resource", expect_name, GreePlatform.getRString(resource_id));
     }
 
     @Then("my sdk build should be (.+)")
+    @And("my sdk build should be (.+)")
     public void verifySdkBuild(String sdk_build) {
-        assertEquals(sdk_build, getBlockRepo().get(SDK_BUILD));
+        assertEquals(sdk_build, (String) getBlockRepo().get(SDK_BUILD));
     }
 
-    @Then("my sdk version should be (.+)")
-    public void verifySdkVersion(String sdk_version) {
-        assertEquals(sdk_version, getBlockRepo().get(SDK_VERSION));
+//    @Then("my sdk version should be (.+)")
+    @Then("my sdk version should be correct")
+    @And("my sdk version should be correct")
+    public void verifySdkVersion() {
+    	Log.d(TAG, (String) getBlockRepo().get(SDK_VERSION));
+        assertEquals("expected " + Core.getSdkVersion() + " got " + (String) getBlockRepo().get(SDK_VERSION) , Core.getSdkVersion(), (String) getBlockRepo().get(SDK_VERSION));
     }
 
     @When("I initialize settings with appId (\\w+) unencrypted consumerKey (.+) and consumerSecret (.+)")
