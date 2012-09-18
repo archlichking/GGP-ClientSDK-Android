@@ -5,8 +5,8 @@
 # ========== Config ==================
 
 avd_name="my_avd"
-apk_path="/Users/vincentxie/OpenFeint/ggpautomation/android/GGPClient-Android/bin/GGPClient-Automation.apk"
-Main_activity="com.openfeint.qa.ggp/.MainActivity"
+apk_path="GGPClient-Android/bin/GGPClient-Automation-release.apk"
+main_activity="com.openfeint.qa.ggp/.MainActivity"
 dailyRun_activity="com.openfeint.qa.ggp/.DailyRunActivity"
 
 # ========== Init Parameter ==========
@@ -43,18 +43,23 @@ echo "Last emulator before launch is "$last_emulator
 echo "Starting emulator...."
 emulator -avd $avd_name &
 
-# Wait until a new emulator launch completed
+# Wait until a new emulator is launched
 sleep 20s
 new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
+while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ]
+do
+  echo "emulator still launching..."
+  sleep 5s
+  new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
+done
 echo "New emulator launched is "$new_emulator
 
+# wait emulator's status is become ready
 if [ $last_emulator != $new_emulator ]
 then
-  # wait launch complete
   emulator_status=`adb devices | grep emulator | tail -1 | awk '{print $2}'`
   while [ $emulator_status != "device" ]
   do
-    echo "emulator still launching..."
     sleep 3s
     emulator_status=`adb devices | grep emulator | tail -1 | awk '{print $2}'`
   done
@@ -64,8 +69,13 @@ else
   exit
 fi
 
+# Uninstall first
+sleep 2s
+echo Uninstall automation app first...
+adb -s $new_emulator uninstall com.openfeint.qa.ggp
+
 # Install automation app
-sleep 5s
+sleep 2s
 echo Install automation app....
 adb -s $new_emulator install -r $apk_path 
 while [ $? -ne 0 ]
@@ -76,11 +86,11 @@ do
 done
 
 # Start MainActivity for some Global context
-sleep 3s
-echo "Starting MainActivity for global context"
-adb -s $new_emulator shell am start -n $MainActivity
+#sleep 3s
+#echo "Starting MainActivity for global context"
+#adb -s $new_emulator shell am start -n $main_activity
 # Start DailyRunActivity to begin test
 sleep 3s
 echo "Let start to run..."
-adb -s $new_emulator shell am start -n $DailyRunActivity
+adb -s $new_emulator shell am start -n $dailyRun_activity
 

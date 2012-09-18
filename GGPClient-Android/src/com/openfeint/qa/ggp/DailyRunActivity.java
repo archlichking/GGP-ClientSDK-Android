@@ -102,13 +102,15 @@ public class DailyRunActivity extends Activity {
         super.onResume();
         // initDebugButton();
 
+        int times = 0;
         do {
             getConfig(); // Get Configuration for this run
-        } while (need_reload);
+        } while (need_reload && times++ < 5);
 
+        times = 0;
         do {
             loadCase(); // Load test case from TCMS
-        } while (need_reload);
+        } while (need_reload & times++ < 5);
 
         runAndSubmitCase(); // Run test cases loaded and submit result
     }
@@ -129,7 +131,7 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            BufferedReader br = http.getJsonResponse("http://10.64.17.51:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
+            BufferedReader br = http.getJsonResponse("http://10.64.17.40:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
 
                 String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
