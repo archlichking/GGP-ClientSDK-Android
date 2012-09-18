@@ -14,23 +14,25 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal" >
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1" >
+            >
 
             <TextView
                 android:id="@+id/run_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TCM Run ID" >
+                android:text="Run:" >
             </TextView>
 
             <EditText
                 android:id="@+id/text_run_id"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="402" >
             </EditText>
@@ -39,19 +41,37 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1" >
+            >
 
             <TextView
                 android:id="@+id/suite_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TCM Suite ID" />
+                android:text="Suite:" />
 
             <EditText
                 android:id="@+id/text_suite_id"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="196" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            >
+
+            <Button
+                android:id="@+id/load_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="178" />
+                android:text=" Load " />
+
+            <Button
+                android:id="@+id/start_selected"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="StartRun" />
         </LinearLayout>
     </LinearLayout>
 
@@ -59,51 +79,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <Button
-            android:id="@+id/load_button"
+        <CheckBox
+            android:id="@+id/use_all"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Load/ReSync" />
+            android:text="select all"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/start_selected"
+        <CheckBox
+            android:id="@+id/use_failed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start Selected" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        
-    <CheckBox
-        android:id="@+id/use_all"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="select all"
-        android:visibility="gone" />
-    
-    <CheckBox
-        android:id="@+id/use_failed"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="select failed"
-        android:visibility="gone" />
-    
+            android:layout_marginLeft="20dp"
+            android:text="select failed"
+            android:visibility="gone" />
     </LinearLayout>
 
     <ListView
         android:id="@+id/result_list"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-    </ListView>
+        android:layout_height="0dip"
+        android:layout_weight="1" />
 
-    <ListView
-        android:id="@+id/result_list_title"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
-    </ListView>
+    <net.gree.asdk.api.ui.StatusBar
+        android:id="@+id/statusBarBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

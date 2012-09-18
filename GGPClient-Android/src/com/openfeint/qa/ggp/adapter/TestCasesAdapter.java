@@ -58,9 +58,9 @@ public class TestCasesAdapter extends BaseAdapter {
         List<String> list = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.isSelected()) {
-                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED &&  
-                    wrapper.getTheCase().getResult() != TestCase.RESULT.BLOCKED) {
-                  wrapper.getTheCase().setExecuted(false);
+                if (wrapper.getTheCase().getResult() != TestCase.RESULT.RETESTED
+                        && wrapper.getTheCase().getResult() != TestCase.RESULT.BLOCKED) {
+                    wrapper.getTheCase().setExecuted(false);
                 }
                 list.add(wrapper.getTheCase().getId());
             }
@@ -85,14 +85,17 @@ public class TestCasesAdapter extends BaseAdapter {
         }
         notifyDataSetChanged();
     }
-    
-    public void ToggleSelectFailed(boolean isSelected) {
+
+    public ArrayList<String> ToggleSelectFailed(boolean isSelected) {
+        ArrayList<String> failedIds = new ArrayList<String>();
         for (CaseWrapper wrapper : testCases) {
             if (wrapper.getTheCase().getResult() == TestCase.RESULT.FAILED) {
+                failedIds.add(wrapper.getTheCase().getId());
                 wrapper.setSelected(isSelected);
                 this.notifyDataSetChanged();
             }
         }
+        return failedIds;
     }
 
     @Override
@@ -119,7 +122,7 @@ public class TestCasesAdapter extends BaseAdapter {
             sResult = "T";
         } else if (result == TestCase.RESULT.RETESTED) {
             sResult = "R";
-        }else if (result == TestCase.RESULT.BLOCKED) {
+        } else if (result == TestCase.RESULT.BLOCKED) {
             sResult = "B";
         }
         holder.result.setText(sResult);

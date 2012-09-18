@@ -20,6 +20,7 @@ import net.gree.asdk.api.GreeUser;
 import net.gree.asdk.api.GreeUser.GreeIgnoredUserListener;
 import net.gree.asdk.api.GreeUser.GreeUserListener;
 import net.gree.asdk.api.IconDownloadListener;
+import net.gree.asdk.api.auth.Authorizer;
 import net.gree.asdk.core.Core;
 import net.gree.asdk.core.Injector;
 import net.gree.asdk.core.Session;
@@ -46,7 +47,7 @@ import com.openfeint.qa.core.command.When;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.ggp.R;
 
-public class PeopleStepDefinitions extends BasicStepDefinition {
+public class GreeUserStepDefinitions extends BasicStepDefinition {
     private static final String TAG = "People_Steps";
 
     private final static String PEOPLE_LIST = "friendList";
@@ -72,7 +73,8 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         HashMap<String, String> credential = getCredential(email, password);
         String user_id = credential.get(CredentialStorage.KEY_USERID);
         if (GreePlatform.getLocalUser() == null
-                || !GreePlatform.getLocalUser().getId().equals(user_id)) {
+                || !GreePlatform.getLocalUser().getId().equals(user_id)
+                || !Authorizer.isAuthorized()) {
             hackLogin(credential);
         } else {
             Log.i(TAG, "Already login with email " + email);
@@ -126,6 +128,11 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             oAuth_storage.setUserId(user_id);
             oAuth_storage.setToken(token);
             oAuth_storage.setSecret(secret);
+
+            // Set mIsAuthorized to true
+            Field mIsAuthorized_field = core.getClass().getDeclaredField("mIsAuthorized");
+            mIsAuthorized_field.setAccessible(true);
+            mIsAuthorized_field.set(core, true);
 
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -194,8 +201,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     public void verifyUserInfo(String column, String value) {
         GreeUser me = (GreeUser) getBlockRepo().get(MYSELF);
 
-        if ("displayName".equals(column)) {
-            assertEquals("userName", value, me.getNickname());
+        if ("nickname".equals(column)) {
+            assertEquals("nickName", value, me.getNickname());
+        } else if ("displayName".equals(column)) {
+            assertEquals("displayName", value, me.getDisplayName());
         } else if ("id".equals(column)) {
             assertEquals("userId", value, me.getId());
         } else if ("userGrade".equals(column)) {
@@ -216,8 +225,10 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
             assertEquals("age", value, me.getAge());
         } else if ("timezone".equals(column)) {
             assertEquals("timezone", value, me.getTimezone());
-        } else if ("has the application".equals(column)) {
-            assertEquals("has the application", value, String.valueOf(me.getHasApp()));
+        } else if ("hasApp".equals(column)) {
+            assertEquals("has the application", Boolean.parseBoolean(value), me.getHasApp());
+        } else if ("gender".equals(column)) {
+            assertEquals("gender", value, me.getGender());
         } else {
             fail("Unknown column of user info!");
         }
@@ -258,6 +269,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
                 getBlockRepo().put(PEOPLE_LIST, new ArrayList<GreeUser>());
                 if (people != null) {
                     Log.i(TAG, "Get " + people.length + " people");
+                    GreeUser.logGreeUser(Consts.STARTINDEX_1, people.length, people);
                     Log.i(TAG, "Adding people datas");
                     ((ArrayList<GreeUser>) getBlockRepo().get(PEOPLE_LIST)).addAll(Arrays
                             .asList(people));
@@ -497,7 +509,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
     }
 
     @When("I load my image with size (\\w+)")
-    public void loadStandardThumbnail(String type) {
+    public void loadUserThumbnail(String type) {
         int size = -100;
         if ("standard".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_STANDARD;
@@ -508,7 +520,7 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         } else if ("huge".equals(type)) {
             size = GreeUser.THUMBNAIL_SIZE_HUGE;
         }
-        getBlockRepo().put(THUMBNAIL_SIZE, type);
+        // getBlockRepo().put(THUMBNAIL_SIZE, type);
         loadThumbnailBySize(size);
     }
 
@@ -559,12 +571,54 @@ public class PeopleStepDefinitions extends BasicStepDefinition {
         }
 
         Bitmap bitmap = (Bitmap) getBlockRepo().get(THUMBNAIL);
-        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
-                GreePlatform.getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap
-                .getHeight());
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                .getContext().getResources(), thumbnail_id), bitmap.getWidth(), bitmap.getHeight());
         double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("user thumbnail similarity is bigger than 80%", sRate > 80);
+    }
+
+    @When("I load my image into native cache with size (\\w+)")
+    public void AnotherMethodToloadUserThumbnail(String type) {
+        notifyStepWait();
+        IconDownloadListener listener = new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load thumbnail failed!");
+                notifyStepPass();
+            }
+        };
+        if ("standard".equals(type)) {
+            GreePlatform.getLocalUser().loadThumbnail(listener);
+        } else if ("small".equals(type)) {
+            GreePlatform.getLocalUser().loadSmallThumbnail(listener);
+        } else if ("large".equals(type)) {
+            GreePlatform.getLocalUser().loadLargeThumbnail(listener);
+        } else if ("huge".equals(type)) {
+            GreePlatform.getLocalUser().loadHugeThumbnail(listener);
+        }
+    }
+
+    @And("I get my image from native cache with size (\\w+)")
+    public void getThumbnailFromCache(String type) {
+        Bitmap thumbnail = null;
+        if ("standard".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getThumbnail();
+        } else if ("small".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getSmallThumbnail();
+        } else if ("large".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getLargeThumbnail();
+        } else if ("huge".equals(type)) {
+            thumbnail = GreePlatform.getLocalUser().getHugeThumbnail();
+        }
+        getBlockRepo().remove(THUMBNAIL);
+        getBlockRepo().put(THUMBNAIL, thumbnail);
     }
 
     // TODO for data preparation

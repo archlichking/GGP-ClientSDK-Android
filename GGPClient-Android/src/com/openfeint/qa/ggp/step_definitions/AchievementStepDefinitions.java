@@ -16,6 +16,8 @@ import net.gree.asdk.api.Achievement.AchievementChangeListener;
 import net.gree.asdk.api.Achievement.AchievementListUpdateListener;
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.IconDownloadListener;
+import net.gree.asdk.core.InternalSettings;
+import net.gree.asdk.core.util.CoreData;
 
 import org.apache.http.HeaderIterator;
 
@@ -38,6 +40,8 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     private static final String ACHIEVEMENT_LIST = "achievement_list";
 
     private static final String ICON = "achievement_icon";
+
+    private static final String ACHIEVEMENT = "achievement";
 
     private boolean transLockStatus(String statusMark) {
         if ("LOCK".equals(statusMark))
@@ -71,6 +75,8 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     @Given("I load list of achievement")
     @And("I load list of achievement")
     public void getAllAchievements() {
+        // make sdk to EnablePerformanceLogging
+        CoreData.put(InternalSettings.EnablePerformanceLogging, "true");
         getAchievements(Consts.STARTINDEX_1, Consts.PAGESIZE_ALL);
     }
 
@@ -108,7 +114,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
     }
 
     @Then("I should have achievement of name (.+) with status (\\w+) and score (\\d+)")
-    public void verifyAchievementInfo(String achiName, String statusMark, int score) {
+    public void verifyAchievementInList(String achiName, String statusMark, int score) {
         ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);
         if (a == null)
             fail("No achievement in the list!");
@@ -209,6 +215,43 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             }
         }
     }
+    
+    @When("I get icon of achievement (.+)")
+    public void getIcon(String achiName) {
+        ArrayList<Achievement> a = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);    
+        
+        if (a == null)
+            fail("No achievement in the list!");
+        
+        for (final Achievement achi : a) {
+            if (achiName.equals(achi.getName())) {
+                notifyStepWait();
+                getBlockRepo().remove(ICON);
+                achi.loadIcon(new IconDownloadListener() {
+                    @Override
+                    public void onSuccess(Bitmap image) {
+                        Log.d(TAG, "load icon success!");
+                        if (achi.getIcon() == null){
+                        	fail("get icon failed!");
+                        }
+                        // Loads achi.getIcon() to ICON
+                        getBlockRepo().put(ICON, achi.getIcon());
+                        Log.d(TAG, "get icon success!");
+                        notifyStepPass(); 
+                    }
+
+                    @Override
+                    public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                        Log.e(TAG, "load icon failed!");
+                        notifyStepPass();
+                    }
+                });           
+                return;
+            }
+        }
+        // If loop for achiName does not match achi.getName() list, fail case
+        fail("Achievement list not matching!");
+    }   
 
     @Then("achievement icon of (.+) should be (.+)")
     public void verifyIcon(String achiName, String type) {
@@ -247,4 +290,52 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             e.printStackTrace();
         }
     }
+
+    @When("I check basic info of achievement (.+)")
+    public void getAchievementFromList(String achiName) {
+        ArrayList<Achievement> list = (ArrayList<Achievement>) getBlockRepo().get(ACHIEVEMENT_LIST);
+        if (list == null)
+            fail("No achievement in the list!");
+
+        for (Achievement achi : list) {
+            if (achiName.equals(achi.getName())) {
+                Log.d(TAG, "Found the achievement " + achiName);
+                getBlockRepo().put(ACHIEVEMENT, achi);
+                return;
+            }
+        }
+        fail("Could not find the achievement named " + achiName);
+    }
+
+    @Then("info (\\w+) of achievement (.+) should be (.+)")
+    @And("info (\\w+) of achievement (.+) should be (.+)")
+    public void verifyAchievementInfo(String column, String achiName, String expectValue) {
+        Achievement achi = (Achievement) getBlockRepo().get(ACHIEVEMENT);
+        if (achi == null)
+            fail("No achievement to be verified!");
+        String actualValue = "";
+        if ("identifier".equals(column)) {
+            actualValue = achi.getId();
+        } else if ("name".equals(column)) {
+            actualValue = achi.getName();
+        } else if ("descriptionText".equals(column)) {
+            actualValue = achi.getDescription();
+        } else if ("isSecret".equals(column)) {
+            if (achi.isSecret()) {
+                actualValue = "YES";
+            } else {
+                actualValue = "NO";
+            }
+        } else if ("score".equals(column)) {
+            actualValue = String.valueOf(achi.getScore());
+        } else if ("isUnlocked".equals(column)) {
+            if (achi.isUnlocked()) {
+                actualValue = "YES";
+            } else {
+                actualValue = "NO";
+            }
+        }
+        assertEquals("achi info " + column, expectValue, actualValue);
+    }
+
 }

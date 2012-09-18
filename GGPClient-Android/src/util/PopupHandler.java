@@ -3,9 +3,12 @@ package util;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.TreeMap;
 
+import net.gree.asdk.api.ui.InviteDialog;
 import net.gree.asdk.api.ui.RequestDialog;
+import net.gree.asdk.api.ui.ShareDialog;
 import net.gree.asdk.api.wallet.Payment;
 import net.gree.asdk.api.wallet.Payment.PaymentListener;
 import net.gree.asdk.api.wallet.PaymentItem;
@@ -25,10 +28,14 @@ import android.webkit.WebView;
 import com.openfeint.qa.ggp.MainActivity;
 
 public class PopupHandler extends BroadcastReceiver {
-    private final String TAG = "Action_Queue";
+    private final String TAG = "Popup_Handler";
 
     public static final int POPUP_REQUEST = 1;
-    
+
+    public static final int POPUP_SHARE = 2;
+
+    public static final int POPUP_INVITE = 3;
+
     public static final int RESULT_UNKNOWN = 0;
 
     public static final int RESULT_SUCCESS = 1;
@@ -36,6 +43,10 @@ public class PopupHandler extends BroadcastReceiver {
     public static final int RESULT_FAILURE = 2;
 
     public static final String ACTION_REQUEST_POPUP = "util.PopupHandler.request_popup";
+
+    public static final String ACTION_SHARE_POPUP = "util.PopupHandler.share_popup";
+
+    public static final String ACTION_INVITE_POPUP = "util.PopupHandler.invite_popup";
 
     public static final String ACTION_PAYMENT_POPUP = "util.PopupHandler.payment_popup";
 
@@ -45,7 +56,13 @@ public class PopupHandler extends BroadcastReceiver {
 
     public static final String POPUP_PARAMS = "util.PopupHandler.params";
 
+    public static final String PAYMENT_MESSAGE = "util.PopupHandler.paymentMessage";
+
     public static boolean is_popup_opened;
+
+    public static boolean is_popup_closed;
+    
+    public static boolean is_popup_canceled;
 
     private static boolean is_popup_loading_done;
 
@@ -55,12 +72,15 @@ public class PopupHandler extends BroadcastReceiver {
 
     private static PopupDialog popupDialog;
 
+    private static Handler snsPopupHandler;
+
+    @SuppressWarnings("unchecked")
     @Override
     public void onReceive(Context context, final Intent intent) {
         Log.d(TAG, "=============== Receive new action: " + intent.getAction() + "===============");
 
-        String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
         if (ACTION_REQUEST_POPUP.equals(intent.getAction())) {
+            String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
             TreeMap<String, Object> map = new TreeMap<String, Object>();
             map.put("title", params[0]);
             map.put("body", params[1]);
@@ -69,8 +89,28 @@ public class PopupHandler extends BroadcastReceiver {
             openSNSPopup(POPUP_REQUEST, map);
             checkPopupLoaded();
 
+        } else if (ACTION_SHARE_POPUP.equals(intent.getAction())) {
+            String[] params = intent.getStringArrayExtra(POPUP_PARAMS);
+            TreeMap<String, Object> map = new TreeMap<String, Object>();
+            map.put("message", params[0]);
+            popupElementId = "ggp_share_submit";
+
+            openSNSPopup(POPUP_SHARE, map);
+            checkPopupLoaded();
+
+        } else if (ACTION_INVITE_POPUP.equals(intent.getAction())) {
+            TreeMap<String, Object> params = new TreeMap<String, Object>();
+            params.putAll((HashMap<String, Object>) intent.getSerializableExtra(POPUP_PARAMS));
+            popupElementId = "form-submit";
+
+            openSNSPopup(POPUP_INVITE, params);
+            checkPopupLoaded();
+
         } else if (ACTION_PAYMENT_POPUP.equals(intent.getAction())) {
-            openPaymentPopup(params);
+            ArrayList<String[]> params = (ArrayList<String[]>) intent
+                    .getSerializableExtra(POPUP_PARAMS);
+            String message = intent.getStringExtra(PAYMENT_MESSAGE);
+            openPaymentPopup(params, message);
         } else if (ACTION_CHECK_PAYMENT_POPUP_LOADED.equals(intent.getAction())) {
             popupElementId = "submit_btn";
             checkPopupLoaded();
@@ -135,13 +175,15 @@ public class PopupHandler extends BroadcastReceiver {
         switch (popupType) {
             case POPUP_REQUEST:
                 Log.d(TAG, "Trying to open request dialog...");
-                Handler handler = new Handler() {
+                snsPopupHandler = new Handler() {
                     public void handleMessage(Message message) {
                         switch (message.what) {
                             case RequestDialog.OPENED:
+                                is_popup_opened = true;
                                 Log.i(TAG, "Request dialog opened.");
                                 break;
                             case RequestDialog.CLOSED:
+                                is_popup_closed = true;
                                 Log.i(TAG, "Request dialog closed.");
                                 break;
                             default:
@@ -150,24 +192,66 @@ public class PopupHandler extends BroadcastReceiver {
                 };
                 RequestDialog requestDialog = new RequestDialog(MainActivity.getInstance());
                 requestDialog.setParams(params);
-                requestDialog.setHandler(handler);
+                requestDialog.setHandler(snsPopupHandler);
                 requestDialog.show();
                 popupDialog = requestDialog;
+                break;
+            case POPUP_SHARE:
+                snsPopupHandler = new Handler() {
+                    public void handleMessage(Message message) {
+                        switch (message.what) {
+                            case ShareDialog.OPENED:
+                                Log.i(TAG, "Share dialog opened.");
+                                break;
+                            case ShareDialog.CLOSED:
+                                Log.i(TAG, "Share dialog closed.");
+                                break;
+                            default:
+                        }
+                    }
+                };
+                ShareDialog shareDialog = new ShareDialog(MainActivity.getInstance());
+                shareDialog.setParams(params);
+                shareDialog.setHandler(snsPopupHandler);
+                shareDialog.show();
+                popupDialog = shareDialog;
+                break;
+            case POPUP_INVITE:
+                snsPopupHandler = new Handler() {
+                    public void handleMessage(Message message) {
+                        switch (message.what) {
+                            case InviteDialog.OPENED:
+                                Log.d("Invite", "InviteDialog opened.");
+                                break;
+                            case InviteDialog.CLOSED:
+                                Log.d("Invite", "InviteDialog closed.");
+                                break;
+                        }
+                    }
+                };
+                InviteDialog inviteDialog = new InviteDialog(MainActivity.getInstance());
+                inviteDialog.setParams(params);
+                inviteDialog.setHandler(snsPopupHandler);
+                inviteDialog.show();
+                popupDialog = inviteDialog;
                 break;
             default:
                 break;
         }
     }
 
-    private void openPaymentPopup(String[] params) {
+    private void openPaymentPopup(ArrayList<String[]> paramList, String message) {
         // add payment item and init payment class
-        PaymentItem item = new PaymentItem(params[0], params[1], Integer.parseInt(params[2]),
-                Integer.parseInt(params[3]));
-        item.setImageUrl(params[4]);
-        item.setDescription(params[5]);
         ArrayList<PaymentItem> itemList = new ArrayList<PaymentItem>();
-        itemList.add(item);
-        final Payment payment = new Payment("test item", itemList);
+        for (String[] params : paramList) {
+            PaymentItem item = new PaymentItem(params[0], params[1], Integer.parseInt(params[2]),
+                    Integer.parseInt(params[3]));
+            item.setImageUrl(params[4]);
+            item.setDescription(params[5]);
+            itemList.add(item);
+        }
+
+        final Payment payment = new Payment(message, itemList);
         payment.setCallbackUrl("");
 
         payment.setHandler(new Handler() {
@@ -213,6 +297,7 @@ public class PopupHandler extends BroadcastReceiver {
             @Override
             public void onCancel(int responseCode, HeaderIterator headers, String paymentId) {
                 Log.d(TAG, "payment.request() canceled.");
+                is_popup_canceled = true;
             }
         });
     }
@@ -221,7 +306,7 @@ public class PopupHandler extends BroadcastReceiver {
         return popupDialog;
     }
 
-    public static void dismissPopupDialog() {
+    private void dismissPopupDialog() {
         if (popupDialog == null)
             return;
         popupDialog.dismiss();

@@ -15,7 +15,7 @@
 	<consumerSecret>9f3c6403c47cd9567fe64cfb1065346b</consumerSecret>
 	<developmentMode>sandbox</developmentMode>
 	
-
+	<enableRequestLogger>true</enableRequestLogger>
 	<use_push_notification>true</use_push_notification>
 	<use_in_app_notification>true</use_in_app_notification>
 	<push_notification_sender_id>net.gree.asdk.sample.sbapp@gmail.com

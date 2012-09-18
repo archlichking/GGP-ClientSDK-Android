@@ -1,3 +1,4 @@
+
 package com.openfeint.qa.ggp;
 
 import java.io.BufferedReader;
@@ -6,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import net.gree.asdk.api.auth.Authorizer;
-import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
+import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.ui.StatusBar;
 import util.RawFileUtil;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -21,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -35,6 +37,7 @@ import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
 import com.openfeint.qa.core.exception.CaseBuildFailedException;
 import com.openfeint.qa.core.exception.TCMIsnotReachableException;
 import com.openfeint.qa.core.net.PlainHttpCommunicator;
+import com.openfeint.qa.core.net.TCMCommunicator;
 import com.openfeint.qa.core.runner.TestRunner;
 import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
@@ -60,13 +63,9 @@ public class MainActivity extends Activity {
 
     private static final int TOAST_DISPLAY = 1;
 
-    private static final int TIME_OUT = 2;
-
     private static final String TAG = "MainActivity";
 
     private TestCasesAdapter adapter;
-
-    private static final int TIME_OUT_LIMITATION = 30000;
 
     private static MainActivity mainActivity;
 
@@ -75,6 +74,8 @@ public class MainActivity extends Activity {
     public static boolean is_dialog_opened;
 
     public static boolean is_dialog_closed;
+
+    private String originalId;
 
     private Handler load_done_handler = new Handler() {
         @Override
@@ -86,11 +87,6 @@ public class MainActivity extends Activity {
                 case TOAST_DISPLAY:
                     Toast.makeText(getBaseContext(), (String) msg.obj, Toast.LENGTH_SHORT).show();
                     break;
-                // case TIME_OUT_LIMITATION:
-                // Toast.makeText(getBaseContext(), "Loading time out!",
-                // Toast.LENGTH_SHORT)
-                // .show();
-                // break;
                 default:
                     break;
             }
@@ -104,12 +100,7 @@ public class MainActivity extends Activity {
     private Runnable progressbar_thread = new Runnable() {
         public void run() {
             Looper.prepare();
-            int lastTime = 0;
             while (is_under_progress) {
-                if (lastTime++ > TIME_OUT_LIMITATION) {
-                    Log.w(TAG, "Loading time out!");
-                    load_done_handler.sendMessage(load_done_handler.obtainMessage(TIME_OUT));
-                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -156,10 +147,8 @@ public class MainActivity extends Activity {
             /* optional */
 
             Log.i(TAG, "---------- Submitting result to TCM ---------");
-            // TCMCommunicator tcm = new
-            // TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
-            // tcm.setTestCasesResult(run_text.getText().toString(),
-            // adapter.getSelectedCases());
+            TCMCommunicator tcm = new TCMCommunicator(rfu.getTextFromRawResource(R.raw.tcm), "");
+            tcm.setTestCasesResult(run_text.getText().toString(), adapter.getSelectedCases());
             Log.i(TAG, "---------- result submitted ----");
 
             is_under_progress = false;
@@ -173,14 +162,12 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // --- start do some check here
-                suite_text = (EditText) findViewById(R.id.text_suite_id);
                 if ("".equals(suite_text.getText().toString())) {
                     Toast.makeText(getBaseContext(),
                             getResources().getString(R.string.no_suiteid_load), Toast.LENGTH_SHORT)
                             .show();
                     return;
                 }
-                run_text = (EditText) findViewById(R.id.text_run_id);
                 if ("".equals(run_text.getText().toString())) {
                     Toast.makeText(getBaseContext(),
                             getResources().getString(R.string.no_runid_load), Toast.LENGTH_SHORT)
@@ -229,7 +216,20 @@ public class MainActivity extends Activity {
 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                adapter.ToggleSelectFailed(isChecked);
+                if (isChecked) {
+                    ArrayList<String> failedIds = adapter.ToggleSelectFailed(isChecked);
+                    StringBuffer ids = new StringBuffer();
+                    for (String id : failedIds) {
+                        ids.append(id);
+                        if (failedIds.indexOf(id) != failedIds.size() - 1) {
+                            ids.append(", ");
+                        }
+                    }
+                    Toast.makeText(getBaseContext(), failedIds.size() + " failed cases: " + ids,
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    adapter.ToggleSelectFailed(isChecked);
+                }
             }
         });
     }
@@ -268,6 +268,42 @@ public class MainActivity extends Activity {
         result_list = (ListView) findViewById(R.id.result_list);
     }
 
+    private void initTextFileds() {
+        run_text = (EditText) findViewById(R.id.text_run_id);
+        run_text.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    originalId = run_text.getText().toString();
+                    run_text.setText("");
+                } else {
+                    if (run_text.getText().length() == 0) {
+                        run_text.setText(originalId);
+                        originalId = "";
+                    }
+                }
+            }
+        });
+
+        suite_text = (EditText) findViewById(R.id.text_suite_id);
+        suite_text.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    originalId = suite_text.getText().toString();
+                    suite_text.setText("");
+                } else {
+                    if (suite_text.getText().length() == 0) {
+                        suite_text.setText(originalId);
+                        originalId = "";
+                    }
+                }
+            }
+        });
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -275,14 +311,15 @@ public class MainActivity extends Activity {
         runner = TestRunner.getInstance(MainActivity.this);
         rfu = RawFileUtil.getInstance(MainActivity.this);
 
+        initTextFileds();
         initLoadCaseButton();
         initRunCaseButton();
         initResultList();
         loadCredentialJson();
         mainActivity = MainActivity.this;
+        GreePlatform.activityOnCreate(this, false);
+        hiddenStatusBar();
 
-        // testScreenshot();
-        // LoginGGP();
         // For debug
         // testJsonConfig();
     }
@@ -297,28 +334,7 @@ public class MainActivity extends Activity {
         Log.d(TAG, "Saving state!");
     }
 
-    AuthorizeListener listener = new AuthorizeListener() {
-        public void onAuthorized() {
-            Log.i(TAG, "Login Success!");
-        }
-
-        public void onCancel() {
-            Log.i(TAG, "Login cancel!");
-        }
-
-        public void onError() {
-            Log.e(TAG, "Login failed!");
-        }
-    };
-
-    // Login for ggp
-    private void LoginGGP() {
-        if (!Authorizer.isAuthorized()) {
-            Authorizer.authorize(this, listener);
-        }
-    }
-
-    // Test coffe api
+    // Test coffee api
     private void testJsonConfig() {
 
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
@@ -357,7 +373,6 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         String data = rfu.getTextFromRawResource(resource_id);
-        // Log.e(TAG, "Json content: \n" + data);
         CredentialStorage.initCredentialStorageWithAppId(app_id, data);
     };
 
@@ -365,6 +380,7 @@ public class MainActivity extends Activity {
         return mainActivity;
     }
 
+    // Add menu button
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE, Menu.FIRST + 1, 1, "QUIT");
         return super.onCreateOptionsMenu(menu);
@@ -380,5 +396,12 @@ public class MainActivity extends Activity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void hiddenStatusBar() {
+        StatusBar bar_expandable = (StatusBar) findViewById(R.id.statusBarExpandable);
+        bar_expandable.setVisibility(View.GONE);
+        StatusBar bar_normal = (StatusBar) findViewById(R.id.statusBarNormal);
+        bar_normal.setVisibility(View.GONE);
     }
 }

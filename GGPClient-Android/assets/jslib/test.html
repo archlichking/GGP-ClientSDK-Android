@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <script type="text/javascript" src='./command_interface.js'></script>
+        <script type="text/javascript" src='./ggp_command.js'></script>
+        <script type="text/javascript" src='./jskit_test.js'></script>
+        <script type="text/javascript">
+            window.addEventListener('load', function() {
+                                    var ret = proton.app.init();
+                                    proton.app.setPullToRefresh();
+                                    proton.app.pageLoaded();
+            });
+            
+            function inviteExternalUser(){
+                proton.app.inviteExternalUser({
+                    'URL':'http://www.baidu.com/'
+                });
+            }
+
+            function launchNativeBrowserTest(callback){
+                proton.app.launchNativeBrowser({'URL':'http://www.baidu.com/'}, callback);
+            }
+
+            function launchOK_CANCELDialogTest(callback){
+                proton.app.showMessageDialog({
+                                'buttons' : [ 'OK', 'Cancel'],
+                                'title' : 'ok cancel dialog test',
+                                'message' : 'this is test purpose',
+                                'cancel_index' : 1
+                               }, callback);
+            }
+        </script>
+    <head>
+    <body>
+        <div id='resultText'></div>
+        <div id='closePopup' onclick='jskit.closePopup()'>closePopup</div>
+        <div id='invokeAllNoPOP' onclick='jskit.invokeAllNonUITest()'>invokeAllNoPOPTest</div>
+        <div id='invokeRequestPopup' onclick='jskit.invokeRequestPopup()'>invokeRequestPopup</div>
+        <div id='invokeSharePopup' onclick='jskit.invokeSharePopup()'>invokeSharePopup</div>
+        <div id='invokeInvitePopup' onclick='jskit.invokeInvitePopup()'>invokeInvitePopup</div>
+        <div id='invokeWebviewDialog' onclick='jskit.invokeWebviewDialog()'>invokeWebviewDialog</div>
+        <div id='invokeDepositProductDialog' onclick='jskit.invokeDepositProductDialog()'>invokeDepositProductDialog</div>
+        <div id='invokeIAPHistoryDialog' onclick='jskit.invokeIAPHistoryDialog()'>invokeIAPHistoryDialog</div>
+        <div id='invokeNeedUpgrade' onclick='jskit.invokeNeedUpgrade()'>invokeNeedUpgrade</div>
+        <div id='invokeDepositHistoryDialog' onclick='jskit.invokeDepositHistoryDialog()'>invokeDepositHistoryDialog</div>
+        <div id='inviteExternalUser' onclick='jskit.inviteExternalUser()'>inviteExternalUser</div>
+        <div id='showDashboard' onclick='jskit.showDashboard()'>showDashboard</div>
+        <div id='launchService' onclick='jskit.launchService()'>launchService</div>
+        <div id='notifyServiceResult' onclick='jskit.notifyServiceResult()'>notifyServiceResult</div>
+    </body>
+</html>

@@ -4,7 +4,7 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="9" />
 
     <!-- add permission for GGP -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -39,9 +39,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity android:name=".JSKitTestActivity" />
         <receiver android:name="util.PopupHandler">
         	<intent-filter> 
                 <action android:name="util.PopupHandler.request_popup" />
+                <action android:name="util.PopupHandler.invite_popup" />
+                <action android:name="util.PopupHandler.share_popup" />
                 <action android:name="util.PopupHandler.payment_popup" />
                 <action android:name="util.PopupHandler.check_popup_loaded" />
                 <action android:name="util.PopupHandler.dismiss" />
@@ -137,7 +140,7 @@
             android:name="net.gree.asdk.core.dashboard.PostingMultipleActivity"
             android:configChanges="orientation" />
 
-        <service android:name=".C2DMReceiver" />
+        <service android:name="net.gree.asdk.api.notifications.c2dm.C2DMReceiver" />
 
         <receiver
             android:name="com.google.android.c2dm.C2DMBroadcastReceiver"

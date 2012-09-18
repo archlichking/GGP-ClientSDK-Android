@@ -47,6 +47,12 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
 
     private static final String ICON = "leaderboard_icon";
 
+    private static final String SCORE_THUMBNAIL = "score_thumbnail";
+
+    private static final String LEADERBOARD_THUMBNAIL = "leaderboard_thumbnail";
+
+    private static final String CURRENT_LEADERBOARD = "current_leaderboard";
+
     private int defaultScore = 3000;
 
     private int transLeaderboardOrderStatus(String mark) {
@@ -110,9 +116,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             public void onSuccess(int index, int totalListSize, Leaderboard[] leaderboards) {
                 Log.d(TAG, "Get Leaderboards success!");
                 getBlockRepo().put(LEADERBOARD_LIST, new ArrayList<Leaderboard>());
-                for (int i = 0; i < leaderboards.length; i++) {
-                    Log.d(TAG, "Leaderboard " + i + ": " + leaderboards[i].getName());
-                }
+                Leaderboard.logLeaders(leaderboards);
                 ((ArrayList<Leaderboard>) getBlockRepo().get(LEADERBOARD_LIST)).addAll(Arrays
                         .asList(leaderboards));
                 notifyStepPass();
@@ -267,7 +271,6 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                         Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
-
                                 Log.d(TAG, "Get leaderboard score success!");
                                 ((ArrayList<Score>) getBlockRepo().get(ALL_SCORE)).addAll(Arrays
                                         .asList(entry));
@@ -320,6 +323,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.d(TAG, "Found the leaderboard " + boardName);
+                Leaderboard.logLeader(board);
                 return board;
             }
         }
@@ -386,6 +390,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                     @Override
                     public void onSuccess(Score[] entry) {
                         Log.d(TAG, "Get leaderboard score success!");
+                        Leaderboard.logScore(entry);
                         // SDK updates and return empty entry instead of
                         // return failed when score is deleted
                         if (entry == null || entry.length == 0) {
@@ -467,6 +472,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 notifyStepWait();
+                getBlockRepo().remove(ICON);
                 board.loadThumbnail(new IconDownloadListener() {
                     @Override
                     public void onSuccess(Bitmap image) {
@@ -492,9 +498,9 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         if (getBlockRepo().get(ICON) == null)
             fail("leaderboard icon is null!");
         Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
-        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(
-                GreePlatform.getContext().getResources(), R.drawable.leaderboard_icon), bitmap
-                .getWidth(), bitmap.getHeight());
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                .getContext().getResources(), R.drawable.leaderboard_icon), bitmap.getWidth(),
+                bitmap.getHeight());
         double sRate = ImageUtil.compareImage(bitmap, expect_image);
         Log.d(TAG, "Similarity rate: " + sRate);
         Assert.assertTrue("leaderboard icon similarity is bigger than 80%", sRate > 80);
@@ -502,10 +508,176 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         // "leaderboard_icon.png");
     }
 
+    @When("I load score thumbnail in leaderboard (.+) with size (\\w+)")
+    public void loadScoreThumbnail(String boardName, String type) {
+        getMyScore(boardName);
+        waitForAsyncInStep(); // waiting for get score method
+
+        getBlockRepo().remove(SCORE_THUMBNAIL);
+        notifyStepWait(); // waiting for loadThumbnail
+        IconDownloadListener listener = new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load score thumbnail success!");
+                getBlockRepo().put(SCORE_THUMBNAIL, image);
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load score thumbnail failed!");
+                notifyStepPass();
+            }
+        };
+        if ("standard".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(listener);
+        } else if ("small".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadSmallThumbnail(listener);
+        } else if ("huge".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadHugeThumbnail(listener);
+        }
+    }
+
+    @Then("score thumbnail should be height (\\d+) and width (\\d+)")
+    public void verifyThumbnailSize(int height, int width) {
+        Bitmap thumbnail = (Bitmap) getBlockRepo().get(SCORE_THUMBNAIL);
+        if (thumbnail == null)
+            fail("score thumbnail is null!");
+        assertEquals("thumbnail height", height, thumbnail.getHeight());
+        assertEquals("thumbnail width", width, thumbnail.getWidth());
+    }
+
+    @And("the score thumbnail should be (\\w+) score thumbnail")
+    public void verifyScoreThumbnail(String type) {
+        Bitmap thumbnail = (Bitmap) getBlockRepo().get(SCORE_THUMBNAIL);
+        if (thumbnail == null)
+            fail("score thumbnail is null!");
+
+        int thumbnail_id = -100;
+        if ("small".equals(type)) {
+            thumbnail_id = R.drawable.score_thumbnail_small;
+        } else if ("standard".equals(type)) {
+            thumbnail_id = R.drawable.score_thumbnail_standard;
+        } else if ("huge".equals(type)) {
+            thumbnail_id = R.drawable.score_thumbnail_huge;
+        }
+        Bitmap expect_image = ImageUtil.zoomBitmap(BitmapFactory.decodeResource(GreePlatform
+                .getContext().getResources(), thumbnail_id), thumbnail.getWidth(), thumbnail
+                .getHeight());
+        double sRate = ImageUtil.compareImage(thumbnail, expect_image);
+        Log.d(TAG, "Similarity rate: " + sRate);
+        Assert.assertTrue("score thumbnail similarity is bigger than 80%", sRate > 80);
+        // saveIconAsExpectedResult(Environment.getExternalStorageDirectory().getAbsolutePath(),
+        // "score_thumbnail_" + type + ".png");
+    }
+
+    @When("I load (\\w+) score thumbnail in leaderboard (.+)")
+    public void AnotherMethodToLoadThumbnail(String type, String boardName) {
+        getMyScore(boardName);
+        waitForAsyncInStep(); // waiting for get score method
+
+        getBlockRepo().remove(SCORE_THUMBNAIL);
+        notifyStepWait(); // waiting for loadThumbnail
+        IconDownloadListener listener = new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load score thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load score thumbnail failed!");
+                notifyStepPass();
+            }
+        };
+
+        if ("standard".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_STANDARD, listener);
+        } else if ("small".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_SMALL, listener);
+        } else if ("huge".equals(type)) {
+            ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
+                    Leaderboard.Score.THUMBNAIL_SIZE_HUGE, listener);
+        }
+    }
+
+    @And("I get (\\w+) score thumbnail from native cache")
+    public void getThumbnailFromCache(String type) {
+        Score score = ((Score) getBlockRepo().get(SCORE));
+        if (score == null)
+            Log.e(TAG, "Leaderboard score in native cache is null!");
+        if ("small".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getSmallThumbnail());
+        } else if ("standard".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getThumbnail());
+        } else if ("huge".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL, score.getHugeThumbnail());
+        }
+    }
+
+    @And("I get score thumbnail from native cache with size (\\w+)")
+    public void AnotherMethodToGetThumbnailFromCache(String type) {
+        Score score = ((Score) getBlockRepo().get(SCORE));
+        if (score == null)
+            fail("Leaderboard score in native cache is null!");
+        if ("small".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_SMALL));
+        } else if ("standard".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_STANDARD));
+        } else if ("huge".equals(type)) {
+            getBlockRepo().put(SCORE_THUMBNAIL,
+                    score.getThumbnail(Leaderboard.Score.THUMBNAIL_SIZE_HUGE));
+        }
+    }
+
+    @When("I load thumbnail of leaderboard (.+)")
+    public void loadLeaderboardThumbnail(String boardName) {
+        notifyStepWait();
+        Leaderboard board = getBoardFromList(boardName);
+        if (board == null)
+            fail("No leaderboard to load thumbnail!");
+        // store current board for next step to get native cache
+        getBlockRepo().put(CURRENT_LEADERBOARD, board);
+        board.loadThumbnail(new IconDownloadListener() {
+            @Override
+            public void onSuccess(Bitmap image) {
+                Log.d(TAG, "load leaderboard thumbnail success!");
+                notifyStepPass();
+            }
+
+            @Override
+            public void onFailure(int responseCode, HeaderIterator headers, String response) {
+                Log.e(TAG, "load leaderboard thumbnail failed!");
+                notifyStepPass();
+            }
+        });
+    }
+
+    @And("I get thumbnail of leaderboard from native cache")
+    public void getLeaderboardThumbnail() {
+        Bitmap thumbnail = ((Leaderboard) getBlockRepo().get(CURRENT_LEADERBOARD)).getThumbnail();
+        getBlockRepo().put(LEADERBOARD_THUMBNAIL, thumbnail);
+    }
+
+    @Then("leaderboard thumbnail should be height (\\d+) and width (\\d+)")
+    public void verifyLeaderboardThumbnailSize(int height, int width) {
+        Bitmap thumbnail = (Bitmap) getBlockRepo().get(LEADERBOARD_THUMBNAIL);
+        if (thumbnail == null)
+            fail("score thumbnail is null!");
+        assertEquals("thumbnail height", height, thumbnail.getHeight());
+        assertEquals("thumbnail width", width, thumbnail.getWidth());
+    }
+
     // TODO for data preparation
     private void saveIconAsExpectedResult(String path, String icon_name) {
         try {
-            Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+            // Bitmap bitmap = (Bitmap) getBlockRepo().get(ICON);
+            Bitmap bitmap = (Bitmap) getBlockRepo().get(SCORE_THUMBNAIL);
             File icon = new File(path, icon_name);
             FileOutputStream fos = new FileOutputStream(icon);
             if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)) {
