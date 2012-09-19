@@ -131,7 +131,9 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            BufferedReader br = http.getJsonResponse("http://10.64.17.40:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
+            String coffeeServer = "";
+            BufferedReader br = http.getJsonResponse("http://" + coffeeServer
+                    + "/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
 
                 String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
