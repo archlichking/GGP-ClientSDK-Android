@@ -95,8 +95,6 @@ public class DailyRunActivity extends Activity {
         // setContentView(R.layout.main);
         runner = TestRunner.getInstance(DailyRunActivity.this);
         rfu = RawFileUtil.getInstance(DailyRunActivity.this);
-
-        LoginGGP();
     }
 
     @Override
@@ -104,36 +102,17 @@ public class DailyRunActivity extends Activity {
         super.onResume();
         // initDebugButton();
 
+        int times = 0;
         do {
             getConfig(); // Get Configuration for this run
-        } while (need_reload);
+        } while (need_reload && times++ < 5);
 
+        times = 0;
         do {
             loadCase(); // Load test case from TCMS
-        } while (need_reload);
+        } while (need_reload & times++ < 5);
 
         runAndSubmitCase(); // Run test cases loaded and submit result
-    }
-
-    AuthorizeListener listener = new AuthorizeListener() {
-        public void onAuthorized() {
-            Log.i(TAG, "Login Success!");
-        }
-
-        public void onCancel() {
-            Log.i(TAG, "Login cancel!");
-        }
-
-        public void onError() {
-            Log.e(TAG, "Login failed!");
-        }
-    };
-
-    // Login for ggp
-    private void LoginGGP() {
-        if (!Authorizer.isAuthorized()) {
-            Authorizer.authorize(this, listener);
-        }
     }
 
     private void initDebugButton() {
@@ -152,7 +131,7 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
+            BufferedReader br = http.getJsonResponse("http://10.64.17.40:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
 
                 String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
@@ -167,9 +146,6 @@ public class DailyRunActivity extends Activity {
 
                 run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
                 Log.d(TAG, "run_id: " + run_id);
-
-                run_desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
-                Log.d(TAG, "description: " + run_desc);
 
                 need_reload = false;
             }
