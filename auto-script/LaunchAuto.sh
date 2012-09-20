@@ -83,7 +83,7 @@ then
     echo "Launch failed, need retry"
     exit
   fi
-target=$avd_name
+  target=$new_emulator
 
 # ====== Device mode ======
 else
@@ -95,8 +95,8 @@ else
   else
     device_name=$2
   fi
+  target=$device_name
 fi
-target=$device_name
 
 # ====== Install app & run ======
 
