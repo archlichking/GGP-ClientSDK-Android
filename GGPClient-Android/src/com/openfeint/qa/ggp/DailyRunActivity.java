@@ -52,6 +52,8 @@ public class DailyRunActivity extends Activity {
 
     private boolean need_reload = false;
 
+    private String coffeeServer = "";
+
     // TODO for debug
     private Button start_button;
 
@@ -88,7 +90,7 @@ public class DailyRunActivity extends Activity {
     };
 
     private void genTestReport() {
-        HttpPost httpPost = new HttpPost("http://10.64.20.100:3000/report");
+        HttpPost httpPost = new HttpPost("http://" + coffeeServer + "/report");
 
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         String filePath = "";
@@ -165,7 +167,6 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            String coffeeServer = "";
             BufferedReader br = http.getJsonResponse("http://" + coffeeServer
                     + "/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
