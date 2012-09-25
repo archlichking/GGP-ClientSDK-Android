@@ -112,7 +112,9 @@ public class DailyRunActivity extends Activity {
             loadCase(); // Load test case from TCMS
         } while (need_reload & times++ < 5);
 
+        System.out.print("Begin Run!!");
         run_case_thread.run();
+        System.out.print("End Run!!");
 //        runAndSubmitCase(); // Run test cases loaded and submit result
     }
 
