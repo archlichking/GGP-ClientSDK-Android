@@ -56,10 +56,8 @@ public class ConnectivityStepDefinitions extends BasicStepDefinition {
 		};
 	
 		connectivityManager.registerListener(connection);
-		System.out.println(connection);
 		getBlockRepo().put(LISTENER, connection);
 		Log.d(TAG, "listener registered");
-		getBlockRepo().put(NOTIFY, "false");
 	}
 	
 	@When("I unregister a listener")
@@ -67,7 +65,6 @@ public class ConnectivityStepDefinitions extends BasicStepDefinition {
 	public void unregisterListener() {
 	
 		connectivityManager.unregisterListener(connection);
-		getBlockRepo().put(NOTIFY, "false");
 		Log.d(TAG, "listener unregistered");
 	}
 	
@@ -104,10 +101,10 @@ public class ConnectivityStepDefinitions extends BasicStepDefinition {
 	public void verifyListener(String state) {
 		
 		if (getBlockRepo().get(NOTIFY).equals(state)) {
-			Log.d(TAG, "listener verified");
+			Log.d(TAG, "listener notify status verified");
 			notifyStepPass();
 		} else {
-			fail("listener not verified");
+			fail("listener notify status not expected: " + state);
 		}
 	}
 }
