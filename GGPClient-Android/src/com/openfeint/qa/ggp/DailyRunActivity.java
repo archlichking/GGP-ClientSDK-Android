@@ -2,10 +2,20 @@
 package com.openfeint.qa.ggp;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import net.gree.asdk.api.auth.Authorizer;
-import net.gree.asdk.api.auth.Authorizer.AuthorizeListener;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
 import util.RawFileUtil;
 import android.app.Activity;
 import android.os.Bundle;
@@ -40,9 +50,9 @@ public class DailyRunActivity extends Activity {
 
     private String run_id;
 
-    private String run_desc;
-
     private boolean need_reload = false;
+
+    private String coffeeServer = "";
 
     // TODO for debug
     private Button start_button;
@@ -75,8 +85,34 @@ public class DailyRunActivity extends Activity {
             runner.runAllCases();
             Log.i(TAG, "---------- Running done ---------");
             submitResult();
+            genTestReport();
         }
     };
+
+    private void genTestReport() {
+        HttpPost httpPost = new HttpPost("http://" + coffeeServer + "/report");
+
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        String filePath = "";
+        params.add(new BasicNameValuePair("key", "adfqet87983hiu783flkad09806g98adgk"));
+        params.add(new BasicNameValuePair("runId", run_id));
+        params.add(new BasicNameValuePair("reportDir", filePath));
+
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(params));
+            HttpResponse httpResponse = new DefaultHttpClient().execute(httpPost);
+            Log.d(TAG, "HttpResponse of genTestReport: " + httpResponse.getStatusLine().toString());
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     private void runAndSubmitCase() {
         new Thread(run_case_thread).start();
@@ -92,7 +128,6 @@ public class DailyRunActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.main);
         runner = TestRunner.getInstance(DailyRunActivity.this);
         rfu = RawFileUtil.getInstance(DailyRunActivity.this);
     }
@@ -112,6 +147,7 @@ public class DailyRunActivity extends Activity {
             loadCase(); // Load test case from TCMS
         } while (need_reload & times++ < 5);
 
+        // run_case_thread.run();
         runAndSubmitCase(); // Run test cases loaded and submit result
     }
 
@@ -131,7 +167,6 @@ public class DailyRunActivity extends Activity {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
             Log.d(TAG, "==================== Load Configuration ====================");
-            String coffeeServer = "";
             BufferedReader br = http.getJsonResponse("http://" + coffeeServer
                     + "/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
