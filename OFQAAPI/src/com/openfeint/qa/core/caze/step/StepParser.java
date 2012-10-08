@@ -5,17 +5,16 @@ import com.openfeint.qa.core.Scanner;
 import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Before;
+import com.openfeint.qa.core.command.Cmd;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
-import com.openfeint.qa.core.command.Cmd;
 import com.openfeint.qa.core.exception.NoSuchStepException;
 import com.openfeint.qa.core.util.CommandUtil;
 import com.openfeint.qa.core.util.PackageUtil;
 import com.openfeint.qa.core.util.StringUtil;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
