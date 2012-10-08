@@ -13,8 +13,10 @@ import com.openfeint.qa.core.util.CredentialStorage;
 import com.openfeint.qa.core.util.JsonUtil;
 import com.openfeint.qa.ggp.adapter.CaseWrapper;
 import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
+import com.openfeint.qa.ggp.R;
 
 import net.gree.asdk.api.GreePlatform;
+import net.gree.asdk.api.ui.StatusBar;
 import util.RawFileUtil;
 
 import android.app.Activity;
@@ -342,7 +344,7 @@ public class MainActivity extends Activity {
         loadCredentialJson();
         mainActivity = MainActivity.this;
         GreePlatform.activityOnCreate(this, false);
-//        hiddenStatusBar();
+        hiddenStatusBar();
 
         // For debug
         // testJsonConfig();
@@ -422,10 +424,10 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-//    public void hiddenStatusBar() {
-//        StatusBar bar_expandable = (StatusBar) findViewById(R.id.statusBarBottom);
-//        bar_expandable.setVisibility(View.GONE);
-//        StatusBar bar_normal = (StatusBar) findViewById(R.id.statusBarBottom);
-//        bar_normal.setVisibility(View.GONE);
-//    }
+    public void hiddenStatusBar() {
+        StatusBar bar_expandable = (StatusBar) findViewById(R.id.statusBarExpandable);
+        bar_expandable.setVisibility(View.GONE);
+        StatusBar bar_normal = (StatusBar) findViewById(R.id.statusBarNormal);
+        bar_normal.setVisibility(View.GONE);
+    }
 }

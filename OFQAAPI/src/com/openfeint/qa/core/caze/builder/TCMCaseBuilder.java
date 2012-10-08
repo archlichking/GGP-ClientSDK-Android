@@ -16,14 +16,12 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class TCMCaseBuilder extends CaseBuilder {
     private TCMCommunicator tcm;
 
     @Override
     public TestCase[] buildCases(String suite_id) throws TCMIsnotReachableException {
-        System.out.println("begin "+new Date().toGMTString());
         ArrayList<TestCase> tcs = new ArrayList<TestCase>();
         BufferedReader br;
         try {
@@ -33,7 +31,6 @@ public class TCMCaseBuilder extends CaseBuilder {
             JSONObject json = new JSONObject(br.readLine());
             JSONArray arr = json.getJSONArray("cases");
 
-            System.out.println("tcm parsing done "+new Date().toGMTString());
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = (JSONObject) arr.get(i);
                 String[] raw_case = StringUtil.splitSteps(o.getString("custom_steps"),
@@ -71,7 +68,6 @@ public class TCMCaseBuilder extends CaseBuilder {
 
                 tcs.add(tc);
             }
-            System.out.println("all passing done "+new Date().toGMTString());
             return tcs.toArray(new TestCase[tcs.size()]);
         } catch (Exception e) {
             Log.e(StringUtil.DEBUG_TAG, e.getMessage());

@@ -2,12 +2,8 @@
 package com.openfeint.qa.core.runner;
 
 import com.openfeint.qa.core.caze.TestCase;
-import com.openfeint.qa.core.caze.TestCaseDelegate;
-import com.openfeint.qa.core.exception.TCMIsnotReachableException;
-import com.openfeint.qa.core.util.StringUtil;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.util.HashMap;
 
