@@ -5,7 +5,6 @@ import com.openfeint.qa.core.caze.step.Step;
 import com.openfeint.qa.core.caze.step.StepResult;
 import com.openfeint.qa.core.util.StringUtil;
 
-import android.provider.SyncStateContract.Constants;
 import android.util.Log;
 
 /***
@@ -19,7 +18,7 @@ public class TestCase {
         int RETESTED = 4;
 
         int BLOCKED = 2;
-        
+
         int PASSED = 1;
 
         int UNTEST = 0;
@@ -107,13 +106,14 @@ public class TestCase {
             // no step in this case, failed directly
             StringBuffer sb = new StringBuffer();
             for (Step s : steps) {
-                if (res != TestCase.RESULT.FAILED || s.getKeyword().toUpperCase().equals("AFTER")) {
-                    // only run with after if exists and if step fails
-                    StepResult sr = s.invoke();
-                    // merge results with or operation
-                    res = res | sr.getCode();
-                    sb.append(sr.getComment() + StringUtil.FILE_LINE_SPLIT);
-                }
+                // if (res != TestCase.RESULT.FAILED ||
+                // s.getKeyword().toUpperCase().equals("AFTER")) {
+                // // only run with after if exists and if step fails
+                StepResult sr = s.invoke();
+                // merge results with or operation
+                res = res | sr.getCode();
+                sb.append(sr.getComment() + StringUtil.FILE_LINE_SPLIT);
+                // }
             }
             this.resultComment = sb.toString();
         }

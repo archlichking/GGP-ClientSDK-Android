@@ -28,44 +28,44 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
 
     private final static String CURRENT_BAR = "current_bar";
 
-    @And("I active widget with position (.+) and expandable (\\w+)")
-    public void activateStatusBar(String position, String isExpandable) {
-        final StatusBar bar;
-        if ("YES".equals(isExpandable)) {
-            bar = getExpandableStatusBar();
-        } else {
-            bar = getNormalStatusBar();
-        }
-        getBlockRepo().put(CURRENT_BAR, bar);
-        MainActivity.getInstance().runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-                bar.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    @And("I active default widget")
-    public void activityDefaultStatusBar() {
-        final StatusBar bar = getNormalStatusBar();
-        getBlockRepo().put(CURRENT_BAR, bar);
-        MainActivity.getInstance().runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-                bar.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    private StatusBar getExpandableStatusBar() {
-        return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarExpandable);
-    }
-
-    private StatusBar getNormalStatusBar() {
-        return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarNormal);
-    }
+//    @And("I active widget with position (.+) and expandable (\\w+)")
+//    public void activateStatusBar(String position, String isExpandable) {
+//        final StatusBar bar;
+//        if ("YES".equals(isExpandable)) {
+//            bar = getExpandableStatusBar();
+//        } else {
+//            bar = getNormalStatusBar();
+//        }
+//        getBlockRepo().put(CURRENT_BAR, bar);
+//        MainActivity.getInstance().runOnUiThread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                bar.setVisibility(View.VISIBLE);
+//            }
+//        });
+//    }
+//
+//    @And("I active default widget")
+//    public void activityDefaultStatusBar() {
+//        final StatusBar bar = getNormalStatusBar();
+//        getBlockRepo().put(CURRENT_BAR, bar);
+//        MainActivity.getInstance().runOnUiThread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                bar.setVisibility(View.VISIBLE);
+//            }
+//        });
+//    }
+//
+//    private StatusBar getExpandableStatusBar() {
+//        return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarBottom);
+//    }
+//
+//    private StatusBar getNormalStatusBar() {
+//        return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarBottom);
+//    }
 
     @When("I set SNS notification to (\\d+) and GAME notification to (\\d+)")
     public void setNotificationBarForTest(int snsCount, int appCount) {

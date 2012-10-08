@@ -8,12 +8,14 @@ import com.openfeint.qa.core.command.Before;
 import com.openfeint.qa.core.command.Given;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
+import com.openfeint.qa.core.command.Cmd;
 import com.openfeint.qa.core.exception.NoSuchStepException;
 import com.openfeint.qa.core.util.CommandUtil;
 import com.openfeint.qa.core.util.PackageUtil;
 import com.openfeint.qa.core.util.StringUtil;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,10 +55,12 @@ public class StepParser {
                 // match and command
             case BEFORE:
                 // match before command
+            case COMMAND:
+                // match all-command command for all
             case AFTER:
                 // match after command
                 s.setCommand(step);
-                holder.fixStep(inst, s, command);
+                holder.fixStep(inst, s, CommandUtil.CMD_FILTER);
                 break;
             default:
                 break;
@@ -72,44 +76,44 @@ public class StepParser {
                 List<Method> mList = PackageUtil.getAllStepMethods(packageName, apkPath);
                 for (Method m : mList) {
                     if (null != m.getAnnotation(Given.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.GIVEN_FILTER + " "
-                                + m.getAnnotation(Given.class).value());
-                        aimStepList.add(new StepPair(p, m));
-                        // continue;
-                    }
-                    if (null != m.getAnnotation(Given.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.GIVEN_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(Given.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
                     if (null != m.getAnnotation(Then.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.THEN_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(Then.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
                     if (null != m.getAnnotation(When.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.WHEN_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(When.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
                     if (null != m.getAnnotation(And.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.AND_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(And.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
                     if (null != m.getAnnotation(Before.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.BEFORE_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(Before.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
                     if (null != m.getAnnotation(After.class)) {
-                        Pattern p = Pattern.compile(CommandUtil.AFTER_FILTER + " "
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
                                 + m.getAnnotation(After.class).value());
+                        aimStepList.add(new StepPair(p, m));
+                        // continue;
+                    }
+                    if (null != m.getAnnotation(Cmd.class)) {
+                        Pattern p = Pattern.compile(CommandUtil.CMD_FILTER + " "
+                                + m.getAnnotation(Cmd.class).value());
                         aimStepList.add(new StepPair(p, m));
                         // continue;
                     }
@@ -143,7 +147,7 @@ public class StepParser {
             step.setRef_method_params(Scanner.scanParameterValues(sp, command + " " + inst));
             // 5. extract class for speed purpose
             step.setRef_class(Scanner.scanClass(sp.getM()));
-            
+
             step.setKeyword(command);
         }
 
@@ -153,8 +157,7 @@ public class StepParser {
                     return sp;
                 }
             }
-            throw new NoSuchStepException("No Such step [" + command + " " + inst
-                    + "] defined");
+            throw new NoSuchStepException("No Such step [" + command + " " + inst + "]");
         }
     }
 

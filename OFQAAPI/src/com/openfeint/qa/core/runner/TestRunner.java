@@ -1,7 +1,6 @@
 
 package com.openfeint.qa.core.runner;
 
-import com.openfeint.qa.core.R;
 import com.openfeint.qa.core.caze.TestCase;
 import com.openfeint.qa.core.caze.TestCaseDelegate;
 import com.openfeint.qa.core.exception.TCMIsnotReachableException;

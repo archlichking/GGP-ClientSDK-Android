@@ -1,8 +1,6 @@
 
 package com.openfeint.qa.core.caze.step.definition;
 
-import android.util.Log;
-
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.concurrent.Semaphore;
