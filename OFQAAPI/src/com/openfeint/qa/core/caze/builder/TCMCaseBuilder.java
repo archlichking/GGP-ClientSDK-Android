@@ -1,9 +1,6 @@
 
 package com.openfeint.qa.core.caze.builder;
 
-import android.content.Context;
-import android.util.Log;
-
 import com.openfeint.qa.core.caze.TestCase;
 import com.openfeint.qa.core.caze.step.Step;
 import com.openfeint.qa.core.exception.NoSuchStepException;
@@ -14,14 +11,19 @@ import com.openfeint.qa.core.util.StringUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class TCMCaseBuilder extends CaseBuilder {
     private TCMCommunicator tcm;
 
     @Override
     public TestCase[] buildCases(String suite_id) throws TCMIsnotReachableException {
+        System.out.println("begin "+new Date().toGMTString());
         ArrayList<TestCase> tcs = new ArrayList<TestCase>();
         BufferedReader br;
         try {
@@ -31,6 +33,7 @@ public class TCMCaseBuilder extends CaseBuilder {
             JSONObject json = new JSONObject(br.readLine());
             JSONArray arr = json.getJSONArray("cases");
 
+            System.out.println("tcm parsing done "+new Date().toGMTString());
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = (JSONObject) arr.get(i);
                 String[] raw_case = StringUtil.splitSteps(o.getString("custom_steps"),
@@ -49,7 +52,7 @@ public class TCMCaseBuilder extends CaseBuilder {
                     tcs.add(tc);
                     continue;
                 }
-                // pase case steps
+                // parse case steps
                 ArrayList<Step> steps = new ArrayList<Step>();
                 for (String step : raw_steps) {
                     try {
@@ -68,7 +71,7 @@ public class TCMCaseBuilder extends CaseBuilder {
 
                 tcs.add(tc);
             }
-
+            System.out.println("all passing done "+new Date().toGMTString());
             return tcs.toArray(new TestCase[tcs.size()]);
         } catch (Exception e) {
             Log.e(StringUtil.DEBUG_TAG, e.getMessage());
