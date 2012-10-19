@@ -197,7 +197,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             if (achiName.equals(achi.getName())) {
                 notifyStepWait();
                 getBlockRepo().remove(ICON);
-                achi.loadIcon(new IconDownloadListener() {
+                achi.loadThumbnail(new IconDownloadListener() {
                     @Override
                     public void onSuccess(Bitmap image) {
                         Log.d(TAG, "load icon success!");
@@ -227,7 +227,7 @@ public class AchievementStepDefinitions extends BasicStepDefinition {
             if (achiName.equals(achi.getName())) {
                 notifyStepWait();
                 getBlockRepo().remove(ICON);
-                achi.loadIcon(new IconDownloadListener() {
+                achi.loadThumbnail(new IconDownloadListener() {
                     @Override
                     public void onSuccess(Bitmap image) {
                         Log.d(TAG, "load icon success!");
