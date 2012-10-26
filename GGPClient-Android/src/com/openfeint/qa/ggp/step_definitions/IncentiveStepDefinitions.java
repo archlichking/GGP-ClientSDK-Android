@@ -11,9 +11,12 @@ import net.gree.vendor.com.google.gson.JsonObject;
 import org.apache.http.HeaderIterator;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import util.RawFileUtil;
-import android.R;
+
+import com.openfeint.qa.ggp.MainActivity;
+import com.openfeint.qa.ggp.R;
 import android.util.Log;
 
 import com.openfeint.qa.core.caze.step.definition.BasicStepDefinition;
@@ -21,12 +24,16 @@ import com.openfeint.qa.core.command.After;
 import com.openfeint.qa.core.command.And;
 import com.openfeint.qa.core.command.Then;
 import com.openfeint.qa.core.command.When;
+//import com.openfeint.qa.ggp.R;
+import static junit.framework.Assert.fail;
+
 
 public class IncentiveStepDefinitions extends BasicStepDefinition {
 	public static final String TAG = IncentiveStepDefinitions.class
 			.getSimpleName();
 	private static final String INCENTIVE_PAYLOAD = "incentive_payload";
 	private static final String PAYLOAD_TYPE = "payload_type";
+	private static final String NUM_OF_INSERTED_ROWS = "num_of_inserted_rows";
 
 	@And("I initialize incentive with incentive type (.*) and message (.*)")
 	public void initializeIncentive(String type, String message) {
@@ -52,7 +59,9 @@ public class IncentiveStepDefinitions extends BasicStepDefinition {
 	public void postIncentive(String email) {
 		notifyStepWait();
 		List<String> users = new ArrayList<String>();
-		users.add(emailToId(email));
+		String userId = emailToUserId(email);
+		Log.d(TAG, "send incentive to " + email + " whose user id is " + userId);
+		users.add(userId);
 		IncentiveController.post(users,
 				((Integer) getBlockRepo().get(PAYLOAD_TYPE)).intValue(),
 				(String) getBlockRepo().get(INCENTIVE_PAYLOAD),
@@ -60,26 +69,37 @@ public class IncentiveStepDefinitions extends BasicStepDefinition {
 
 					@Override
 					public void onSuccess(String response) {
+						Log.d(TAG, "send incentive success");
+						try {
+							int number = parseNumberOfInsertedRows(response);
+							getBlockRepo().put(NUM_OF_INSERTED_ROWS, number);
+						} catch (JSONException e) {
+							fail("The server does not return the number of inserted rows: " + response);
+							e.printStackTrace();
+						}
 						notifyStepPass();
 					}
 
 					@Override
 					public void onFailure(int responseCode,
 							HeaderIterator headers, String response) {
+						Log.d(TAG, "send incentive failed");
 						notifyStepPass();
 					}
 				});
 	}
 
-	private String emailToId(String email) {
+	private String emailToUserId(String email) {
 		// see MainActivity.java
-		RawFileUtil rfu = null;
-		String app_id = "15265";
+		RawFileUtil rfu = RawFileUtil.getInstance(MainActivity.getInstance());
+		String app_id = "15265"; // on sandbox or production
 		String field_name = "credentials_config_" + app_id;
+		field_name = "credentials_config_15265";
 		int resource_id = 0;
 		try {
 			Field field = R.raw.class.getDeclaredField(field_name);
 			resource_id = (Integer) field.get(null);
+			Log.d(TAG, String.valueOf(resource_id));
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (NoSuchFieldException e) {
@@ -97,7 +117,7 @@ public class IncentiveStepDefinitions extends BasicStepDefinition {
 				org.json.JSONObject jobj = jsonArray.getJSONObject(i);
 				String userid = jobj.getString("userid");
 				String username = jobj.getString("username");
-				if (username == email)
+				if (username.equals(email))
 					return userid;
 			}
 		} catch (JSONException e) {
@@ -106,9 +126,19 @@ public class IncentiveStepDefinitions extends BasicStepDefinition {
 		return null;
 	}
 
+	private int parseNumberOfInsertedRows(String json) throws JSONException {
+		org.json.JSONObject jsonObject = new JSONObject(json);
+		int number = jsonObject.getInt("entry");
+		return number;
+	}
+
 	@Then("incentive target should be (.*)")
 	public void verifyIncentive(int number) {
-		// do nothing
+		int number_reported_by_server = (Integer) getBlockRepo().get(NUM_OF_INSERTED_ROWS);
+		if (number_reported_by_server != number) {
+			Log.d(TAG, "server return is success");
+			fail("expected " + number + " inserted rows but only reported " + number_reported_by_server + " by the server");
+		}
 	}
 
 	@After("I mark incentive as processed")
