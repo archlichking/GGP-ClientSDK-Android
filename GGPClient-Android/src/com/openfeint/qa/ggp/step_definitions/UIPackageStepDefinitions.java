@@ -67,14 +67,11 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
         return (StatusBar) MainActivity.getInstance().findViewById(R.id.statusBarNormal);
     }
 
-    @When("I set SNS notification to (\\d+) and GAME notification to (\\d+)")
+    @When("I set GAME notification to (\\d+)")
     public void setNotificationBarForTest(int snsCount, int appCount) {
         try {
             NotificationCounts mCounts = Injector.getInstance(NotificationCounts.class);
             // set notification count
-            Field mSnsCount_field = NotificationCounts.class.getDeclaredField("mSnsCount");
-            mSnsCount_field.setAccessible(true);
-            mSnsCount_field.set(mCounts, snsCount);
             Field mAppCount_field = NotificationCounts.class.getDeclaredField("mAppCount");
             mAppCount_field.setAccessible(true);
             mAppCount_field.set(mCounts, appCount);
@@ -88,10 +85,6 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
         StatusBar bar = (StatusBar) getBlockRepo().get(CURRENT_BAR);
         if ("all".equals(type)) {
             updateAllNotificationCount(bar);
-        } else if ("SNS".equals(type)) {
-            NotificationButton button = (NotificationButton) bar
-                    .findViewById(R.id.gree_user_notification_button);
-            updateNotificationButtonCount(button);
         } else if ("GAME".equals(type)) {
             NotificationButton button = (NotificationButton) bar
                     .findViewById(R.id.gree_game_notification_button);
@@ -154,10 +147,6 @@ public class UIPackageStepDefinitions extends BasicStepDefinition {
         TextView badgeCountView = null;
         if ("all".equals(type)) {
             badgeCountView = getAllBadgeCountView(bar);
-        } else if ("SNS".equals(type)) {
-            NotificationButton button = (NotificationButton) bar
-                    .findViewById(R.id.gree_user_notification_button);
-            badgeCountView = getNotificationButtonView(button);
         } else if ("GAME".equals(type)) {
             NotificationButton button = (NotificationButton) bar
                     .findViewById(R.id.gree_game_notification_button);
