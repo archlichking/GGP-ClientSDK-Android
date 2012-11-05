@@ -1,24 +1,16 @@
 
 package com.openfeint.qa.ggp;
 
-import com.openfeint.qa.core.caze.TestCase;
-import com.openfeint.qa.core.caze.builder.CaseBuilder;
-import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
-import com.openfeint.qa.core.exception.CaseBuildFailedException;
-import com.openfeint.qa.core.exception.TCMIsnotReachableException;
-import com.openfeint.qa.core.net.PlainHttpCommunicator;
-import com.openfeint.qa.core.net.TCMCommunicator;
-import com.openfeint.qa.core.runner.TestRunner;
-import com.openfeint.qa.core.util.CredentialStorage;
-import com.openfeint.qa.core.util.JsonUtil;
-import com.openfeint.qa.ggp.adapter.CaseWrapper;
-import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
-import com.openfeint.qa.ggp.R;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import net.gree.asdk.api.GreePlatform;
 import net.gree.asdk.api.ui.StatusBar;
 import util.RawFileUtil;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
@@ -40,11 +32,18 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.openfeint.qa.core.caze.TestCase;
+import com.openfeint.qa.core.caze.builder.CaseBuilder;
+import com.openfeint.qa.core.caze.builder.CaseBuilderFactory;
+import com.openfeint.qa.core.exception.CaseBuildFailedException;
+import com.openfeint.qa.core.exception.TCMIsnotReachableException;
+import com.openfeint.qa.core.net.PlainHttpCommunicator;
+import com.openfeint.qa.core.net.TCMCommunicator;
+import com.openfeint.qa.core.runner.TestRunner;
+import com.openfeint.qa.core.util.CredentialStorage;
+import com.openfeint.qa.core.util.JsonUtil;
+import com.openfeint.qa.ggp.adapter.CaseWrapper;
+import com.openfeint.qa.ggp.adapter.TestCasesAdapter;
 
 public class MainActivity extends Activity {
     private Button start_button;
@@ -126,32 +125,8 @@ public class MainActivity extends Activity {
             // or use TCM_BUILDER
             // rfu.getTextFromRawResource(R.raw.tcm)
             // to use TCM
-            PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
-            try {
-                Log.d("info", "==================== Load Configuration ====================");
-                BufferedReader br = http
-                        .getJsonResponse("http://localhost:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
-                if (br != null) {
-
-                    String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
-                    Log.d("info", "is_create_run: " + mark);
-
-                    String suite_id = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
-                    Log.d("info", "suite_id: " + suite_id);
-
-                    String run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
-                    Log.d("info", "run_id: " + run_id);
-
-                    String run_desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
-                    Log.d("info", "description: " + run_desc);
-                }
-            } catch (TCMIsnotReachableException e) {
-                e.printStackTrace();
-            } finally {
-            }
-
-            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.FILE_BUILDER,
-                    rfu.getTextFromRawResource(R.raw.sample_case),
+            CaseBuilder builder = CaseBuilderFactory.makeBuilder(CaseBuilderFactory.TCM_BUILDER,
+                    rfu.getTextFromRawResource(R.raw.tcm),
                     rfu.getTextFromRawResource(R.raw.step_def, "step_path"), MainActivity.this);
 
             try {
@@ -345,9 +320,6 @@ public class MainActivity extends Activity {
         mainActivity = MainActivity.this;
         GreePlatform.activityOnCreate(this, false);
         hiddenStatusBar();
-
-        // For debug
-        // testJsonConfig();
     }
 
     @Override
@@ -361,20 +333,33 @@ public class MainActivity extends Activity {
     }
 
     // Test coffee api
-    private void testJsonConfig() {
-
+    private void getConfig() {
         PlainHttpCommunicator http = new PlainHttpCommunicator(null, null);
         try {
-            BufferedReader br = http.getJsonResponse("http://10.64.20.98:3000/config");
+            Log.d(TAG, "==================== Load Configuration ====================");
+            BufferedReader br = http
+                    .getJsonResponse("http://10.64.17.40:3000/android/config?key=adfqet87983hiu783flkad09806g98adgk");
             if (br != null) {
-                String is_Create_Run = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
-                Log.d(TAG, "is_create_run: " + is_Create_Run);
+                String val;
+                Log.e(TAG, "print out all json data:");
+                try {
+                    while ((val = br.readLine()) != null) {
+                        Log.e(TAG, val);
+                    }
+                    br.reset();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                String mark = JsonUtil.getAutoConfigJsonValueByKey("is_create_run", br);
+                Log.d(TAG, "is_create_run: " + mark);
+
                 String suite_id = JsonUtil.getAutoConfigJsonValueByKey("suite_id", br);
                 Log.d(TAG, "suite_id: " + suite_id);
+
                 String run_id = JsonUtil.getAutoConfigJsonValueByKey("run_id", br);
                 Log.d(TAG, "run_id: " + run_id);
-                String desc = JsonUtil.getAutoConfigJsonValueByKey("description", br);
-                Log.d(TAG, "description: " + desc);
+
             }
         } catch (TCMIsnotReachableException e) {
             e.printStackTrace();
