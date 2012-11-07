@@ -85,17 +85,22 @@ public class DailyRunActivity extends Activity {
             runner.runAllCases();
             Log.i(TAG, "---------- Running done ---------");
             submitResult();
-            genTestReport();
+            genTestReport(run_id);
         }
     };
 
-    private void genTestReport() {
+    private void genEmptyTestReport() {
+        // submit an invalid test run id to create a empty report
+        genTestReport("99999");
+    }
+
+    private void genTestReport(String runId) {
         HttpPost httpPost = new HttpPost("http://" + coffeeServer + "/report");
 
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         String filePath = "";
         params.add(new BasicNameValuePair("key", "adfqet87983hiu783flkad09806g98adgk"));
-        params.add(new BasicNameValuePair("runId", run_id));
+        params.add(new BasicNameValuePair("runId", runId));
         params.add(new BasicNameValuePair("reportDir", filePath));
 
         try {
@@ -139,13 +144,23 @@ public class DailyRunActivity extends Activity {
 
         int times = 0;
         do {
+            if (times++ > 5) {
+                Log.d(TAG, "loading config failed!");
+                genEmptyTestReport();
+                System.exit(0);
+            }
             getConfig(); // Get Configuration for this run
-        } while (need_reload && times++ < 5);
+        } while (need_reload);
 
         times = 0;
         do {
+            if (times++ > 5) {
+                Log.d(TAG, "loading test case failed!");
+                genEmptyTestReport();
+                System.exit(0);
+            }
             loadCase(); // Load test case from TCMS
-        } while (need_reload & times++ < 5);
+        } while (need_reload);
 
         // run_case_thread.run();
         runAndSubmitCase(); // Run test cases loaded and submit result

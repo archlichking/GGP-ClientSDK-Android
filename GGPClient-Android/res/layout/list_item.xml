@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerInParent="true"
-        android:padding="1px" />
+        android:padding="1dp" />
 
     <TextView
         android:id="@+id/case_result"
@@ -18,9 +18,9 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_toRightOf="@+id/use"
-        android:paddingLeft="5px"
+        android:paddingLeft="5dp"
         android:text="F"
-        android:textSize="15px" />
+        android:textSize="15dp" />
 
     <TextView
         android:id="@+id/case_id"
@@ -28,9 +28,9 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_toRightOf="@+id/case_result"
-        android:paddingLeft="5px"
+        android:paddingLeft="5dp"
         android:text="1234"
-        android:textSize="15px" />
+        android:textSize="15dp" />
 
     <TextView
         android:id="@+id/case_title"
@@ -38,8 +38,8 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_toRightOf="@+id/case_id"
-        android:paddingLeft="10px"
+        android:paddingLeft="10dp"
         android:text="If an inventory is changed from the DD the player should get a message but the change should always be appliedIf an inventory is changed from the DD the player should get a message but the change should always be appliedIf an inventory is changed from the DD the player should get a message but the change should always be appliedIf an inventory is changed from the DD the player should get a message but the change should always be appliedIf an inventory is changed from the DD the player should get a message but the change should always be appliedIf an inventory is changed from the DD the player should get a message but the change should always be applied"
-        android:textSize="15px" />
+        android:textSize="15dp" />
 
 </RelativeLayout>
