@@ -144,7 +144,7 @@ public class DailyRunActivity extends Activity {
 
         int times = 0;
         do {
-            if (times++ < 5) {
+            if (times++ > 5) {
                 Log.d(TAG, "loading config failed!");
                 genEmptyTestReport();
                 System.exit(0);
@@ -154,7 +154,7 @@ public class DailyRunActivity extends Activity {
 
         times = 0;
         do {
-            if (times++ < 5) {
+            if (times++ > 5) {
                 Log.d(TAG, "loading test case failed!");
                 genEmptyTestReport();
                 System.exit(0);
