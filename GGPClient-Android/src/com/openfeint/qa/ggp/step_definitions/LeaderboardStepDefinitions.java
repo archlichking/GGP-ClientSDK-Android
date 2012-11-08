@@ -394,6 +394,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
                         // SDK updates and return empty entry instead of
                         // return failed when score is deleted
                         if (entry == null || entry.length == 0) {
+                            Log.e(TAG, "return score is null");
                             getBlockRepo().put(SCORE, new Score());
                         } else {
                             getBlockRepo().put(SCORE, entry[0]);
@@ -530,10 +531,16 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
             }
         };
         if ("standard".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrl() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadThumbnail(listener);
         } else if ("small".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrlSmall() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadSmallThumbnail(listener);
         } else if ("huge".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrlHuge() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadHugeThumbnail(listener);
         }
     }
@@ -593,12 +600,18 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         };
 
         if ("standard".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrl() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
                     Leaderboard.Score.THUMBNAIL_SIZE_STANDARD, listener);
         } else if ("small".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrlSmall() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
                     Leaderboard.Score.THUMBNAIL_SIZE_SMALL, listener);
         } else if ("huge".equals(type)) {
+            if (((Score) getBlockRepo().get(SCORE)).getThumbnailUrlHuge() == null)
+                fail("Thumbnail url is null!");
             ((Score) getBlockRepo().get(SCORE)).loadThumbnail(
                     Leaderboard.Score.THUMBNAIL_SIZE_HUGE, listener);
         }
