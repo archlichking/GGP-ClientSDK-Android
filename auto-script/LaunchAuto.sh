@@ -30,6 +30,39 @@ then
 fi
 
 # =========== Action Begin ============
+
+killEmulators()
+{
+  for pid in `ps aux | grep emulator | grep avd | awk '{print $2}'`
+  do
+    kill -9 $pid
+    sleep 3s
+  done
+}
+
+launchNewEmulator()
+{
+  echo "Starting emulator...."
+  emulator -avd $avd_name &
+
+  # Wait until a new emulator is launched
+  sleep 20s
+  new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
+  times=0
+  while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ] || [ 1 ]
+  do
+    if [ $times -ge 0 ]
+    then
+      echo "Launch failed, need retry"
+      return 1
+    fi
+    echo "emulator still launching..."
+    sleep 5s
+    let times=$times+1
+    new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
+  done
+  echo "New emulator launched is "$new_emulator
+}
 if [ $mode == "emulator" ]
 then
 # ====== Emulator mode ======
@@ -48,26 +81,17 @@ then
   echo "Last emulator before launch is "$last_emulator
 
 ## Launch avd
-  echo "Starting emulator...."
-  emulator -avd $avd_name &
-
-## Wait until a new emulator is launched
-  sleep 20s
-  new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
-  times=0
-  while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ]
+  while [ 1 ]
   do
-    if [ $times -ge 3 ]
+    launchNewEmulator
+    if [ $? -ne 0 ]
     then
-      echo "Launch failed, need retry"
-      exit
+      killEmulators
+      launchNewEmulator
+    else
+      break
     fi
-    echo "emulator still launching..."
-    sleep 5s
-    let times=$times+1
-    new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
   done
-  echo "New emulator launched is "$new_emulator
 
 ## wait emulator's status is become ready
   if [ $last_emulator != $new_emulator ]
