@@ -49,7 +49,7 @@ launchNewEmulator()
   sleep 20s
   new_emulator=`adb devices | grep emulator | tail -1 | awk '{print $1}'`
   times=0
-  while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ] || [ 1 ]
+  while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ]
   do
     if [ $times -ge 3 ]
     then
@@ -133,10 +133,12 @@ adb -s $target uninstall com.openfeint.qa.ggp
 sleep 2s
 echo Install automation app....
 adb -s $target install -r $apk_path 
-while [ $? -ne 0 ]
+times=0
+while [ $? -ne 0 ] || [ $times -ge 5 ]
 do
   echo "try install again..."
   sleep 5s
+  let times=$times+1
   adb -s $target install -r $apk_path
 done
 
