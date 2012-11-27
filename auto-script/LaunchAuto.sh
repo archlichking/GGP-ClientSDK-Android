@@ -51,7 +51,7 @@ launchNewEmulator()
   times=0
   while [ -z $new_emulator ] || [ $last_emulator == $new_emulator ] || [ 1 ]
   do
-    if [ $times -ge 0 ]
+    if [ $times -ge 3 ]
     then
       echo "Launch failed, need retry"
       return 1
