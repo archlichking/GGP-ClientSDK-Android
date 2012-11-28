@@ -8,7 +8,7 @@ workspace_root=`pwd`"/"
 # Below path are all base on the workspace_root
 project_root="GGPClient-Android/"
 script_root="auto-script/"
-qalib_root="OFQAAPI/"
+qalib_root="Android-Framework/OFQAAPI/"
 sdk_root="../../ClientSDK-Android/workspace/"
 sdk_path="sdk/"
 gson_path="vendor/gson/"
