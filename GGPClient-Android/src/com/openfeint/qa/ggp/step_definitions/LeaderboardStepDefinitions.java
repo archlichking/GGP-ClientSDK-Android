@@ -418,7 +418,7 @@ public class LeaderboardStepDefinitions extends BasicStepDefinition {
         for (Leaderboard board : l) {
             if (boardName.equals(board.getName())) {
                 Log.i(TAG, "Try to get leaderboard ranking and score...");
-                Leaderboard.getScore(board.getId(), transSelector("EVERYONE"), transPeriod(period),
+                Leaderboard.getScore(board.getId(), transSelector("ME"), transPeriod(period),
                         Consts.STARTINDEX_1, Consts.PAGESIZE_ALL, new ScoreListener() {
                             @Override
                             public void onSuccess(Score[] entry) {
